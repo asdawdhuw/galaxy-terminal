@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import startSound from '../../startSound3.mp3'
+
+// Preload at module level — loads while JS bundle parses, not when splash mounts
+const audio = new Audio(startSound)
+audio.preload = 'auto'
+audio.volume = 0.75
 
 const SUBTITLE = 'A COSMIC COMMAND CENTRE'
 
@@ -60,6 +66,26 @@ export default function SplashScreen({ onDone }) {
     }, 250)
     return () => clearInterval(iv)
   }, [typing])
+
+  // Startup sound — useLayoutEffect fires before paint, earlier than useEffect
+  useLayoutEffect(() => {
+    audio.currentTime = 0
+    audio.play().catch(() => {})
+    return () => {
+      // Quick fade-out on unmount
+      if (audio.paused) return
+      const step = () => {
+        if (audio.volume > 0.03) {
+          audio.volume = Math.max(0, audio.volume - 0.06)
+          requestAnimationFrame(step)
+        } else {
+          audio.pause()
+          audio.currentTime = 0
+        }
+      }
+      step()
+    }
+  }, [])
 
   // Dismiss
   useEffect(() => {
