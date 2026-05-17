@@ -181,8 +181,6 @@ function createWindow() {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
-    // ██████████ FORCE DevTools open — always visible on startup ██████████
-    mainWindow.webContents.openDevTools({ mode: 'detach' })
   })
 
   // Backup shortcut: Ctrl+Alt+D to toggle DevTools

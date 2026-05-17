@@ -52,7 +52,7 @@ export default function TopMenuBar({
         onClick={onToggleSearch}
         style={{
           display: 'flex', alignItems: 'center', gap: 6, padding: '4px 14px', borderRadius: 7,
-          marginLeft: 44,  // align with session list edge
+          marginLeft: 0,
           border: `1px solid ${searchOpen ? 'rgba(124,111,247,0.4)' : 'rgba(255,255,255,0.1)'}`,
           background: searchOpen ? 'rgba(124,111,247,0.14)' : 'rgba(255,255,255,0.02)',
           color: searchOpen ? '#c4b5fd' : 'rgba(255,255,255,0.55)',
