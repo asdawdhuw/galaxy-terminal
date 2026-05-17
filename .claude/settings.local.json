@@ -3,7 +3,8 @@
     "allow": [
       "PowerShell(npm *)",
       "PowerShell(scoop *)",
-      "PowerShell(npm config *)"
+      "PowerShell(npm config *)",
+      "Bash(npm run *)"
     ]
   }
 }

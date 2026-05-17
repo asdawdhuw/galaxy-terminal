@@ -60,8 +60,8 @@ function createSession(cols, rows) {
   activeSessionId = id
 
   proc.onData((data) => {
-    if (activeSessionId === id && mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('pty:output', data)
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('pty:output', { sessionId: id, data })
     }
   })
 
@@ -192,6 +192,9 @@ ipcMain.handle('pty:list', () => {
 ipcMain.handle('pty:switch', (_event, id) => {
   if (sessions.has(id)) {
     activeSessionId = id
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('pty:switched', id)
+    }
     return true
   }
   return false

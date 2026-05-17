@@ -34,6 +34,28 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated }) {
   const containerRef = useRef(null)
   const termRef = useRef(null)
   const fitRef = useRef(null)
+  const buffersRef = useRef(new Map())   // sessionId → output string
+  const shownIdRef = useRef(null)        // which session xterm is currently showing
+
+  // Switch display to a different session
+  function switchDisplay(toId) {
+    const term = termRef.current
+    if (!term) return
+
+    const oldId = shownIdRef.current
+    if (oldId === toId) return
+
+    shownIdRef.current = toId
+
+    term.reset()
+    try { fitRef.current?.fit() } catch (_) {}
+
+    const buf = buffersRef.current.get(toId) || ''
+    if (buf) {
+      term.write(buf)
+    }
+  }
+
   // Effect 1: Terminal lifecycle (mount once)
   useEffect(() => {
     const term = new Terminal({
@@ -64,14 +86,26 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated }) {
       window.terminal.sendInput(data)
     })
 
-    // Receive PTY output
-    const unsubOutput = window.terminal.onOutput((data) => {
-      term.write(data)
+    // Receive PTY output — route to correct buffer
+    const unsubOutput = window.terminal.onOutput(({ sessionId, data }) => {
+      // Always accumulate to the correct session's buffer
+      const prev = buffersRef.current.get(sessionId) || ''
+      buffersRef.current.set(sessionId, prev + data)
+
+      // Write to screen if this session is shown, or no session established yet (initial load)
+      if (sessionId === shownIdRef.current || shownIdRef.current === null) {
+        term.write(data)
+      }
     })
 
     // Handle PTY exit
     const unsubExit = window.terminal.onExit(({ id, exitCode }) => {
       term.write(`\r\n\x1b[33m[${id} exited with code ${exitCode}]\x1b[0m\r\n`)
+    })
+
+    // Handle auto-switch (exit / close of active session)
+    const unsubSwitched = window.terminal.onSwitched((newId) => {
+      if (newId) switchDisplay(newId)
     })
 
     // Resize PTY when container changes
@@ -86,6 +120,10 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated }) {
     // Create first PTY session
     window.terminal.createPty(term.cols, term.rows).then((session) => {
       if (session && onSessionCreated) {
+        shownIdRef.current = session.id
+        if (!buffersRef.current.has(session.id)) {
+          buffersRef.current.set(session.id, '')
+        }
         onSessionCreated(session)
       }
     })
@@ -94,9 +132,17 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated }) {
       resizeObserver.disconnect()
       unsubOutput()
       unsubExit()
+      unsubSwitched()
       term.dispose()
     }
   }, [])
+
+  // Effect 2: React to session switch from App state (sidebar click / new session)
+  useEffect(() => {
+    if (activeSessionId && activeSessionId !== shownIdRef.current) {
+      switchDisplay(activeSessionId)
+    }
+  }, [activeSessionId])
 
   return <div ref={containerRef} className="w-full h-full" />
 }
