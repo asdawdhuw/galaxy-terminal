@@ -37,8 +37,6 @@ function genStars(count) {
 export default function SplashScreen({ onDone }) {
   const stars = useMemo(() => genStars(72), [])
   const [typed, setTyped] = useState('')
-  const [cursorOn, setCursorOn] = useState(true)
-  const [typing, setTyping] = useState(true)
 
   // Typewriter
   useEffect(() => {
@@ -48,24 +46,11 @@ export default function SplashScreen({ onDone }) {
         setTyped(SUBTITLE.slice(0, i + 1))
         i++
       } else {
-        setTyping(false)
         clearInterval(iv)
       }
     }, 55)
     return () => clearInterval(iv)
   }, [])
-
-  // Cursor blink cycle (starts after typing finishes)
-  useEffect(() => {
-    if (typing) return
-    let count = 0
-    const iv = setInterval(() => {
-      setCursorOn((v) => !v)
-      count++
-      if (count >= 8) clearInterval(iv) // 4 full blinks, then stays off
-    }, 250)
-    return () => clearInterval(iv)
-  }, [typing])
 
   // Startup sound — useLayoutEffect fires before paint, earlier than useEffect
   useLayoutEffect(() => {
@@ -148,7 +133,6 @@ export default function SplashScreen({ onDone }) {
         <h1 className="splash-title">GALAXY TERMINAL</h1>
         <p className="splash-sub">
           {typed}
-          {cursorOn && <span className="splash-cursor">|</span>}
         </p>
       </div>
     </div>

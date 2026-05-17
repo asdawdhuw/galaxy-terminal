@@ -64,19 +64,20 @@ export default function useAudioEngine(audioMap, {
   mode = 'dynamic',
   staticTier = 0
 } = {}) {
-  const strikesRef   = useRef([])
-  const gainsRef     = useRef(null)
-  const elemsRef     = useRef(null)
-  const tierRef      = useRef(TIER_IDLE)
-  const smoothedRef  = useRef(0)
-  const intervalRef  = useRef(null)
-  const enabledRef   = useRef(enabled)
-  const masterRef    = useRef(masterVolume)
-  const modeRef      = useRef(mode)
-  const audioMapRef  = useRef(audioMap)
-  enabledRef.current = enabled
-  masterRef.current  = masterVolume
-  modeRef.current    = mode
+  const strikesRef    = useRef([])
+  const gainsRef      = useRef(null)
+  const elemsRef      = useRef(null)
+  const tierRef       = useRef(TIER_IDLE)
+  const smoothedRef   = useRef(0)
+  const intervalRef   = useRef(null)
+  const enabledRef    = useRef(enabled)
+  const masterRef     = useRef(masterVolume)
+  const modeRef       = useRef(mode)
+  const audioMapRef   = useRef(audioMap)
+  const xfadeIdRef    = useRef(0)   // guards against stale setTimeout
+  enabledRef.current  = enabled
+  masterRef.current   = masterVolume
+  modeRef.current     = mode
   audioMapRef.current = audioMap
 
   const [currentTier, setCurrentTier] = useState(TIER_IDLE)
@@ -92,15 +93,19 @@ export default function useAudioEngine(audioMap, {
     const gains = gainsRef.current
     const elems = elemsRef.current
     if (!gains || !elems) return
+    if (from === to) return
 
-    if (from >= 0 && from !== to) {
+    const xid = ++xfadeIdRef.current
+
+    if (from >= 0) {
       expRampTo(gains[from], 0, FADE_S)
       setTimeout(() => {
+        if (xfadeIdRef.current !== xid) return // newer crossfade already ran
         try {
           gains[from].gain.setValueAtTime(0, _ctx?.currentTime ?? 0)
           elems[from].pause()
         } catch (_) {}
-      }, FADE_S * 1000 + 50)
+      }, FADE_S * 1000 + 60)
     }
 
     elems[to].currentTime = 0
