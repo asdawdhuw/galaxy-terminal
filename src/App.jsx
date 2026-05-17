@@ -2,8 +2,10 @@ import { useState, useCallback, useEffect } from 'react'
 import GalaxyBackground from './components/GalaxyBackground'
 import SessionList from './components/SessionList'
 import TerminalCanvas from './components/TerminalCanvas'
+import SplashScreen from './components/SplashScreen'
 
 export default function App() {
+  const [splash, setSplash] = useState(true)
   const [sessions, setSessions] = useState([])
   const [activeId, setActiveId] = useState(null)
 
@@ -66,6 +68,7 @@ export default function App() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-cosmos-bg">
+      {splash && <SplashScreen onDone={() => setSplash(false)} />}
       <GalaxyBackground />
 
       <div className="relative z-10 flex h-full">
