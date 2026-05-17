@@ -5,7 +5,7 @@ import TerminalCanvas from './components/TerminalCanvas'
 import SplashScreen from './components/SplashScreen'
 import TopMenuBar from './components/TopMenuBar'
 import RightMusicSidebar from './components/RightMusicSidebar'
-import useSpotifyController from './hooks/useSpotifyController'
+import useMusicController from './hooks/useNeteaseMusicController'
 // Default audio tracks — 3 tiers
 import idleSrc from '../sound/Afraid of Time.mp3'
 import activeSrc from '../sound/Cornfield Chase.mp3'
@@ -22,9 +22,8 @@ export default function App() {
   const [staticTier, setStaticTier] = useState(0)
   const [audioMap, setAudioMap] = useState({ 0: idleSrc, 1: activeSrc, 2: climaxSrc })
   const [searchOpen, setSearchOpen] = useState(false)
-  const [selectedUri, setSelectedUri] = useState(null)
 
-  const spotify = useSpotifyController()
+  const music = useMusicController()
 
   function handleChangeTrack(tier, file) {
     const url = URL.createObjectURL(file)
@@ -125,6 +124,10 @@ export default function App() {
             onStaticSelect={setStaticTier}
             onToggleSearch={() => setSearchOpen(v => !v)}
             searchOpen={searchOpen}
+            musicPlaying={music.playing}
+            musicTrack={music.currentTrack}
+            onMusicPause={music.pause}
+            onMusicResume={music.resume}
           />
 
           {/* Terminal */}
@@ -157,16 +160,12 @@ export default function App() {
           <RightMusicSidebar
             visible={searchOpen}
             onClose={() => setSearchOpen(false)}
-            results={spotify.results}
-            searching={spotify.searching}
-            onSearch={spotify.search}
-            onPlay={spotify.play}
-            selectedUri={selectedUri}
-            onSelect={(t) => setSelectedUri(t.uri)}
-            connected={spotify.connected}
-            connecting={spotify.connecting}
-            error={spotify.error}
-            onConnect={spotify.connect}
+            results={music.results}
+            searching={music.searching}
+            onSearch={music.search}
+            onPlay={music.play}
+            currentTrack={music.currentTrack}
+            error={music.error}
           />
       </div>
     </div>

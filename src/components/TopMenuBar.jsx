@@ -18,7 +18,11 @@ export default function TopMenuBar({
   onModeChange,
   onStaticSelect,
   onToggleSearch,
-  searchOpen
+  searchOpen,
+  musicPlaying,
+  musicTrack,
+  onMusicPause,
+  onMusicResume
 }) {
   const [open, setOpen] = useState(false)
   const panelRef = useRef(null)
@@ -42,24 +46,73 @@ export default function TopMenuBar({
   const isStatic = mode === 'static'
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', height: 32, paddingRight: 10, justifyContent: 'flex-end', gap: 8, WebkitAppRegion: 'drag', background: 'rgba(8,8,24,0.25)', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0, position: 'relative' }}>
-      {/* Online Search toggle */}
+    <div style={{ display: 'flex', alignItems: 'center', height: 32, paddingRight: 10, justifyContent: 'space-between', WebkitAppRegion: 'drag', background: 'rgba(8,8,24,0.25)', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0, position: 'relative' }}>
+      {/* Left: standalone Music Search button */}
       <button
         onClick={onToggleSearch}
         style={{
-          display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6,
-          border: `1px solid ${searchOpen ? 'rgba(30,215,96,0.35)' : 'rgba(255,255,255,0.08)'}`,
-          background: searchOpen ? 'rgba(30,215,96,0.1)' : 'transparent',
-          color: searchOpen ? '#1db954' : 'rgba(107,107,138,0.45)',
+          display: 'flex', alignItems: 'center', gap: 6, padding: '4px 14px', borderRadius: 7,
+          marginLeft: 44,  // align with session list edge
+          border: `1px solid ${searchOpen ? 'rgba(124,111,247,0.4)' : 'rgba(255,255,255,0.1)'}`,
+          background: searchOpen ? 'rgba(124,111,247,0.14)' : 'rgba(255,255,255,0.02)',
+          color: searchOpen ? '#c4b5fd' : 'rgba(255,255,255,0.55)',
           fontFamily: "'JetBrains Mono','Cascadia Code','Consolas',monospace",
-          fontSize: 11, cursor: 'pointer', transition: 'all 0.2s ease', WebkitAppRegion: 'no-drag'
+          fontSize: 11, cursor: 'pointer', transition: 'all 0.25s ease', WebkitAppRegion: 'no-drag'
         }}
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
         </svg>
-        <span style={{ letterSpacing: '0.04em' }}>SEARCH</span>
+        <span style={{ letterSpacing: '0.06em' }}>MUSIC</span>
+        {searchOpen && (
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#a78bfa', boxShadow: '0 0 5px #a78bfa' }} />
+        )}
       </button>
+
+      {/* Right group: player + audio */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+
+      {/* Mini music player — shows when a track is loaded */}
+      {musicTrack && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '2px 10px', borderRadius: 7,
+          border: '1px solid rgba(124,111,247,0.12)',
+          background: 'rgba(124,111,247,0.06)',
+          maxWidth: 240, overflow: 'hidden',
+          WebkitAppRegion: 'no-drag'
+        }}>
+          <span style={{
+            fontSize: 10, fontFamily: "'JetBrains Mono','Cascadia Code','Consolas',monospace",
+            color: 'rgba(255,255,255,0.55)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0
+          }}>
+            {musicTrack.name}
+          </span>
+          {musicPlaying ? (
+            <button onClick={onMusicPause} title="Pause" style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'rgba(167,139,250,0.7)', padding: 0, display: 'flex', alignItems: 'center',
+              fontFamily: 'inherit', fontSize: 12, transition: 'color 0.15s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = '#c4b5fd'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(167,139,250,0.7)'}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
+            </button>
+          ) : (
+            <button onClick={onMusicResume} title="Resume" style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'rgba(167,139,250,0.7)', padding: 0, display: 'flex', alignItems: 'center',
+              fontFamily: 'inherit', fontSize: 12, transition: 'color 0.15s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = '#c4b5fd'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(167,139,250,0.7)'}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* AUDIO button */}
       <button
@@ -124,6 +177,7 @@ export default function TopMenuBar({
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }

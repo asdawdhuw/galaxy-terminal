@@ -1,10 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
-
-function fmtDuration(ms) {
-  if (!ms) return '--:--'
-  const s = Math.floor(ms / 1000)
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
-}
+import { useState, useRef } from 'react'
 
 export default function RightMusicSidebar({
   visible,
@@ -13,24 +7,19 @@ export default function RightMusicSidebar({
   searching,
   onSearch,
   onPlay,
-  selectedUri,
-  onSelect,
-  connected,
-  connecting,
-  error,
-  onConnect
+  currentTrack,
+  error
 }) {
   const [query, setQuery] = useState('')
-  const inputRef = useRef(null)
   const timerRef = useRef(null)
 
-  const handleInput = useCallback((v) => {
+  function handleInput(v) {
     setQuery(v)
     clearTimeout(timerRef.current)
     if (v.trim()) {
       timerRef.current = setTimeout(() => onSearch?.(v), 400)
     }
-  }, [onSearch])
+  }
 
   if (!visible) return null
 
@@ -60,48 +49,23 @@ export default function RightMusicSidebar({
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
           <input
-            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => handleInput(e.target.value)}
-            placeholder="Search Spotify..."
+            placeholder="Search NetEase..."
             spellCheck={false}
             className="flex-1 bg-transparent outline-none text-xs text-cosmos-text/80 font-mono placeholder:text-cosmos-dim/30"
           />
         </div>
       </div>
 
-      {/* Connect / status */}
-      {!connected && (
-        <div className="px-3 py-3 border-b border-white/5">
-          {connecting ? (
-            <div className="text-center text-[10px] text-[#1db954]/60 font-mono py-1">
-              Connecting...
-            </div>
-          ) : (
-            <button
-              onClick={onConnect}
-              className="w-full py-1.5 rounded-lg text-xs font-mono text-[#1db954] border border-[#1db954]/30
-                         bg-[#1db954]/10 hover:bg-[#1db954]/20 transition-colors"
-            >
-              Connect Spotify
-            </button>
-          )}
-          {error && (
-            <div className="mt-1.5 text-[9px] text-red-400/60 font-mono text-center leading-relaxed">
-              {error}
-            </div>
-          )}
-        </div>
-      )}
-      {connected && (
-        <div className="px-3 py-2 border-b border-white/5 text-center text-[10px] text-[#1db954]/50 font-mono">
-          Connected
-        </div>
-      )}
-
       {/* Results */}
       <div className="flex-1 overflow-y-auto">
+        {error && (
+          <div className="px-4 py-3 text-[10px] text-red-400/60 font-mono text-center">
+            {error}
+          </div>
+        )}
         {searching && (
           <div className="px-4 py-8 text-center text-[10px] text-cosmos-dim/40 font-mono">
             Searching...
@@ -114,58 +78,48 @@ export default function RightMusicSidebar({
         )}
         {!searching && results.length === 0 && !query && (
           <div className="px-4 py-6 text-center text-[10px] text-cosmos-dim/30 font-mono italic">
-            Type to search Spotify
+            Type to search NetEase Cloud
           </div>
         )}
         {results.map((track, i) => {
-          const isSelected = track.uri === selectedUri
+          const isActive = currentTrack?.id === track.id
           return (
             <div
               key={track.id}
-              onClick={() => onSelect?.(track)}
-              onDoubleClick={() => onPlay?.(track.uri)}
+              onDoubleClick={() => onPlay?.(track)}
               className={`group flex items-center gap-3 px-4 py-3 cursor-pointer border-b border-white/5
                           transition-colors duration-150 font-mono
-                          ${isSelected
+                          ${isActive
                             ? 'bg-white/[0.06] text-white'
                             : 'text-cosmos-dim/70 hover:bg-white/[0.03] hover:text-cosmos-text/80'
                           }`}
             >
               {/* Index */}
-              <span className={`w-5 text-[11px] shrink-0 ${isSelected ? 'text-cosmos-accent' : 'text-cosmos-dim/40'}`}>
+              <span className={`w-5 text-[11px] shrink-0 ${isActive ? 'text-cosmos-accent' : 'text-cosmos-dim/40'}`}>
                 {i + 1}
               </span>
 
-              {/* Album art or placeholder */}
-              {track.image ? (
-                <img src={track.image} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
-              ) : (
-                <div className="w-8 h-8 rounded bg-white/[0.04] flex items-center justify-center shrink-0">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(107,107,138,0.3)" strokeWidth="2">
-                    <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
-                  </svg>
-                </div>
-              )}
-
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <div className={`text-xs truncate ${isSelected ? 'text-cosmos-text' : ''}`}>
+                <div className={`text-xs truncate ${isActive ? 'text-white' : 'text-white/80'}`}>
                   {track.name}
                 </div>
-                <div className="text-[10px] text-cosmos-dim/50 truncate mt-0.5">
+                <div className="text-[10px] text-white/50 truncate mt-0.5">
                   {track.artist}
                 </div>
               </div>
 
-              {/* Duration + play on hover */}
+              {/* Duration */}
               <span className="text-[10px] text-cosmos-dim/40 shrink-0 group-hover:hidden">
-                {fmtDuration(track.duration)}
+                {track.durationFmt}
               </span>
+
+              {/* Play button on hover */}
               <button
-                onClick={(e) => { e.stopPropagation(); onPlay?.(track.uri) }}
+                onClick={(e) => { e.stopPropagation(); onPlay?.(track) }}
                 className="hidden group-hover:flex items-center justify-center w-6 h-6 rounded
-                           text-[#1db954] hover:bg-[#1db954]/10 transition-colors shrink-0"
-                title="Play on Spotify"
+                           text-cosmos-accent hover:bg-cosmos-accent/10 transition-colors shrink-0"
+                title="Play"
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5 3 19 12 5 21 5 3" />
@@ -176,9 +130,9 @@ export default function RightMusicSidebar({
         })}
       </div>
 
-      {/* Footer hint */}
+      {/* Footer */}
       <div className="px-4 py-2 border-t border-white/5 text-[9px] text-cosmos-dim/35 font-mono text-center">
-        Double-click or ▶ to play on Spotify
+        Double-click or ▶ to play &middot; NetEase Cloud
       </div>
     </aside>
   )

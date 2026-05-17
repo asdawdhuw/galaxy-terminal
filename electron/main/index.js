@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut, protocol, net } = require('electron')
 const { join } = require('path')
 const os = require('os')
 const pty = require('node-pty')
@@ -7,6 +7,11 @@ process.on('uncaughtException', (err) => {
   if (err.message && err.message.includes('AttachConsole')) return
   console.error(err)
 })
+
+// Register custom stream:// protocol (bypasses CSP for audio playback)
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'stream', privileges: { bypassCSP: true, stream: true, supportFetchAPI: true, corsEnabled: true } }
+])
 
 // --- Session Manager ---
 
@@ -55,7 +60,7 @@ function createSession(cols, rows) {
     env
   })
 
-  const name = `pwsh-${sessionSeq}`
+  const name = `session_${sessionSeq}`
   sessions.set(id, { id, process: proc, name, cwd })
   activeSessionId = id
 
@@ -368,9 +373,52 @@ ipcMain.handle('spotify:refresh', async (_event, { refreshToken, clientId }) => 
   }
 })
 
+// --- iTunes Search API proxy (free, no auth, previewUrl built-in) ---
+
+ipcMain.handle('itunes:search', async (_event, { term, limit = 20 }) => {
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=${limit}&country=CN`
+  console.log('[iTunes] Searching:', term)
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(6000) })
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    const data = await r.json()
+    console.log(`[iTunes] Found ${data.resultCount} results`)
+    return {
+      ok: true,
+      results: (data.results || []).map((t) => ({
+        id: t.trackId,
+        name: t.trackName,
+        artist: t.artistName,
+        album: t.collectionName,
+        artwork: t.artworkUrl100,
+        previewUrl: t.previewUrl,
+        duration: t.trackTimeMillis,
+        price: t.trackPrice
+      }))
+    }
+  } catch (e) {
+    console.error('[iTunes] Failed:', e.message)
+    return { ok: false, error: e.message }
+  }
+})
+
 // --- App lifecycle ---
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  // Custom stream:// protocol — must be registered AFTER app is ready
+  protocol.handle('stream', async (request) => {
+    try {
+      const targetUrl = new URL(request.url).searchParams.get('url')
+      if (!targetUrl) return new Response('Missing url param', { status: 400 })
+      console.log('[stream] Proxying:', targetUrl.slice(0, 80) + '...')
+      return net.fetch(targetUrl)
+    } catch (e) {
+      console.error('[stream] Error:', e.message)
+      return new Response('Audio fetch failed', { status: 500 })
+    }
+  })
+  createWindow()
+})
 
 app.on('window-all-closed', () => {
   killAll()
