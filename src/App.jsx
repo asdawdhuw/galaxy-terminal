@@ -4,6 +4,8 @@ import SessionList from './components/SessionList'
 import TerminalCanvas from './components/TerminalCanvas'
 import SplashScreen from './components/SplashScreen'
 import TopMenuBar from './components/TopMenuBar'
+import RightMusicSidebar from './components/RightMusicSidebar'
+import useSpotifyController from './hooks/useSpotifyController'
 // Default audio tracks — 3 tiers
 import idleSrc from '../sound/Afraid of Time.mp3'
 import activeSrc from '../sound/Cornfield Chase.mp3'
@@ -19,6 +21,10 @@ export default function App() {
   const [audioMode, setAudioMode] = useState('dynamic')
   const [staticTier, setStaticTier] = useState(0)
   const [audioMap, setAudioMap] = useState({ 0: idleSrc, 1: activeSrc, 2: climaxSrc })
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [selectedUri, setSelectedUri] = useState(null)
+
+  const spotify = useSpotifyController()
 
   function handleChangeTrack(tier, file) {
     const url = URL.createObjectURL(file)
@@ -117,6 +123,8 @@ export default function App() {
             onVolumeChange={setMasterVolume}
             onModeChange={setAudioMode}
             onStaticSelect={setStaticTier}
+            onToggleSearch={() => setSearchOpen(v => !v)}
+            searchOpen={searchOpen}
           />
 
           {/* Terminal */}
@@ -144,6 +152,22 @@ export default function App() {
             </span>
           </div>
         </main>
+
+          {/* Right music search sidebar */}
+          <RightMusicSidebar
+            visible={searchOpen}
+            onClose={() => setSearchOpen(false)}
+            results={spotify.results}
+            searching={spotify.searching}
+            onSearch={spotify.search}
+            onPlay={spotify.play}
+            selectedUri={selectedUri}
+            onSelect={(t) => setSelectedUri(t.uri)}
+            connected={spotify.connected}
+            connecting={spotify.connecting}
+            error={spotify.error}
+            onConnect={spotify.connect}
+          />
       </div>
     </div>
   )
