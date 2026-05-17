@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: #06060f;
+  font-family: 'JetBrainsMono NF', 'JetBrainsMonoNL NF', 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+}
+
+/* --- Galaxy background (user image) --- */
+.galaxy-layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Subtle dark overlay on top of galaxy image */
+.galaxy-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 6, 15, 0.2);
+}
+
+/* --- Glass panels for text readability --- */
+.terminal-mask {
+  background: rgba(6, 6, 15, 0.3);
+  backdrop-filter: blur(6px);
+}
+
+/* --- Scrollbar styling --- */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e1e3a;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2e2e5a;
+}
+
+/* --- Xterm.js overrides --- */
+.xterm {
+  padding: 8px 12px;
+}
+.xterm-screen {
+  background: transparent !important;
+}
+.xterm-viewport {
+  background: transparent !important;
+}
+.xterm-viewport::-webkit-scrollbar {
+  width: 6px;
+}
+.xterm-viewport::-webkit-scrollbar-thumb {
+  background: rgba(30, 30, 58, 0.6);
+  border-radius: 3px;
+}
