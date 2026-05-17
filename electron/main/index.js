@@ -131,6 +131,18 @@ const menuTemplate = [
       { type: 'separator' },
       { label: 'Toggle DevTools', accelerator: 'F12', role: 'toggleDevTools' }
     ]
+  },
+  {
+    label: 'Audio',
+    submenu: [
+      {
+        label: 'Toggle Music',
+        accelerator: 'CmdOrCtrl+Shift+M',
+        click: () => {
+          if (mainWindow) mainWindow.webContents.send('menu:toggle-music')
+        }
+      }
+    ]
   }
 ]
 

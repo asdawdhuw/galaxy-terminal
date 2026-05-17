@@ -3,11 +3,31 @@ import GalaxyBackground from './components/GalaxyBackground'
 import SessionList from './components/SessionList'
 import TerminalCanvas from './components/TerminalCanvas'
 import SplashScreen from './components/SplashScreen'
+import TopMenuBar from './components/TopMenuBar'
+// Default audio tracks — 3 tiers
+import idleSrc from '../sound/Afraid of Time.mp3'
+import activeSrc from '../sound/Cornfield Chase.mp3'
+import climaxSrc from '../sound/No time for caution.mp3'
 
 export default function App() {
   const [splash, setSplash] = useState(true)
   const [sessions, setSessions] = useState([])
   const [activeId, setActiveId] = useState(null)
+  const [musicOn, setMusicOn] = useState(true)
+  const [masterVolume, setMasterVolume] = useState(0.75)
+  const [currentTier, setCurrentTier] = useState(0)
+  const [audioMode, setAudioMode] = useState('dynamic')
+  const [staticTier, setStaticTier] = useState(0)
+  const [audioMap, setAudioMap] = useState({ 0: idleSrc, 1: activeSrc, 2: climaxSrc })
+
+  function handleChangeTrack(tier, file) {
+    const url = URL.createObjectURL(file)
+    setAudioMap((prev) => {
+      const old = prev[tier]
+      if (old && old.startsWith('blob:')) URL.revokeObjectURL(old)
+      return { ...prev, [tier]: url }
+    })
+  }
 
   const handleSessionCreated = useCallback((session) => {
     setSessions((prev) => [...prev, session])
@@ -63,8 +83,11 @@ export default function App() {
     const u2 = window.terminal.onMenuCloseSession?.(() => {
       if (activeId) handleClose(activeId)
     })
-    return () => { u1?.(); u2?.() }
+    const u3 = window.terminal.onMenuToggleMusic?.(() => setMusicOn((v) => !v))
+    return () => { u1?.(); u2?.(); u3?.() }
   }, [activeId, handleNewSession, handleClose])
+
+  const handleToggleMusic = useCallback(() => setMusicOn((v) => !v), [])
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-cosmos-bg">
@@ -82,10 +105,18 @@ export default function App() {
         />
 
         <main className="flex-1 flex flex-col min-w-0">
-          {/* Minimal title bar */}
-          <div
-            className="h-8 border-b border-white/5 shrink-0"
-            style={{ background: 'rgba(8, 8, 24, 0.25)', WebkitAppRegion: 'drag' }}
+          {/* Title bar with Audio panel */}
+          <TopMenuBar
+            musicOn={musicOn}
+            onToggleMusic={handleToggleMusic}
+            currentTier={currentTier}
+            audioMap={audioMap}
+            masterVolume={masterVolume}
+            mode={audioMode}
+            onChangeTrack={handleChangeTrack}
+            onVolumeChange={setMasterVolume}
+            onModeChange={setAudioMode}
+            onStaticSelect={setStaticTier}
           />
 
           {/* Terminal */}
@@ -93,6 +124,12 @@ export default function App() {
             <TerminalCanvas
               activeSessionId={activeId}
               onSessionCreated={handleSessionCreated}
+              musicEnabled={musicOn && !splash}
+              audioMap={audioMap}
+              masterVolume={masterVolume}
+              mode={audioMode}
+              staticTier={staticTier}
+              onTierChange={setCurrentTier}
             />
           </div>
 

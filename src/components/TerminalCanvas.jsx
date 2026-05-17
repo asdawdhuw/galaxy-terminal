@@ -5,6 +5,7 @@ import { WebLinksAddon } from '@xterm/addon-web-links'
 import { SearchAddon } from '@xterm/addon-search'
 import '@xterm/xterm/css/xterm.css'
 import SearchBar from './SearchBar'
+import useAudioEngine from '../hooks/useAudioEngine'
 
 const COSMIC_THEME = {
   background: 'rgba(8, 8, 24, 0.35)',
@@ -31,7 +32,7 @@ const COSMIC_THEME = {
   brightWhite: '#f0f0f8'
 }
 
-export default function TerminalCanvas({ activeSessionId, onSessionCreated }) {
+export default function TerminalCanvas({ activeSessionId, onSessionCreated, musicEnabled = true, audioMap, masterVolume = 0.75, mode = 'dynamic', staticTier = 0, onTierChange }) {
   const containerRef = useRef(null)
   const termRef = useRef(null)
   const fitRef = useRef(null)
@@ -47,6 +48,15 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated }) {
 
   const openSearch = useCallback(() => setSearchOpen(true), [])
   const closeSearch = useCallback(() => setSearchOpen(false), [])
+
+  // Audio engine — 3-tier, dynamic/static dual mode
+  const { updateTypingStrike, currentTier } = useAudioEngine(
+    audioMap,
+    { enabled: musicEnabled, masterVolume, mode, staticTier }
+  )
+
+  // Bubble tier changes up to App for UI display
+  useEffect(() => { onTierChange?.(currentTier) }, [currentTier, onTierChange])
 
   function showToast(text) {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
@@ -112,8 +122,9 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated }) {
       return true
     })
 
-    // Forward keystrokes
+    // Forward keystrokes + notify audio engine
     term.onData((data) => {
+      updateTypingStrike()
       window.terminal.sendInput(data)
     })
 

@@ -30,5 +30,9 @@ contextBridge.exposeInMainWorld('terminal', {
   onMenuCloseSession: (cb) => {
     const h = () => cb(); ipcRenderer.on('menu:close-session', h)
     return () => ipcRenderer.removeListener('menu:close-session', h)
+  },
+  onMenuToggleMusic: (cb) => {
+    const h = () => cb(); ipcRenderer.on('menu:toggle-music', h)
+    return () => ipcRenderer.removeListener('menu:toggle-music', h)
   }
 })
