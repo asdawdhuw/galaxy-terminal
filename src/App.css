@@ -468,6 +468,36 @@ html, body, #root {
   100% { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
+/* --- Font-size toast --- */
+.font-toast {
+  animation: toast-pop-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.font-toast.toast-out {
+  animation: toast-fade-out 0.35s ease forwards;
+}
+.toast-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  background: rgba(2, 2, 12, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #e0e0f0;
+  font-family: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 13px;
+  user-select: none;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+}
+@keyframes toast-pop-in {
+  0%   { opacity: 0; transform: translate3d(0, 6px, 0) scale(0.9); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes toast-fade-out {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* --- Xterm.js overrides --- */
 .xterm {
   padding: 8px 12px;

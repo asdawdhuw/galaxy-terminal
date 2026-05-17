@@ -38,10 +38,23 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated }) {
   const searchAddonRef = useRef(null)
   const buffersRef = useRef(new Map())   // sessionId → output string
   const shownIdRef = useRef(null)        // which session xterm is currently showing
+  const fontSizeRef = useRef(14)         // live fontSize, avoids stale closures
+  const toastTimerRef = useRef(null)
+
   const [searchOpen, setSearchOpen] = useState(false)
+  const [fontSize, setFontSize] = useState(14)
+  const [toast, setToast] = useState(null)  // { text, visible }
 
   const openSearch = useCallback(() => setSearchOpen(true), [])
   const closeSearch = useCallback(() => setSearchOpen(false), [])
+
+  function showToast(text) {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    setToast({ text, visible: true })
+    toastTimerRef.current = setTimeout(() => {
+      setToast((prev) => prev ? { ...prev, visible: false } : null)
+    }, 1200)
+  }
 
   // Switch display to a different session
   function switchDisplay(toId) {
@@ -126,6 +139,25 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated }) {
       if (newId) switchDisplay(newId)
     })
 
+    // Ctrl+Wheel → font size + toast
+    function handleWheel(e) {
+      if (!e.ctrlKey) return
+      e.preventDefault()
+      e.stopPropagation()
+      const next = Math.min(28, Math.max(10, fontSizeRef.current - Math.sign(e.deltaY)))
+      if (next === fontSizeRef.current) return
+      fontSizeRef.current = next
+      term.options.fontSize = next
+      setFontSize(next)
+      showToast(`${next}px`)
+      try { fitAddon.fit() } catch (_) {}
+      // Note: we intentionally skip resizePty here.
+      // Notifying PTY of dimension changes would cause pwsh to re-render
+      // the current line, which gets appended to the session buffer and
+      // creates duplicated content on repeated zoom in/out.
+    }
+    containerRef.current.addEventListener('wheel', handleWheel, { passive: false, capture: true })
+
     // Resize PTY when container changes
     const resizeObserver = new ResizeObserver(() => {
       try {
@@ -147,6 +179,8 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated }) {
     })
 
     return () => {
+      containerRef.current?.removeEventListener('wheel', handleWheel, { capture: true })
+      clearTimeout(toastTimerRef.current)
       resizeObserver.disconnect()
       unsubOutput()
       unsubExit()
@@ -171,6 +205,24 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated }) {
           onClose={closeSearch}
         />
       )}
+
+      {/* Font-size toast */}
+      {toast && (
+        <div
+          className={`font-toast ${toast.visible ? 'toast-in' : 'toast-out'}`}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 30,
+            pointerEvents: 'none'
+          }}
+        >
+          <span className="toast-badge">{toast.text}</span>
+        </div>
+      )}
+
       <div ref={containerRef} className="w-full h-full" />
     </div>
   )
