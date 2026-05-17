@@ -49,7 +49,7 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated, musi
   const openSearch = useCallback(() => setSearchOpen(true), [])
   const closeSearch = useCallback(() => setSearchOpen(false), [])
 
-  // Audio engine — 3-tier, dynamic/static dual mode
+  // Audio engine — 3-tier, IKD-driven
   const { updateTypingStrike, currentTier } = useAudioEngine(
     audioMap,
     { enabled: musicEnabled, masterVolume, mode, staticTier }
@@ -122,7 +122,7 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated, musi
       return true
     })
 
-    // Forward keystrokes + notify audio engine
+    // Forward keystrokes + feed IKD engine
     term.onData((data) => {
       updateTypingStrike()
       window.terminal.sendInput(data)

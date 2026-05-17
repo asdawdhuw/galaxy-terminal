@@ -93,65 +93,71 @@ function killAll() {
 
 // --- Menu ---
 
-const menuTemplate = [
-  {
-    label: 'Sessions',
-    submenu: [
-      {
-        label: 'New Session',
-        accelerator: 'CmdOrCtrl+Shift+T',
-        click: () => {
-          if (mainWindow) mainWindow.webContents.send('menu:new-session')
+function buildMenuTemplate() {
+  return [
+    {
+      label: 'Sessions',
+      submenu: [
+        {
+          label: 'New Session',
+          accelerator: 'CmdOrCtrl+Shift+T',
+          click: () => {
+            if (mainWindow) mainWindow.webContents.send('menu:new-session')
+          }
+        },
+        {
+          label: 'Close Active Session',
+          accelerator: 'CmdOrCtrl+Shift+W',
+          click: () => {
+            if (mainWindow) mainWindow.webContents.send('menu:close-session')
+          }
+        },
+        { type: 'separator' },
+        { label: 'Quit', accelerator: 'CmdOrCtrl+Q', role: 'quit' }
+      ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { label: 'Copy', accelerator: 'CmdOrCtrl+Shift+C', role: 'copy' },
+        { label: 'Paste', accelerator: 'CmdOrCtrl+Shift+V', role: 'paste' }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { label: 'Zoom In', accelerator: 'CmdOrCtrl+=', role: 'zoomIn' },
+        { label: 'Zoom Out', accelerator: 'CmdOrCtrl+-', role: 'zoomOut' },
+        { label: 'Reset Zoom', accelerator: 'CmdOrCtrl+0', role: 'resetZoom' },
+        { type: 'separator' },
+        { label: 'Toggle DevTools', accelerator: 'F12', role: 'toggleDevTools' }
+      ]
+    },
+    {
+      label: 'Audio',
+      submenu: [
+        {
+          label: 'Toggle Music',
+          accelerator: 'CmdOrCtrl+Shift+M',
+          click: () => {
+            if (mainWindow) mainWindow.webContents.send('menu:toggle-music')
+          }
         }
-      },
-      {
-        label: 'Close Active Session',
-        accelerator: 'CmdOrCtrl+Shift+W',
-        click: () => {
-          if (mainWindow) mainWindow.webContents.send('menu:close-session')
-        }
-      },
-      { type: 'separator' },
-      { label: 'Quit', accelerator: 'CmdOrCtrl+Q', role: 'quit' }
-    ]
-  },
-  {
-    label: 'Edit',
-    submenu: [
-      { label: 'Copy', accelerator: 'CmdOrCtrl+Shift+C', role: 'copy' },
-      { label: 'Paste', accelerator: 'CmdOrCtrl+Shift+V', role: 'paste' }
-    ]
-  },
-  {
-    label: 'View',
-    submenu: [
-      { label: 'Zoom In', accelerator: 'CmdOrCtrl+=', role: 'zoomIn' },
-      { label: 'Zoom Out', accelerator: 'CmdOrCtrl+-', role: 'zoomOut' },
-      { label: 'Reset Zoom', accelerator: 'CmdOrCtrl+0', role: 'resetZoom' },
-      { type: 'separator' },
-      { label: 'Toggle DevTools', accelerator: 'F12', role: 'toggleDevTools' }
-    ]
-  },
-  {
-    label: 'Audio',
-    submenu: [
-      {
-        label: 'Toggle Music',
-        accelerator: 'CmdOrCtrl+Shift+M',
-        click: () => {
-          if (mainWindow) mainWindow.webContents.send('menu:toggle-music')
-        }
-      }
-    ]
-  }
-]
+      ]
+    }
+  ]
+}
+
+function refreshMenu() {
+  Menu.setApplicationMenu(Menu.buildFromTemplate(buildMenuTemplate()))
+}
 
 // --- Window ---
 
 let mainWindow = null
 
 function createWindow() {
-  Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate))
+  refreshMenu()
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,

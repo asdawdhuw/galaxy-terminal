@@ -34,5 +34,6 @@ contextBridge.exposeInMainWorld('terminal', {
   onMenuToggleMusic: (cb) => {
     const h = () => cb(); ipcRenderer.on('menu:toggle-music', h)
     return () => ipcRenderer.removeListener('menu:toggle-music', h)
-  }
+  },
+  updateAudioMenu: (state) => ipcRenderer.send('menu:update-audio', state)
 })
