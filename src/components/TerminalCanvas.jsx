@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import { SearchAddon } from '@xterm/addon-search'
 import '@xterm/xterm/css/xterm.css'
+import SearchBar from './SearchBar'
 
 const COSMIC_THEME = {
   background: 'rgba(8, 8, 24, 0.35)',
@@ -34,8 +35,13 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated }) {
   const containerRef = useRef(null)
   const termRef = useRef(null)
   const fitRef = useRef(null)
+  const searchAddonRef = useRef(null)
   const buffersRef = useRef(new Map())   // sessionId → output string
   const shownIdRef = useRef(null)        // which session xterm is currently showing
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  const openSearch = useCallback(() => setSearchOpen(true), [])
+  const closeSearch = useCallback(() => setSearchOpen(false), [])
 
   // Switch display to a different session
   function switchDisplay(toId) {
@@ -71,15 +77,27 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated }) {
     })
 
     const fitAddon = new FitAddon()
+    const searchAddon = new SearchAddon()
     term.loadAddon(fitAddon)
     term.loadAddon(new WebLinksAddon())
-    term.loadAddon(new SearchAddon())
+    term.loadAddon(searchAddon)
+    searchAddonRef.current = searchAddon
 
     term.open(containerRef.current)
     fitAddon.fit()
 
     termRef.current = term
     fitRef.current = fitAddon
+
+    // Global Ctrl+F → toggle search bar
+    term.attachCustomKeyEventHandler((e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault()
+        setSearchOpen((v) => !v)
+        return false
+      }
+      return true
+    })
 
     // Forward keystrokes
     term.onData((data) => {
@@ -144,5 +162,16 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated }) {
     }
   }, [activeSessionId])
 
-  return <div ref={containerRef} className="w-full h-full" />
+  return (
+    <div className="relative w-full h-full">
+      {searchOpen && (
+        <SearchBar
+          searchAddon={searchAddonRef.current}
+          term={termRef.current}
+          onClose={closeSearch}
+        />
+      )}
+      <div ref={containerRef} className="w-full h-full" />
+    </div>
+  )
 }
