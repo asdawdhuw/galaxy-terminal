@@ -1,8 +1,17 @@
 import { useState, useRef, useEffect } from 'react'
 
-export default function SessionItem({ session, isActive, onSwitch, onRename, onClose }) {
+export default function SessionItem({
+  session,
+  isActive,
+  index = 0,
+  canClose = true,
+  onSwitch,
+  onRename,
+  onClose
+}) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(session.name)
+  const [hovered, setHovered] = useState(false)
   const inputRef = useRef(null)
 
   useEffect(() => { setName(session.name) }, [session.name])
@@ -24,24 +33,34 @@ export default function SessionItem({ session, isActive, onSwitch, onRename, onC
     setEditing(false)
   }
 
+  const status = isActive ? 'running' : 'idle'
+
   return (
     <div
-      className={`group flex items-center gap-2 px-4 py-3 cursor-pointer border-b border-white/5
-                  transition-colors duration-150 text-sm font-mono
-                  ${isActive
-                    ? 'bg-white/[0.06] text-white'
-                    : 'text-cosmos-dim/70 hover:bg-white/[0.03] hover:text-cosmos-text/80'
-                  }`}
+      className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 font-mono
+        ${isActive
+          ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+          : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/80'
+        }`}
       onClick={() => onSwitch(session.id)}
       onDoubleClick={() => setEditing(true)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ animationDelay: `${index * 50}ms` }}
     >
-      {/* Active indicator */}
-      <span
-        className={`w-2 h-2 rounded-full shrink-0 transition-colors
-                    ${isActive ? 'bg-cosmos-accent shadow-[0_0_6px_#a78bfa]' : 'bg-cosmos-dim/30'}`}
-      />
+      <div className="relative shrink-0">
+        <span
+          className={`block w-2.5 h-2.5 rounded-full ${
+            status === 'running' ? 'bg-green-400' : 'bg-cosmos-accent'
+          }`}
+        />
+        {status === 'running' && (
+          <span className="absolute inset-0 animate-ping">
+            <span className="block w-2.5 h-2.5 rounded-full bg-green-400/30" />
+          </span>
+        )}
+      </div>
 
-      {/* Name */}
       {editing ? (
         <input
           ref={inputRef}
@@ -53,22 +72,30 @@ export default function SessionItem({ session, isActive, onSwitch, onRename, onC
             if (e.key === 'Escape') { setName(session.name); setEditing(false) }
           }}
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 bg-transparent border-b border-cosmos-accent outline-none text-white text-sm
-                     font-mono px-0.5 min-w-0"
+          className="flex-1 bg-transparent border-b border-cosmos-accent outline-none text-sm min-w-0"
         />
       ) : (
-        <span className="flex-1 truncate">{name}</span>
+        <span className="flex-1 text-sm font-medium truncate">{name}</span>
       )}
 
-      {/* Close button */}
-      <button
-        onClick={(e) => { e.stopPropagation(); onClose(session.id) }}
-        className="opacity-0 group-hover:opacity-100 text-cosmos-dim hover:text-red-400
-                   transition-all duration-150 text-base leading-none px-0.5"
-        title="Close session"
-      >
-        {"×"}
-      </button>
+      {isActive && !editing && (
+        <svg className="w-4 h-4 text-sidebar-primary shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+
+      {hovered && canClose && !editing && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onClose(session.id) }}
+          className="absolute right-2 p-1 rounded hover:bg-red-500/20 transition-colors"
+          title="删除会话"
+        >
+          <svg className="w-3.5 h-3.5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 6h18M8 6V4h8v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      )}
     </div>
   )
 }

@@ -5,17 +5,40 @@ export default {
     extend: {
       colors: {
         cosmos: {
-          bg: '#06060f',
-          panel: '#0c0c1d',
-          border: '#1e1e3a',
-          text: '#c8c8d8',
-          dim: '#6b6b8a',
-          accent: '#7c6ff7',
-          glow: '#a78bfa'
+          bg: '#0a0a14',
+          panel: '#12121f',
+          border: '#2a2a45',
+          text: '#e8e8f5',
+          dim: '#8b8ba8',
+          accent: '#6eb5d9',
+          glow: '#a78bfa',
+          accent2: '#c98fd4'
+        },
+        sidebar: {
+          DEFAULT: '#14141f',
+          foreground: '#d8d8e8',
+          accent: '#1e1e30',
+          'accent-foreground': '#e8e8f5',
+          primary: '#6eb5d9',
+          border: '#2a2a40'
         }
       },
       fontFamily: {
-        mono: ['Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', 'monospace']
+        mono: ['JetBrains Mono', 'Cascadia Code', 'Consolas', 'monospace']
+      },
+      animation: {
+        'scan-line': 'scan-line 8s linear infinite',
+        'cursor-blink': 'cursor-blink 1s step-end infinite'
+      },
+      keyframes: {
+        'scan-line': {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(100vh)' }
+        },
+        'cursor-blink': {
+          '0%, 50%': { opacity: '1' },
+          '51%, 100%': { opacity: '0' }
+        }
       },
       backdropBlur: {
         xs: '2px'

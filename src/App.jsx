@@ -6,7 +6,6 @@ import GalaxyBackground from './components/GalaxyBackground'
 import TopMenuBar from './components/TopMenuBar'
 import RightMusicSidebar from './components/RightMusicSidebar'
 import useMusicController from './hooks/useNeteaseMusicController'
-// Default audio tracks — 3 tiers
 import idleSrc from '../sound/Afraid of Time.mp3'
 import activeSrc from '../sound/Cornfield Chase.mp3'
 import climaxSrc from '../sound/No time for caution.mp3'
@@ -22,8 +21,21 @@ export default function App() {
   const [staticTier, setStaticTier] = useState(0)
   const [audioMap, setAudioMap] = useState({ 0: idleSrc, 1: activeSrc, 2: climaxSrc })
   const [searchOpen, setSearchOpen] = useState(false)
+  const [currentTime, setCurrentTime] = useState('')
+  const [showScanLine, setShowScanLine] = useState(true)
 
   const music = useMusicController()
+
+  useEffect(() => {
+    const updateTime = () => {
+      setCurrentTime(
+        new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      )
+    }
+    updateTime()
+    const interval = setInterval(updateTime, 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   function handleChangeTrack(tier, file) {
     const url = URL.createObjectURL(file)
@@ -74,7 +86,6 @@ export default function App() {
     }
   }, [activeId])
 
-  // Listen for auto-switch when active session exits
   useEffect(() => {
     const unsub = window.terminal.onSwitched?.((newId) => {
       setActiveId(newId)
@@ -82,7 +93,6 @@ export default function App() {
     return () => { if (unsub) unsub() }
   }, [])
 
-  // Listen for menu bar actions
   useEffect(() => {
     const u1 = window.terminal.onMenuNewSession?.(() => handleNewSession())
     const u2 = window.terminal.onMenuCloseSession?.(() => {
@@ -94,46 +104,48 @@ export default function App() {
 
   const handleToggleMusic = useCallback(() => setMusicOn((v) => !v), [])
 
-  return (
-    <div className="relative w-full h-screen overflow-hidden bg-cosmos-bg">
-      {splash && <SplashScreen onDone={() => setSplash(false)} />}
-      <GalaxyBackground />
+  const activeSession = sessions.find((s) => s.id === activeId)
 
-      <div className="relative z-10 flex h-full">
-        <SessionList
-          sessions={sessions}
-          activeId={activeId}
-          onSwitch={handleSwitch}
-          onRename={handleRename}
-          onClose={handleClose}
-          onNew={handleNewSession}
+  return (
+    <div className="relative h-screen w-full overflow-hidden bg-cosmos-bg">
+      {splash && <SplashScreen onDone={() => setSplash(false)} />}
+      <GalaxyBackground showScanLine={showScanLine} />
+
+      <div className="relative z-10 h-full flex flex-col">
+        <TopMenuBar
+          currentTime={currentTime}
+          musicOn={musicOn}
+          onToggleMusic={handleToggleMusic}
+          currentTier={currentTier}
+          audioMap={audioMap}
+          masterVolume={masterVolume}
+          mode={audioMode}
+          onChangeTrack={handleChangeTrack}
+          onVolumeChange={setMasterVolume}
+          onModeChange={setAudioMode}
+          onStaticSelect={setStaticTier}
+          onToggleSearch={() => setSearchOpen((v) => !v)}
+          searchOpen={searchOpen}
+          musicPlaying={music.playing}
+          musicTrack={music.currentTrack}
+          onMusicPause={music.pause}
+          onMusicResume={music.resume}
         />
 
-        <main className="flex-1 flex flex-col min-w-0">
-          {/* Title bar with Audio panel */}
-          <TopMenuBar
-            musicOn={musicOn}
-            onToggleMusic={handleToggleMusic}
-            currentTier={currentTier}
-            audioMap={audioMap}
-            masterVolume={masterVolume}
-            mode={audioMode}
-            onChangeTrack={handleChangeTrack}
-            onVolumeChange={setMasterVolume}
-            onModeChange={setAudioMode}
-            onStaticSelect={setStaticTier}
-            onToggleSearch={() => setSearchOpen(v => !v)}
-            searchOpen={searchOpen}
-            musicPlaying={music.playing}
-            musicTrack={music.currentTrack}
-            onMusicPause={music.pause}
-            onMusicResume={music.resume}
+        <div className="flex-1 flex overflow-hidden min-h-0">
+          <SessionList
+            sessions={sessions}
+            activeId={activeId}
+            onSwitch={handleSwitch}
+            onRename={handleRename}
+            onClose={handleClose}
+            onNew={handleNewSession}
           />
 
-          {/* Terminal */}
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 p-4 overflow-hidden min-w-0">
             <TerminalCanvas
               activeSessionId={activeId}
+              sessionName={activeSession?.name}
               onSessionCreated={handleSessionCreated}
               musicEnabled={musicOn && !splash}
               audioMap={audioMap}
@@ -144,19 +156,6 @@ export default function App() {
             />
           </div>
 
-          {/* Status bar */}
-          <div
-            className="h-6 border-t border-white/5 flex items-center px-4 shrink-0"
-            style={{ background: 'rgba(8, 8, 24, 0.10)' }}
-          >
-            <span className="text-[10px] text-cosmos-dim/60">
-              {sessions.length} session{sessions.length !== 1 ? 's' : ''}
-              {activeId && <> &middot; active: {sessions.find(s => s.id === activeId)?.name}</>}
-            </span>
-          </div>
-        </main>
-
-          {/* Right music search sidebar */}
           <RightMusicSidebar
             visible={searchOpen}
             onClose={() => setSearchOpen(false)}
@@ -167,7 +166,36 @@ export default function App() {
             currentTrack={music.currentTrack}
             error={music.error}
           />
+        </div>
+
+        <div className="h-7 glass-panel border-t border-cosmos-border/30 flex items-center justify-between px-4 text-xs shrink-0">
+          <div className="flex items-center gap-4 text-cosmos-dim font-mono">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              {sessions.length} 个会话
+            </span>
+            <span>·</span>
+            <span>当前: {activeSession?.name ?? '—'}</span>
+          </div>
+          <div className="flex items-center gap-4 text-cosmos-dim font-mono">
+            <button
+              type="button"
+              onClick={() => setShowScanLine((v) => !v)}
+              className={`hover:text-cosmos-text transition-colors ${!showScanLine ? 'line-through opacity-50' : ''}`}
+            >
+              扫描线
+            </button>
+            <span>|</span>
+            <span>双击曲目播放 · 30s 自动切歌</span>
+          </div>
+        </div>
       </div>
+
+      <div
+        className="absolute inset-0 pointer-events-none cosmic-border-glow rounded-lg"
+        style={{ zIndex: 20 }}
+        aria-hidden
+      />
     </div>
   )
 }

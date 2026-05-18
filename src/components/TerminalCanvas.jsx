@@ -8,17 +8,17 @@ import SearchBar from './SearchBar'
 import useAudioEngine from '../hooks/useAudioEngine'
 
 const COSMIC_THEME = {
-  background: 'rgba(8, 8, 24, 0.10)',
+  background: 'rgba(8, 8, 24, 0.08)',
   foreground: '#e0e0f0',
-  cursor: '#a78bfa',
+  cursor: '#6eb5d9',
   cursorAccent: '#06060f',
-  selectionBackground: '#7c6ff744',
+  selectionBackground: '#6eb5d944',
   selectionForeground: '#f0f0f8',
   black: '#1a1a2e',
   red: '#ff6b6b',
   green: '#69db7c',
   yellow: '#ffd43b',
-  blue: '#7c6ff7',
+  blue: '#6eb5d9',
   magenta: '#da77f2',
   cyan: '#22b8cf',
   white: '#c8c8d8',
@@ -32,7 +32,7 @@ const COSMIC_THEME = {
   brightWhite: '#f0f0f8'
 }
 
-export default function TerminalCanvas({ activeSessionId, onSessionCreated, musicEnabled = true, audioMap, masterVolume = 0.75, mode = 'dynamic', staticTier = 0, onTierChange }) {
+export default function TerminalCanvas({ activeSessionId, sessionName, onSessionCreated, musicEnabled = true, audioMap, masterVolume = 0.75, mode = 'dynamic', staticTier = 0, onTierChange }) {
   const containerRef = useRef(null)
   const termRef = useRef(null)
   const fitRef = useRef(null)
@@ -207,18 +207,33 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated, musi
     }
   }, [activeSessionId])
 
+  const title = sessionName ? `${sessionName} — pwsh` : 'pwsh — galaxy-terminal'
+
   return (
-    <div className="relative w-full h-full">
-      {searchOpen && (
+    <div className="h-full flex flex-col bg-cosmos-bg/80 backdrop-blur-sm rounded-lg overflow-hidden border border-cosmos-border/50">
+      <div className="terminal-chrome flex items-center gap-2 px-4 py-2 border-b border-cosmos-border/50 shrink-0">
+        <div className="flex gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-red-500/80" />
+          <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+          <div className="w-3 h-3 rounded-full bg-green-500/80" />
+        </div>
+        <span className="text-sm text-cosmos-dim font-mono ml-2 truncate">{title}</span>
+        <div className="ml-auto flex items-center gap-2 text-xs text-cosmos-dim font-mono shrink-0">
+          <span className="animate-pulse text-green-400">●</span>
+          <span>已连接</span>
+        </div>
+      </div>
+
+      <div className="relative flex-1 min-h-0">
+        {searchOpen && (
         <SearchBar
           searchAddon={searchAddonRef.current}
           term={termRef.current}
           onClose={closeSearch}
         />
-      )}
+        )}
 
-      {/* Font-size toast */}
-      {toast && (
+        {toast && (
         <div
           className={`font-toast ${toast.visible ? 'toast-in' : 'toast-out'}`}
           style={{
@@ -232,9 +247,20 @@ export default function TerminalCanvas({ activeSessionId, onSessionCreated, musi
         >
           <span className="toast-badge">{toast.text}</span>
         </div>
-      )}
+        )}
 
-      <div ref={containerRef} className="w-full h-full" />
+        <div ref={containerRef} className="w-full h-full" />
+      </div>
+
+      <div className="px-4 py-1.5 terminal-chrome border-t border-cosmos-border/50 flex items-center justify-between text-xs text-cosmos-dim font-mono shrink-0">
+        <span>Galaxy Terminal · xterm</span>
+        <div className="flex items-center gap-2">
+          <span className="text-green-400">●</span>
+          <span>UTF-8</span>
+          <span>|</span>
+          <span>pwsh</span>
+        </div>
+      </div>
     </div>
   )
 }

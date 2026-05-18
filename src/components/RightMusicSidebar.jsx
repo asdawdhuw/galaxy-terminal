@@ -24,16 +24,13 @@ export default function RightMusicSidebar({
   if (!visible) return null
 
   return (
-    <aside
-      className="w-64 shrink-0 border-l border-white/10 flex flex-col animate-slide-in-right"
-      style={{ background: 'rgba(8, 8, 24, 0.03)', backdropFilter: 'blur(4px)' }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
-        <span className="text-xs font-semibold text-cosmos-dim/70 uppercase tracking-widest">
+    <aside className="w-64 shrink-0 border-l border-cosmos-border/30 flex flex-col animate-slide-in-right glass-panel">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-cosmos-border/30">
+        <span className="text-xs font-semibold text-cosmos-dim/80 uppercase tracking-widest font-mono">
           Music Search
         </span>
         <button
+          type="button"
           onClick={onClose}
           className="text-cosmos-dim hover:text-red-400 transition-colors text-lg leading-none"
           title="Close"
@@ -42,43 +39,41 @@ export default function RightMusicSidebar({
         </button>
       </div>
 
-      {/* Search input */}
-      <div className="px-3 py-3 border-b border-white/5">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/[0.06] bg-white/[0.03]">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(107,107,138,0.5)" strokeWidth="2" strokeLinecap="round">
+      <div className="px-3 py-3 border-b border-cosmos-border/20">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-cosmos-border/30 bg-cosmos-panel/40">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(139,139,168,0.6)" strokeWidth="2" strokeLinecap="round">
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
           <input
             type="text"
             value={query}
             onChange={(e) => handleInput(e.target.value)}
-            placeholder="Search NetEase..."
+            placeholder="Search tracks..."
             spellCheck={false}
-            className="flex-1 bg-transparent outline-none text-xs text-cosmos-text/80 font-mono placeholder:text-cosmos-dim/30"
+            className="flex-1 bg-transparent outline-none text-xs text-cosmos-text/90 font-mono placeholder:text-cosmos-dim/40"
           />
         </div>
       </div>
 
-      {/* Results */}
       <div className="flex-1 overflow-y-auto">
         {error && (
-          <div className="px-4 py-3 text-[10px] text-red-400/60 font-mono text-center">
+          <div className="px-4 py-3 text-[10px] text-red-400/70 font-mono text-center">
             {error}
           </div>
         )}
         {searching && (
-          <div className="px-4 py-8 text-center text-[10px] text-cosmos-dim/40 font-mono">
+          <div className="px-4 py-8 text-center text-[10px] text-cosmos-dim/50 font-mono">
             Searching...
           </div>
         )}
         {!searching && results.length === 0 && query && (
-          <div className="px-4 py-8 text-center text-[10px] text-cosmos-dim/40 font-mono">
+          <div className="px-4 py-8 text-center text-[10px] text-cosmos-dim/50 font-mono">
             No results
           </div>
         )}
         {!searching && results.length === 0 && !query && (
-          <div className="px-4 py-6 text-center text-[10px] text-cosmos-dim/30 font-mono italic">
-            Type to search NetEase Cloud
+          <div className="px-4 py-6 text-center text-[10px] text-cosmos-dim/35 font-mono italic">
+            Type to search iTunes previews
           </div>
         )}
         {results.map((track, i) => {
@@ -87,38 +82,34 @@ export default function RightMusicSidebar({
             <div
               key={track.id}
               onDoubleClick={() => onPlay?.(track)}
-              className={`group flex items-center gap-3 px-4 py-3 cursor-pointer border-b border-white/5
+              className={`group flex items-center gap-3 px-4 py-3 cursor-pointer border-b border-cosmos-border/20
                           transition-colors duration-150 font-mono
                           ${isActive
-                            ? 'bg-white/[0.06] text-white'
-                            : 'text-cosmos-dim/70 hover:bg-white/[0.03] hover:text-cosmos-text/80'
+                            ? 'bg-cosmos-accent/12 text-cosmos-text'
+                            : 'text-cosmos-dim/75 hover:bg-cosmos-panel/40 hover:text-cosmos-text/90'
                           }`}
             >
-              {/* Index */}
-              <span className={`w-5 text-[11px] shrink-0 ${isActive ? 'text-cosmos-accent' : 'text-cosmos-dim/40'}`}>
+              <span className={`w-5 text-[11px] shrink-0 ${isActive ? 'text-cosmos-accent' : 'text-cosmos-dim/45'}`}>
                 {i + 1}
               </span>
 
-              {/* Info */}
               <div className="flex-1 min-w-0">
-                <div className={`text-xs truncate ${isActive ? 'text-white' : 'text-white/80'}`}>
+                <div className={`text-xs truncate ${isActive ? 'text-cosmos-accent' : 'text-cosmos-text/85'}`}>
                   {track.name}
                 </div>
-                <div className="text-[10px] text-white/50 truncate mt-0.5">
+                <div className="text-[10px] text-cosmos-dim/60 truncate mt-0.5">
                   {track.artist}
                 </div>
               </div>
 
-              {/* Duration */}
-              <span className="text-[10px] text-cosmos-dim/40 shrink-0 group-hover:hidden">
+              <span className="text-[10px] text-cosmos-dim/45 shrink-0 group-hover:hidden">
                 {track.durationFmt}
               </span>
 
-              {/* Play button on hover */}
               <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); onPlay?.(track) }}
-                className="hidden group-hover:flex items-center justify-center w-6 h-6 rounded
-                           text-cosmos-accent hover:bg-cosmos-accent/10 transition-colors shrink-0"
+                className="hidden group-hover:flex items-center justify-center w-6 h-6 rounded text-cosmos-accent hover:bg-cosmos-accent/15 transition-colors shrink-0"
                 title="Play"
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
@@ -130,9 +121,8 @@ export default function RightMusicSidebar({
         })}
       </div>
 
-      {/* Footer */}
-      <div className="px-4 py-2 border-t border-white/5 text-[9px] text-cosmos-dim/35 font-mono text-center">
-        Double-click or ▶ to play &middot; NetEase Cloud
+      <div className="px-4 py-2 border-t border-cosmos-border/20 text-[9px] text-cosmos-dim/45 font-mono text-center">
+        Double-click or ▶ to play &middot; 30s preview auto-radio
       </div>
     </aside>
   )
