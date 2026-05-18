@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from 'react'
-import GalaxyBackground from './components/GalaxyBackground'
 import SessionList from './components/SessionList'
 import TerminalCanvas from './components/TerminalCanvas'
 import SplashScreen from './components/SplashScreen'
+import GalaxyBackground from './components/GalaxyBackground'
 import TopMenuBar from './components/TopMenuBar'
 import RightMusicSidebar from './components/RightMusicSidebar'
 import useMusicController from './hooks/useNeteaseMusicController'
@@ -147,7 +147,7 @@ export default function App() {
           {/* Status bar */}
           <div
             className="h-6 border-t border-white/5 flex items-center px-4 shrink-0"
-            style={{ background: 'rgba(8, 8, 24, 0.25)' }}
+            style={{ background: 'rgba(8, 8, 24, 0.10)' }}
           >
             <span className="text-[10px] text-cosmos-dim/60">
               {sessions.length} session{sessions.length !== 1 ? 's' : ''}

@@ -8,7 +8,7 @@ import SearchBar from './SearchBar'
 import useAudioEngine from '../hooks/useAudioEngine'
 
 const COSMIC_THEME = {
-  background: 'rgba(8, 8, 24, 0.35)',
+  background: 'rgba(8, 8, 24, 0.10)',
   foreground: '#e0e0f0',
   cursor: '#a78bfa',
   cursorAccent: '#06060f',

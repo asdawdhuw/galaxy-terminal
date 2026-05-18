@@ -30,7 +30,7 @@ html, body, #root {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(6, 6, 15, 0.2);
+  background: rgba(6, 6, 15, 0.10);
 }
 
 /* --- Glass panels for text readability --- */
