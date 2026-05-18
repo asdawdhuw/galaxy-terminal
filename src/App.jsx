@@ -171,7 +171,7 @@ export default function App() {
         <div className="h-7 glass-panel border-t border-cosmos-border/30 flex items-center justify-between px-4 text-xs shrink-0">
           <div className="flex items-center gap-4 text-cosmos-dim font-mono">
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-cosmos-accent animate-pulse shadow-[0_0_8px_rgba(110,181,217,0.6)]" />
               {sessions.length} 个会话
             </span>
             <span>·</span>

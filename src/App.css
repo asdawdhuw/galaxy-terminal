@@ -99,19 +99,19 @@ html, body, #root {
 .nebula-a {
   width: 55vw; height: 55vh;
   left: -12vw; top: 8vh;
-  background: radial-gradient(ellipse at center, rgba(0, 255, 65, 0.08) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(124, 111, 247, 0.09) 0%, transparent 70%);
   animation: nebula-drift 11s ease-in-out infinite;
 }
 .nebula-b {
   width: 48vw; height: 48vh;
   right: -10vw; bottom: 2vh;
-  background: radial-gradient(ellipse at center, rgba(0, 200, 80, 0.06) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(110, 181, 217, 0.07) 0%, transparent 70%);
   animation: nebula-drift 13s ease-in-out infinite reverse;
 }
 .nebula-c {
   width: 40vw; height: 40vh;
   left: 30vw; top: 50vh;
-  background: radial-gradient(ellipse at center, rgba(0, 255, 65, 0.04) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(201, 143, 212, 0.06) 0%, transparent 70%);
   animation: nebula-drift 15s ease-in-out infinite;
 }
 
@@ -119,7 +119,7 @@ html, body, #root {
 .splash-star {
   position: fixed;
   border-radius: 50%;
-  background: #b8ffb8;
+  background: #e8e4ff;
   animation: star-twinkle ease-in-out infinite;
   pointer-events: none;
   will-change: opacity, transform;
@@ -141,14 +141,26 @@ html, body, #root {
 /* ----- orbital particle rings ----- */
 .orbit-ring {
   position: absolute;
-  inset: 0;
   border-radius: 50%;
   pointer-events: none;
   will-change: transform;
+  border: 1px solid rgba(124, 111, 247, 0.22);
 }
-.ring-r1 { animation: orbit-spin 7s linear infinite; }
-.ring-r2 { animation: orbit-spin 11s linear infinite reverse; }
-.ring-r3 { animation: orbit-spin 16s linear infinite; }
+.ring-r1 {
+  inset: 20%;
+  border-color: rgba(167, 139, 250, 0.42);
+  animation: orbit-spin 7s linear infinite;
+}
+.ring-r2 {
+  inset: 10%;
+  border-color: rgba(124, 111, 247, 0.3);
+  animation: orbit-spin 11s linear infinite reverse;
+}
+.ring-r3 {
+  inset: 0;
+  border-color: rgba(196, 181, 253, 0.24);
+  animation: orbit-spin 16s linear infinite;
+}
 
 .orbit-dot {
   position: absolute;
@@ -175,26 +187,26 @@ html, body, #root {
   opacity: 0;
 }
 .arm-1 {
-  border-top-color: rgba(0, 255, 65, 0.45);
-  border-right-color: rgba(57, 255, 20, 0.2);
+  border-top-color: rgba(124, 111, 247, 0.45);
+  border-right-color: rgba(167, 139, 250, 0.2);
   animation: arm-unfurl 1.5s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards,
              arm-spin 10s 1.7s linear infinite;
 }
 .arm-2 {
-  border-top-color: rgba(0, 220, 100, 0.42);
-  border-left-color: rgba(57, 255, 20, 0.18);
+  border-top-color: rgba(167, 139, 250, 0.4);
+  border-left-color: rgba(124, 111, 247, 0.22);
   animation: arm-unfurl 1.4s 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards,
              arm-spin 13s 1.75s linear infinite reverse;
 }
 .arm-3 {
-  border-bottom-color: rgba(0, 255, 65, 0.35);
-  border-right-color: rgba(0, 200, 100, 0.16);
+  border-bottom-color: rgba(124, 111, 247, 0.35);
+  border-right-color: rgba(196, 181, 253, 0.2);
   animation: arm-unfurl 1.3s 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards,
              arm-spin 17s 1.8s linear infinite;
 }
 .arm-4 {
-  border-top-color: rgba(57, 255, 20, 0.28);
-  border-left-color: rgba(0, 220, 100, 0.12);
+  border-top-color: rgba(167, 139, 250, 0.28);
+  border-left-color: rgba(218, 119, 242, 0.18);
   animation: arm-unfurl 1.2s 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards,
              arm-spin 21s 1.85s linear infinite reverse;
 }
@@ -246,8 +258,8 @@ html, body, #root {
   position: absolute;
   width: 8px; height: 8px;
   border-radius: 50%;
-  background: #e8ffe8;
-  box-shadow: 0 0 12px 3px rgba(0, 255, 65, 0.85);
+  background: #f5f0ff;
+  box-shadow: 0 0 12px 3px rgba(167, 139, 250, 0.85);
 }
 
 @keyframes core-emerge {
@@ -259,26 +271,26 @@ html, body, #root {
 @keyframes core-breathe {
   0%, 100% {
     box-shadow:
-      0 0 22px 4px rgba(57, 255, 20, 0.5),
-      0 0 55px 12px rgba(0, 255, 65, 0.2);
+      0 0 22px 4px rgba(139, 124, 247, 0.55),
+      0 0 55px 12px rgba(124, 111, 247, 0.22);
   }
   50% {
     box-shadow:
-      0 0 36px 8px rgba(57, 255, 20, 0.7),
-      0 0 80px 22px rgba(0, 255, 65, 0.3);
+      0 0 36px 8px rgba(167, 139, 250, 0.75),
+      0 0 80px 22px rgba(124, 111, 247, 0.32);
   }
 }
 
 @keyframes core-aura {
   0%, 100% {
     box-shadow:
-      0 0 40px 8px rgba(0, 255, 65, 0.16),
-      0 0 100px 24px rgba(0, 255, 65, 0.05);
+      0 0 40px 8px rgba(124, 111, 247, 0.18),
+      0 0 100px 24px rgba(110, 181, 217, 0.06);
   }
   50% {
     box-shadow:
-      0 0 60px 14px rgba(57, 255, 20, 0.26),
-      0 0 140px 36px rgba(0, 255, 65, 0.09);
+      0 0 60px 14px rgba(167, 139, 250, 0.28),
+      0 0 140px 36px rgba(124, 111, 247, 0.1);
   }
 }
 
@@ -310,14 +322,14 @@ html, body, #root {
   font-size: 0.68rem;
   font-weight: 400;
   letter-spacing: 0.5em;
-  color: rgba(57, 255, 20, 0.55);
+  color: rgba(167, 139, 250, 0.65);
   user-select: none;
   min-height: 1.2em;  /* prevent layout jump while typing */
 }
 
 .splash-cursor {
   display: inline-block;
-  color: rgba(57, 255, 20, 0.8);
+  color: rgba(196, 181, 253, 0.85);
   font-weight: 300;
   animation: cursor-flash 0.55s step-end infinite;
 }

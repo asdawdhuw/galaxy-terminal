@@ -16,7 +16,7 @@ const COSMIC_THEME = {
   selectionForeground: '#f0f0f8',
   black: '#1a1a2e',
   red: '#ff6b6b',
-  green: '#69db7c',
+  green: '#66d9e8',
   yellow: '#ffd43b',
   blue: '#6eb5d9',
   magenta: '#da77f2',
@@ -24,7 +24,7 @@ const COSMIC_THEME = {
   white: '#c8c8d8',
   brightBlack: '#4a4a6a',
   brightRed: '#ff8787',
-  brightGreen: '#8ce99a',
+  brightGreen: '#8ce8f0',
   brightYellow: '#ffe066',
   brightBlue: '#a78bfa',
   brightMagenta: '#e599f7',
@@ -215,11 +215,11 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
         <div className="flex gap-1.5">
           <div className="w-3 h-3 rounded-full bg-red-500/80" />
           <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-          <div className="w-3 h-3 rounded-full bg-green-500/80" />
+          <div className="w-3 h-3 rounded-full bg-cosmos-accent/70 shadow-[0_0_6px_rgba(110,181,217,0.5)]" />
         </div>
         <span className="text-sm text-cosmos-dim font-mono ml-2 truncate">{title}</span>
         <div className="ml-auto flex items-center gap-2 text-xs text-cosmos-dim font-mono shrink-0">
-          <span className="animate-pulse text-green-400">●</span>
+          <span className="animate-pulse text-cosmos-accent">●</span>
           <span>已连接</span>
         </div>
       </div>
@@ -255,7 +255,7 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
       <div className="px-4 py-1.5 terminal-chrome border-t border-cosmos-border/50 flex items-center justify-between text-xs text-cosmos-dim font-mono shrink-0">
         <span>Galaxy Terminal · xterm</span>
         <div className="flex items-center gap-2">
-          <span className="text-green-400">●</span>
+          <span className="text-cosmos-accent">●</span>
           <span>UTF-8</span>
           <span>|</span>
           <span>pwsh</span>

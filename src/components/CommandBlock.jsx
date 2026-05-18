@@ -7,7 +7,7 @@ const converter = new AnsiToHtml({
   colors: {
     0: '#1a1a2e',
     1: '#ff6b6b',
-    2: '#69db7c',
+    2: '#66d9e8',
     3: '#ffd43b',
     4: '#7c6ff7',
     5: '#da77f2',
@@ -15,7 +15,7 @@ const converter = new AnsiToHtml({
     7: '#c8c8d8',
     8: '#4a4a6a',
     9: '#ff8787',
-    10: '#8ce99a',
+    10: '#8ce8f0',
     11: '#ffe066',
     12: '#a78bfa',
     13: '#e599f7',
@@ -45,7 +45,7 @@ export default function CommandBlock({ block }) {
           <span className="ml-auto text-[10px] text-yellow-400/70 shrink-0">^C</span>
         )}
         {block.status === 'completed' && (
-          <span className="ml-auto w-2 h-2 rounded-full bg-green-500/40 shrink-0" />
+          <span className="ml-auto w-2 h-2 rounded-full bg-cosmos-accent/50 shadow-[0_0_4px_rgba(110,181,217,0.4)] shrink-0" />
         )}
       </div>
 

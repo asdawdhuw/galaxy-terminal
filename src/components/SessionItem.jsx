@@ -51,12 +51,12 @@ export default function SessionItem({
       <div className="relative shrink-0">
         <span
           className={`block w-2.5 h-2.5 rounded-full ${
-            status === 'running' ? 'bg-green-400' : 'bg-cosmos-accent'
+            status === 'running' ? 'bg-cosmos-accent' : 'bg-cosmos-dim/50'
           }`}
         />
         {status === 'running' && (
           <span className="absolute inset-0 animate-ping">
-            <span className="block w-2.5 h-2.5 rounded-full bg-green-400/30" />
+            <span className="block w-2.5 h-2.5 rounded-full bg-cosmos-accent/35" />
           </span>
         )}
       </div>

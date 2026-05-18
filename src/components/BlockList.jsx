@@ -6,9 +6,9 @@ const converter = new AnsiToHtml({
   fg: '#6b6b8a',
   bg: 'transparent',
   colors: {
-    0: '#1a1a2e', 1: '#ff6b6b', 2: '#69db7c', 3: '#ffd43b',
+    0: '#1a1a2e', 1: '#ff6b6b', 2: '#66d9e8', 3: '#ffd43b',
     4: '#7c6ff7', 5: '#da77f2', 6: '#22b8cf', 7: '#c8c8d8',
-    8: '#4a4a6a', 9: '#ff8787', 10: '#8ce99a', 11: '#ffe066',
+    8: '#4a4a6a', 9: '#ff8787', 10: '#8ce8f0', 11: '#ffe066',
     12: '#a78bfa', 13: '#e599f7', 14: '#66d9e8', 15: '#f0f0f8'
   }
 })

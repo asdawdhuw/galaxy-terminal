@@ -165,7 +165,7 @@ export default function TopMenuBar({
                 onClick={onToggleMusic}
                 className={`px-2.5 py-0.5 rounded-full text-[10px] border ${
                   musicOn
-                    ? 'border-green-500/30 bg-green-500/10 text-green-400'
+                    ? 'border-cosmos-accent/35 bg-cosmos-accent/12 text-cosmos-accent'
                     : 'border-red-500/30 bg-red-500/10 text-red-400'
                 }`}
               >
