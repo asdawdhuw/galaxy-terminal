@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut, protocol, net
 const { join } = require('path')
 const os = require('os')
 const pty = require('node-pty')
+const crypto = require('crypto')
 
 process.on('uncaughtException', (err) => {
   if (err.message && err.message.includes('AttachConsole')) return
@@ -400,6 +401,137 @@ ipcMain.handle('itunes:search', async (_event, { term, limit = 20 }) => {
   }
 })
 
+// --- Bilibili WBI Sign (inline — avoids bundler module loss) ---
+
+const MIXIN_KEY_ENC_TAB = [
+  46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35,
+  27, 43, 5, 49, 33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13,
+  37, 48, 7, 16, 24, 55, 40, 61, 26, 17, 0, 1, 60, 51, 30, 4,
+  22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11, 36, 20, 52, 44, 34
+]
+
+let _wbiKey = null
+let _wbiCacheTime = 0
+const WBI_CACHE_TTL = 3600000
+
+async function getMixinKey() {
+  if (_wbiKey && Date.now() - _wbiCacheTime < WBI_CACHE_TTL) return _wbiKey
+
+  const r = await fetch('https://api.bilibili.com/x/web-interface/nav', {
+    headers: { Referer: 'https://www.bilibili.com' }
+  })
+  const j = await r.json()
+  if (!j.data?.wbi_img) throw new Error('Failed to fetch WBI keys from nav')
+
+  const imgUrl = j.data.wbi_img.img_url
+  const subUrl = j.data.wbi_img.sub_url
+  const imgKey = imgUrl.split('/').pop().split('.')[0]
+  const subKey = subUrl.split('/').pop().split('.')[0]
+  const raw = imgKey + subKey
+
+  _wbiKey = MIXIN_KEY_ENC_TAB.map(i => raw[i]).join('').slice(0, 32)
+  _wbiCacheTime = Date.now()
+  return _wbiKey
+}
+
+function signParams(params, mixinKey) {
+  const sorted = Object.keys(params).sort()
+  const query = sorted
+    .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`)
+    .join('&')
+  const wts = Math.floor(Date.now() / 1000)
+  const w_rid = crypto.createHash('md5').update(query + mixinKey).digest('hex')
+  return { ...params, wts, w_rid }
+}
+
+// --- Bilibili Search (non-WBI, public endpoint) ---
+
+ipcMain.handle('bilibili:search', async (_event, { keyword, limit = 20 }) => {
+  const url = `https://api.bilibili.com/x/web-interface/search/all/v2?keyword=${encodeURIComponent(keyword)}&search_type=video&limit=${limit}`
+  console.log('[Bilibili] Searching:', keyword)
+  try {
+    const r = await fetch(url, {
+      headers: { Referer: 'https://www.bilibili.com' },
+      signal: AbortSignal.timeout(8000)
+    })
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    const data = await r.json()
+    if (data.code !== 0) throw new Error(`B站 code=${data.code}: ${data.message}`)
+
+    const videoResult = (data.data?.result || []).find((g) => g.result_type === 'video')
+    const items = (videoResult?.data || []).map((v) => ({
+      bvid: v.bvid,
+      aid: v.aid,
+      title: v.title?.replace(/<[^>]+>/g, ''),
+      artist: v.author,
+      cover: v.pic,
+      duration: v.duration,
+      playCount: v.play
+    }))
+
+    console.log(`[Bilibili] Found ${items.length} results`)
+    return { ok: true, results: items }
+  } catch (e) {
+    console.error('[Bilibili] Search failed:', e.message)
+    return { ok: false, error: e.message }
+  }
+})
+
+// --- Bilibili Play URL (WBI-signed, fetches cid then audio stream) ---
+
+ipcMain.handle('bilibili:playurl', async (_event, { bvid }) => {
+  console.log('[Bilibili] Getting playurl for:', bvid)
+  try {
+    // Step 1: get cid from pagelist
+    const plUrl = `https://api.bilibili.com/x/player/pagelist?bvid=${bvid}`
+    const plR = await fetch(plUrl, {
+      headers: { Referer: 'https://www.bilibili.com' },
+      signal: AbortSignal.timeout(6000)
+    })
+    const plData = await plR.json()
+    if (plData.code !== 0 || !plData.data?.[0]?.cid) {
+      throw new Error(`pagelist failed: code=${plData.code}`)
+    }
+    const cid = plData.data[0].cid
+    console.log(`[Bilibili] Got cid=${cid} for ${bvid}`)
+
+    // Step 2: WBI-sign the playurl request
+    const mixinKey = await getMixinKey()
+    const params = signParams({ bvid, cid, fnval: '4048', fnver: '0', fourk: '1', qn: '0' }, mixinKey)
+    const paramsStr = Object.keys(params)
+      .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`)
+      .join('&')
+
+    const puUrl = `https://api.bilibili.com/x/player/wbi/playurl?${paramsStr}`
+    console.log('[Bilibili] Fetching playurl with WBI signature...')
+    const puR = await fetch(puUrl, {
+      headers: { Referer: 'https://www.bilibili.com' },
+      signal: AbortSignal.timeout(8000)
+    })
+    const puData = await puR.json()
+    if (puData.code !== 0) {
+      throw new Error(`playurl failed: code=${puData.code} ${puData.message || ''}`)
+    }
+
+    const audio = puData.data?.dash?.audio?.[0]
+    if (!audio?.baseUrl) {
+      throw new Error('No audio stream found (dash.audio empty)')
+    }
+
+    console.log(`[Bilibili] Audio URL: ${audio.baseUrl.slice(0, 80)}...`)
+    return {
+      ok: true,
+      url: audio.baseUrl,
+      backupUrl: audio.backupUrl?.[0] || null,
+      bandwidth: audio.bandwidth,
+      duration: puData.data.timelength
+    }
+  } catch (e) {
+    console.error('[Bilibili] Playurl failed:', e.message)
+    return { ok: false, error: e.message }
+  }
+})
+
 // --- App lifecycle ---
 
 app.whenReady().then(() => {
@@ -409,7 +541,9 @@ app.whenReady().then(() => {
       const targetUrl = new URL(request.url).searchParams.get('url')
       if (!targetUrl) return new Response('Missing url param', { status: 400 })
       console.log('[stream] Proxying:', targetUrl.slice(0, 80) + '...')
-      return net.fetch(targetUrl)
+      return net.fetch(targetUrl, {
+        headers: { Referer: 'https://www.bilibili.com' }
+      })
     } catch (e) {
       console.error('[stream] Error:', e.message)
       return new Response('Audio fetch failed', { status: 500 })

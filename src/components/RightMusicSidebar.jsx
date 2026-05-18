@@ -27,7 +27,7 @@ export default function RightMusicSidebar({
     <aside className="w-64 shrink-0 border-l border-cosmos-border/30 flex flex-col animate-slide-in-right glass-panel">
       <div className="flex items-center justify-between px-4 py-3 border-b border-cosmos-border/30">
         <span className="text-xs font-semibold text-cosmos-dim/80 uppercase tracking-widest font-mono">
-          Music Search
+          Bilibili Music
         </span>
         <button
           type="button"
@@ -48,7 +48,7 @@ export default function RightMusicSidebar({
             type="text"
             value={query}
             onChange={(e) => handleInput(e.target.value)}
-            placeholder="Search tracks..."
+            placeholder="搜索 B站 歌曲..."
             spellCheck={false}
             className="flex-1 bg-transparent outline-none text-xs text-cosmos-text/90 font-mono placeholder:text-cosmos-dim/40"
           />
@@ -73,14 +73,14 @@ export default function RightMusicSidebar({
         )}
         {!searching && results.length === 0 && !query && (
           <div className="px-4 py-6 text-center text-[10px] text-cosmos-dim/35 font-mono italic">
-            Type to search iTunes previews
+            搜索 B站音乐 · 双击播放
           </div>
         )}
         {results.map((track, i) => {
-          const isActive = currentTrack?.id === track.id
+          const isActive = currentTrack?.bvid === track.bvid
           return (
             <div
-              key={track.id}
+              key={track.bvid || i}
               onDoubleClick={() => onPlay?.(track)}
               className={`group flex items-center gap-3 px-4 py-3 cursor-pointer border-b border-cosmos-border/20
                           transition-colors duration-150 font-mono
@@ -93,9 +93,13 @@ export default function RightMusicSidebar({
                 {i + 1}
               </span>
 
+              {track.cover && (
+                <img src={track.cover} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+              )}
+
               <div className="flex-1 min-w-0">
                 <div className={`text-xs truncate ${isActive ? 'text-cosmos-accent' : 'text-cosmos-text/85'}`}>
-                  {track.name}
+                  {track.title}
                 </div>
                 <div className="text-[10px] text-cosmos-dim/60 truncate mt-0.5">
                   {track.artist}
@@ -103,7 +107,7 @@ export default function RightMusicSidebar({
               </div>
 
               <span className="text-[10px] text-cosmos-dim/45 shrink-0 group-hover:hidden">
-                {track.durationFmt}
+                {track.duration || '--:--'}
               </span>
 
               <button
@@ -122,7 +126,7 @@ export default function RightMusicSidebar({
       </div>
 
       <div className="px-4 py-2 border-t border-cosmos-border/20 text-[9px] text-cosmos-dim/45 font-mono text-center">
-        Double-click or ▶ to play &middot; 30s preview auto-radio
+        Double-click or ▶ to play · 自动连播下一首
       </div>
     </aside>
   )

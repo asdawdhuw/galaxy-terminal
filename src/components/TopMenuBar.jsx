@@ -99,7 +99,7 @@ export default function TopMenuBar({
               <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
             </svg>
             <span className="text-cosmos-dim truncate font-mono">
-              {musicTrack.name} — {musicTrack.artist}
+              {musicTrack.title || musicTrack.name} — {musicTrack.artist}
             </span>
           </div>
         )}

@@ -1,9 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 
 /* ================================================================== */
-/*  Apple iTunes Search — free, stable, previewUrl built-in             */
-/*  Auto-radio: when a 30s preview ends, play another track by the      */
-/*  same artist. All fetch goes through main process (no CORS).        */
+/*  Bilibili Audio Stream — WBI-signed, stream:// protocol, Referer    */
 /* ================================================================== */
 
 let _player = null
@@ -15,12 +13,6 @@ function getPlayer() {
   return _player
 }
 
-function fmtDuration(ms) {
-  if (!ms) return '--:--'
-  const s = Math.floor(ms / 1000)
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
-}
-
 export default function useMusicController() {
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
@@ -28,18 +20,25 @@ export default function useMusicController() {
   const [playing, setPlaying] = useState(false)
   const [error, setError] = useState(null)
 
-  // Refs to avoid stale closures in the onended handler
   const currentRef = useRef(null)
   const resultsRef = useRef([])
   currentRef.current = currentTrack
   resultsRef.current = results
 
-  /* ---- helper: play a track by URL ---- */
   async function playTrack(track) {
-    if (!track?.previewUrl) return false
+    if (!track?.bvid) return false
+    setError(null)
+
+    // Get WBI-signed audio URL from main process
+    const r = await window.terminal?.bilibiliPlayurl?.({ bvid: track.bvid })
+    if (!r?.ok) {
+      setError(r?.error || 'Bilibili playurl failed')
+      return false
+    }
+
     const player = getPlayer()
     if (!player.paused) player.pause()
-    player.src = `stream://audio?url=${encodeURIComponent(track.previewUrl)}`
+    player.src = `stream://audio?url=${encodeURIComponent(r.url)}`
     player.currentTime = 0
     try {
       await player.play()
@@ -52,65 +51,35 @@ export default function useMusicController() {
     }
   }
 
-  /* ---- auto-radio: same-artist shuffle ---- */
+  // Auto-radio: move to next track in current results
   const autoRadio = useCallback(async () => {
     const prev = currentRef.current
-    if (!prev?.artist) return
+    if (!prev) return
 
-    console.log('[Radio] 30s ended — searching more by:', prev.artist)
-    try {
-      const r = await window.terminal?.itunesSearch?.({ term: prev.artist, limit: 30 })
-      if (!r?.ok) throw new Error('No results')
-
-      // Filter out the track that just finished
-      const candidates = r.results.filter((t) => t.id !== prev.id && t.previewUrl)
-      if (candidates.length === 0) {
-        // Fallback: pick next from current search results
-        const idx = resultsRef.current.findIndex((t) => t.id === prev.id)
-        const fallback = resultsRef.current[idx + 1] || resultsRef.current[0]
-        if (fallback && fallback.previewUrl && fallback.id !== prev.id) {
-          console.log('[Radio] Fallback — next in list:', fallback.name)
-          await playTrack(fallback)
-        } else {
-          console.log('[Radio] No more tracks available')
-        }
-        return
-      }
-
-      // Random pick from same-artist songs
-      const next = candidates[Math.floor(Math.random() * candidates.length)]
-      console.log(`[Radio] Next up: ${next.name} — ${next.artist}`)
+    const idx = resultsRef.current.findIndex((t) => t.bvid === prev.bvid)
+    const next = resultsRef.current[idx + 1] || resultsRef.current[0]
+    if (next && next.bvid !== prev.bvid) {
+      console.log('[Radio] Next up:', next.title)
       await playTrack(next)
-    } catch (e) {
-      console.warn('[Radio] Failed, trying fallback:', e.message)
-      // Fallback: next song in current results
-      const idx = resultsRef.current.findIndex((t) => t.id === prev.id)
-      const fallback = resultsRef.current[idx + 1] || resultsRef.current[0]
-      if (fallback?.previewUrl && fallback.id !== prev.id) {
-        await playTrack(fallback)
-      }
+    } else {
+      console.log('[Radio] No more tracks')
     }
   }, [])
 
-  /* ---- register onended once ---- */
   useEffect(() => {
     const player = getPlayer()
     player.addEventListener('ended', autoRadio)
     return () => player.removeEventListener('ended', autoRadio)
   }, [autoRadio])
 
-  /* ---- search ---- */
   const search = useCallback(async (query) => {
     if (!query.trim()) { setResults([]); return }
     setSearching(true)
     setError(null)
     try {
-      const r = await window.terminal?.itunesSearch?.({ term: query, limit: 20 })
+      const r = await window.terminal?.bilibiliSearch?.({ keyword: query, limit: 20 })
       if (!r?.ok) throw new Error(r?.error || 'Search failed')
-      setResults((r.results || []).map((t) => ({
-        ...t,
-        durationFmt: fmtDuration(t.duration)
-      })))
+      setResults(r.results || [])
     } catch (e) {
       setResults([])
       setError(e.message)
@@ -118,7 +87,6 @@ export default function useMusicController() {
     setSearching(false)
   }, [])
 
-  /* ---- play ---- */
   const play = useCallback(async (track) => {
     setError(null)
     await playTrack(track)

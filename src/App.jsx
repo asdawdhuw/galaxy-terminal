@@ -186,7 +186,7 @@ export default function App() {
               扫描线
             </button>
             <span>|</span>
-            <span>双击曲目播放 · 30s 自动切歌</span>
+            <span>双击播放 · 自动连播下一首</span>
           </div>
         </div>
       </div>

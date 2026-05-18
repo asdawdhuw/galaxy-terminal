@@ -48,5 +48,7 @@ contextBridge.exposeInMainWorld('terminal', {
     return () => ipcRenderer.removeListener('spotify-token-error', h)
   },
   refreshSpotifyToken: (params) => ipcRenderer.invoke('spotify:refresh', params),
-  itunesSearch: (params) => ipcRenderer.invoke('itunes:search', params)
+  itunesSearch: (params) => ipcRenderer.invoke('itunes:search', params),
+  bilibiliSearch: (params) => ipcRenderer.invoke('bilibili:search', params),
+  bilibiliPlayurl: (params) => ipcRenderer.invoke('bilibili:playurl', params)
 })
