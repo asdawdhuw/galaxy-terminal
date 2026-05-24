@@ -2,9 +2,9 @@ import { useEffect, useRef } from 'react'
 
 const STAR_COUNT = 220
 const BREATHE_RATIO = 0.15
-const METEOR_CHANCE = 0.01
-const METEOR_LENGTH_MIN = 60
-const METEOR_LENGTH_MAX = 120
+const METEOR_CHANCE = 0.015
+const METEOR_LENGTH_MIN = 130
+const METEOR_LENGTH_MAX = 260
 
 export default function Starfield({ chillMode }) {
   const canvasRef = useRef(null)
@@ -49,10 +49,10 @@ export default function Starfield({ chillMode }) {
         const angle = Math.PI / 4 + (Math.random() - 0.5) * 0.5
         meteorsRef.current.push({
           x: Math.random() * canvas.width * 0.8,
-          y: Math.random() * canvas.height * 0.3,
+          y: canvas.height * (0.25 + Math.random() * 0.25),
           length: METEOR_LENGTH_MIN + Math.random() * (METEOR_LENGTH_MAX - METEOR_LENGTH_MIN),
           angle,
-          speed: 8 + Math.random() * 12,
+          speed: 2 + Math.random() * 3,
           opacity: 0.6 + Math.random() * 0.4,
         })
       }
@@ -120,28 +120,49 @@ export default function Starfield({ chillMode }) {
         const endX = startX + Math.cos(m.angle) * m.length
         const endY = startY + Math.sin(m.angle) * m.length
 
-        const grad = ctx.createLinearGradient(startX, startY, endX, endY)
-        grad.addColorStop(0, `rgba(200, 216, 240, ${m.opacity})`)
-        grad.addColorStop(0.2, `rgba(200, 216, 240, ${m.opacity * 0.5})`)
-        grad.addColorStop(1, 'rgba(200, 216, 240, 0)')
+        // Blue glow trail — wider, softer
+        const glowGrad = ctx.createLinearGradient(startX, startY, endX, endY)
+        glowGrad.addColorStop(0, `rgba(61, 127, 255, ${m.opacity * 0.6})`)
+        glowGrad.addColorStop(0.15, `rgba(61, 127, 255, ${m.opacity * 0.3})`)
+        glowGrad.addColorStop(0.4, `rgba(30, 100, 220, ${m.opacity * 0.1})`)
+        glowGrad.addColorStop(1, 'rgba(30, 100, 220, 0)')
 
         ctx.beginPath()
         ctx.moveTo(startX, startY)
         ctx.lineTo(endX, endY)
-        ctx.strokeStyle = grad
-        ctx.lineWidth = 1.5
+        ctx.strokeStyle = glowGrad
+        ctx.lineWidth = 4
         ctx.stroke()
 
-        // Head dot
+        // Core white trail — thin, bright
+        const coreGrad = ctx.createLinearGradient(startX, startY, endX, endY)
+        coreGrad.addColorStop(0, `rgba(255, 255, 255, ${m.opacity})`)
+        coreGrad.addColorStop(0.15, `rgba(200, 225, 255, ${m.opacity * 0.6})`)
+        coreGrad.addColorStop(0.5, `rgba(140, 180, 255, ${m.opacity * 0.2})`)
+        coreGrad.addColorStop(1, 'rgba(61, 127, 255, 0)')
+
+        ctx.beginPath()
+        ctx.moveTo(startX, startY)
+        ctx.lineTo(endX, endY)
+        ctx.strokeStyle = coreGrad
+        ctx.lineWidth = 1.2
+        ctx.stroke()
+
+        // Head dot — blue-white
         ctx.beginPath()
         ctx.arc(startX, startY, 1.5, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(255, 255, 255, ${m.opacity})`
+        ctx.fillStyle = `rgba(180, 220, 255, ${m.opacity})`
+        ctx.fill()
+        // Outer head glow
+        ctx.beginPath()
+        ctx.arc(startX, startY, 3, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(61, 127, 255, ${m.opacity * 0.3})`
         ctx.fill()
 
         // Move and fade
         m.x += Math.cos(m.angle) * m.speed
         m.y += Math.sin(m.angle) * m.speed
-        m.opacity -= 0.012
+        m.opacity -= 0.006
 
         if (m.opacity <= 0 || m.x > canvas.width || m.y > canvas.height) {
           meteorsRef.current.splice(i, 1)

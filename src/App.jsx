@@ -46,6 +46,7 @@ export default function App() {
   const [currentTheme, setCurrentTheme] = useState('orion')
   const [themePickerOpen, setThemePickerOpen] = useState(false)
   const [terminalSolid, setTerminalSolid] = useState(false)
+  const [uiOpacity, setUiOpacity] = useState(0.85)
 
   const termRef = useRef(null)
 
@@ -181,7 +182,7 @@ export default function App() {
   const activeSession = sessions.find((s) => s.id === activeId)
 
   return (
-    <div className={`relative h-screen w-full overflow-hidden ${chillMode ? 'chill-mode' : ''}`} style={{ background: 'var(--bg-deep)' }}>
+    <div className={`relative h-screen w-full overflow-hidden ${chillMode ? 'chill-mode' : ''}`} style={{ background: 'var(--bg-deep)', '--ui-opacity': uiOpacity }}>
       {splash && <SplashScreen onDone={() => setSplash(false)} />}
       <GalaxyBackground chillMode={chillMode} />
 
@@ -238,6 +239,8 @@ export default function App() {
           musicTrack={music.currentTrack}
           onMusicPause={music.pause}
           onMusicResume={music.resume}
+          uiOpacity={uiOpacity}
+          onOpacityChange={setUiOpacity}
         />
 
         <div className="app-body">

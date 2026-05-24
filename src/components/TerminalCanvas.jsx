@@ -204,8 +204,8 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
         }
         if (cmd === '/music') {
           cmdBufRef.current = ''
-          window.terminal.openMusicWindow()
-          term.write('\r\n\x1b[36m[Music popup opened]\x1b[0m\r\n')
+          window.terminal.sendInput('\x03')
+          setTimeout(() => { term.write('\r\n\x1b[36m[Music popup opened]\x1b[0m\r\n') }, 50)
           return
         }
         cmdBufRef.current = ''

@@ -25,7 +25,9 @@ export default function TopMenuBar({
   musicPlaying,
   musicTrack,
   onMusicPause,
-  onMusicResume
+  onMusicResume,
+  uiOpacity,
+  onOpacityChange
 }) {
   const [audioOpen, setAudioOpen] = useState(false)
   const panelRef = useRef(null)
@@ -183,8 +185,20 @@ export default function TopMenuBar({
         <span>{currentTime}</span>
       </div>
 
-      {/* Right: audio panel toggle */}
+      {/* Right: transparency + audio panel toggle */}
       <div className="flex items-center gap-3 ml-auto" style={{ WebkitAppRegion: 'no-drag' }}>
+        <div className="flex items-center gap-2" title="UI Transparency">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--text-dim)', flexShrink: 0 }}>
+            <circle cx="12" cy="12" r="10" /><path d="M12 2a10 10 0 0 1 0 20" strokeLinecap="round" />
+          </svg>
+          <input
+            type="range" min="3" max="100"
+            value={Math.round((uiOpacity ?? 0.85) * 100)}
+            onChange={(e) => onOpacityChange?.(Number(e.target.value) / 100)}
+            style={{ width: 64, height: 3, accentColor: 'var(--accent)', cursor: 'pointer' }}
+          />
+        </div>
+
         <button
           ref={btnRef}
           type="button"
