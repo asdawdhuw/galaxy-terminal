@@ -6,12 +6,14 @@ const METEOR_CHANCE = 0.01
 const METEOR_LENGTH_MIN = 60
 const METEOR_LENGTH_MAX = 120
 
-export default function Starfield() {
+export default function Starfield({ chillMode }) {
   const canvasRef = useRef(null)
   const starsRef = useRef([])
   const meteorsRef = useRef([])
   const animRef = useRef(0)
   const timeRef = useRef(0)
+  const chillRef = useRef(chillMode)
+  chillRef.current = chillMode
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -57,6 +59,8 @@ export default function Starfield() {
     }
 
     const animate = (timestamp) => {
+      const chillin = chillRef.current
+      const speedMul = chillin ? 0.25 : 1
       timeRef.current = timestamp * 0.001
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
@@ -65,28 +69,40 @@ export default function Starfield() {
         let opacity = star.opacity
 
         if (star.breathe) {
-          const phase = Math.sin(timeRef.current * star.breatheSpeed + star.breathePhase)
-          opacity = star.opacity * (0.4 + 0.6 * ((phase + 1) / 2))
+          const breatheMul = chillin ? 0.3 : 1
+          const phase = Math.sin(timeRef.current * star.breatheSpeed * breatheMul + star.breathePhase)
+          opacity = star.opacity * (chillin ? 0.5 + 0.5 * ((phase + 1) / 2) : (0.4 + 0.6 * ((phase + 1) / 2)))
         }
+
+        // Chill: read star tint from CSS variables
+        const style = getComputedStyle(document.documentElement)
+        const r = chillin ? parseInt(style.getPropertyValue('--chill-star-r')) || 190 : 200
+        const g = chillin ? parseInt(style.getPropertyValue('--chill-star-g')) || 215 : 216
+        const b = chillin ? parseInt(style.getPropertyValue('--chill-star-b')) || 245 : 240
 
         ctx.beginPath()
         ctx.arc(star.x, star.y, Math.max(0.1, star.radius), 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(200, 216, 240, ${Math.max(0, Math.min(1, opacity))})`
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, opacity))})`
         ctx.fill()
 
-        // Glow for larger stars
-        if (star.radius > 1.0) {
-          const g = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.radius * 3)
-          g.addColorStop(0, `rgba(61, 127, 255, ${opacity * 0.25})`)
-          g.addColorStop(1, 'rgba(61, 127, 255, 0)')
+        // Glow halo — theme-driven in chill mode
+        const haloRadius = star.radius * (chillin ? 5 : 3)
+        const glowColor = style.getPropertyValue('--chill-glow') || 'rgba(80, 160, 255, 0.3)'
+        const glowEnd = style.getPropertyValue('--chill-glow-end') || 'rgba(30, 100, 220, 0)'
+        const haloColor = chillin ? glowColor : `rgba(61, 127, 255, ${opacity * 0.25})`
+        const haloEnd = chillin ? glowEnd : 'rgba(61, 127, 255, 0)'
+        if (star.radius > 0.7) {
+          const gx = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, haloRadius)
+          gx.addColorStop(0, haloColor)
+          gx.addColorStop(1, haloEnd)
           ctx.beginPath()
-          ctx.arc(star.x, star.y, star.radius * 3, 0, Math.PI * 2)
-          ctx.fillStyle = g
+          ctx.arc(star.x, star.y, haloRadius, 0, Math.PI * 2)
+          ctx.fillStyle = gx
           ctx.fill()
         }
 
         // Drift downward
-        star.y += star.speed
+        star.y += star.speed * speedMul
         if (star.y > canvas.height + 5) {
           star.y = -5
           star.x = Math.random() * canvas.width

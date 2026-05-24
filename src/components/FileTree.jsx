@@ -1,63 +1,95 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
-const MOCK_TREE = [
-  { name: 'src', type: 'dir', children: [
-    { name: 'components', type: 'dir', children: [
-      { name: 'TerminalCanvas.jsx', type: 'file' },
-      { name: 'SessionList.jsx', type: 'file' },
-      { name: 'BlockList.jsx', type: 'file' },
-      { name: 'TopMenuBar.jsx', type: 'file' },
-    ]},
-    { name: 'hooks', type: 'dir', children: [
-      { name: 'useAudioEngine.js', type: 'file' },
-      { name: 'useNeteaseMusicController.js', type: 'file' },
-    ]},
-    { name: 'App.jsx', type: 'file' },
-    { name: 'App.css', type: 'file' },
-  ]},
-  { name: 'electron', type: 'dir', children: [
-    { name: 'main', type: 'dir', children: [
-      { name: 'index.js', type: 'file' },
-    ]},
-    { name: 'preload', type: 'dir', children: [
-      { name: 'index.js', type: 'file' },
-    ]},
-  ]},
-  { name: 'package.json', type: 'file' },
-  { name: 'tailwind.config.js', type: 'file' },
-]
+function TreeNode({ node, depth = 0, onFileOpen, loadChildren }) {
+  const [open, setOpen] = useState(false)
+  const [children, setChildren] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const hasChildren = node.type === 'dir'
+  const loaded = children !== null
 
-function TreeNode({ node, depth = 0 }) {
-  const [open, setOpen] = useState(true)
-  const hasChildren = node.children && node.children.length > 0
+  const handleClick = useCallback(async () => {
+    if (!hasChildren) return
+    if (!loaded && loadChildren) {
+      setLoading(true)
+      const kids = await loadChildren(node.path)
+      setChildren(kids)
+      setLoading(false)
+    }
+    setOpen(!open)
+  }, [hasChildren, loaded, loadChildren, node.path, open])
 
   return (
     <div>
       <div
         className="file-tree-node"
         style={{ paddingLeft: 12 + depth * 14 }}
-        onClick={() => hasChildren && setOpen(!open)}
+        onClick={handleClick}
+        onDoubleClick={(e) => {
+          e.stopPropagation()
+          if (node.type === 'file' && onFileOpen) {
+            onFileOpen({ name: node.name, path: node.path })
+          }
+        }}
       >
         <span className="file-tree-arrow" style={{ opacity: hasChildren ? 1 : 0 }}>
-          {open ? '▾' : '▸'}
+          {loading ? '···' : open ? '\u{25BE}' : '\u{25B8}'}
         </span>
         <span className="file-tree-icon">
-          {node.type === 'dir' ? (open ? '\u{1F4C2}' : '\u{1F4C1}') : '\u{1F4C4}'}
+          {hasChildren ? (open ? '\u{1F4C2}' : '\u{1F4C1}') : '\u{1F4C4}'}
         </span>
         <span className="file-tree-name">{node.name}</span>
       </div>
-      {hasChildren && open && node.children.map((child, i) => (
-        <TreeNode key={i} node={child} depth={depth + 1} />
+      {hasChildren && open && children && children.map((child, i) => (
+        <TreeNode key={i} node={child} depth={depth + 1} onFileOpen={onFileOpen} loadChildren={loadChildren} />
       ))}
     </div>
   )
 }
 
-export default function FileTree() {
+export default function FileTree({ onFileOpen, basePath }) {
+  const [roots, setRoots] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [err, setErr] = useState('')
+
+  const loadChildren = useCallback(async (dirPath) => {
+    try {
+      const res = await window.terminal.listDir(dirPath)
+      if (res.ok) return res.children
+      return []
+    } catch (_) {
+      return []
+    }
+  }, [])
+
+  useEffect(() => {
+    setLoading(true)
+    // Use the terminal's CWD if available, otherwise project root
+    const dir = basePath || '.'
+    loadChildren(dir)
+      .then((kids) => {
+        setRoots(kids)
+        setLoading(false)
+      })
+      .catch((e) => {
+        setErr(e.message)
+        setLoading(false)
+      })
+  }, [loadChildren, basePath])
+
   return (
     <div className="file-tree-list">
-      {MOCK_TREE.map((node, i) => (
-        <TreeNode key={i} node={node} depth={0} />
+      {loading && (
+        <div style={{ padding: '16px', textAlign: 'center', fontSize: 10, color: 'var(--text-dim)', opacity: 0.4 }}>
+          Reading directory...
+        </div>
+      )}
+      {err && (
+        <div style={{ padding: '16px', textAlign: 'center', fontSize: 10, color: 'var(--dot-red)', opacity: 0.6 }}>
+          {err}
+        </div>
+      )}
+      {roots.map((node, i) => (
+        <TreeNode key={i} node={node} depth={0} onFileOpen={onFileOpen} loadChildren={loadChildren} />
       ))}
     </div>
   )

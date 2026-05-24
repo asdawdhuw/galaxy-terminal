@@ -6,6 +6,8 @@ import GalaxyBackground from './components/GalaxyBackground'
 import TopMenuBar from './components/TopMenuBar'
 import RightMusicSidebar from './components/RightMusicSidebar'
 import GalaxySpotlight from './components/GalaxySpotlight'
+import FileViewer from './components/FileViewer'
+import ThemePicker from './components/ThemePicker'
 import useMusicController from './hooks/useNeteaseMusicController'
 import idleSrc from '../sound/idle.mp3'
 import activeSrc from '../sound/active.mp3'
@@ -28,6 +30,12 @@ export default function App() {
   const [sidebarViewMode, setSidebarViewMode] = useState('sessions')
   // Z-axis: focus mode
   const [focusMode, setFocusMode] = useState(false)
+  const [viewerFile, setViewerFile] = useState(null)
+  const [activeCwd, setActiveCwd] = useState(null)
+  const [chillMode, setChillMode] = useState(false)
+  const [currentTheme, setCurrentTheme] = useState('orion')
+  const [themePickerOpen, setThemePickerOpen] = useState(false)
+  const [terminalSolid, setTerminalSolid] = useState(false)
 
   const termRef = useRef(null)
 
@@ -98,9 +106,20 @@ export default function App() {
     switch (type) {
       case 'focus':
         setFocusMode(payload)
+        if (payload) setChillMode(false)
         break
       case 'viewMode':
         setSidebarViewMode(payload)
+        break
+      case 'chill':
+        setChillMode(payload)
+        if (payload) setFocusMode(false)
+        break
+      case 'themePick':
+        setThemePickerOpen(true)
+        break
+      case 'modeToggle':
+        setTerminalSolid((v) => !v)
         break
       case 'terminal':
         // Forward unknown command to active PTY session
@@ -108,6 +127,14 @@ export default function App() {
         break
     }
   }
+
+  // Track active session CWD for FileTree
+  useEffect(() => {
+    const unsub = window.terminal.onCwd?.(({ sessionId, cwd }) => {
+      if (sessionId === activeId) setActiveCwd(cwd)
+    })
+    return () => { if (unsub) unsub() }
+  }, [activeId])
 
   useEffect(() => {
     const unsub = window.terminal.onSwitched?.((newId) => {
@@ -127,15 +154,56 @@ export default function App() {
 
   const handleToggleMusic = useCallback(() => setMusicOn((v) => !v), [])
 
+  function handleThemeSelect(themeId) {
+    setCurrentTheme(themeId)
+    document.documentElement.setAttribute('data-theme', themeId)
+    setThemePickerOpen(false)
+  }
+
+  // Apply theme on mount
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', currentTheme)
+  }, [])
+
   const activeSession = sessions.find((s) => s.id === activeId)
 
   return (
-    <div className="relative h-screen w-full overflow-hidden" style={{ background: 'var(--bg-deep)' }}>
+    <div className={`relative h-screen w-full overflow-hidden ${chillMode ? 'chill-mode' : ''}`} style={{ background: 'var(--bg-deep)' }}>
       {splash && <SplashScreen onDone={() => setSplash(false)} />}
-      <GalaxyBackground />
+      <GalaxyBackground chillMode={chillMode} />
+
+      {/* Chill nebula overlay — cosmic immersion */}
+      {chillMode && (
+        <>
+          <div className="chill-nebula" aria-hidden>
+            <div className="chill-nebula-a" />
+            <div className="chill-nebula-b" />
+            <div className="chill-nebula-c" />
+            <div className="chill-nebula-d" />
+            <div className="chill-nebula-e" />
+            <div className="chill-nebula-f" />
+          </div>
+          <div className="chill-dust" aria-hidden />
+        </>
+      )}
 
       {/* Galaxy Spotlight — Ctrl+K */}
       <GalaxySpotlight onCommand={handleSpotlightCommand} />
+
+      {/* File Viewer — double-click in FileTree */}
+      <FileViewer
+        file={viewerFile}
+        onClose={() => setViewerFile(null)}
+      />
+
+      {/* Theme Picker — /theme command */}
+      {themePickerOpen && (
+        <ThemePicker
+          current={currentTheme}
+          onSelect={handleThemeSelect}
+          onClose={() => setThemePickerOpen(false)}
+        />
+      )}
 
       <div className="app-layout">
         <TopMenuBar
@@ -170,6 +238,8 @@ export default function App() {
             viewMode={sidebarViewMode}
             onViewModeChange={setSidebarViewMode}
             focusMode={focusMode}
+            onFileOpen={setViewerFile}
+            cwd={activeCwd}
           />
 
           {/* Terminal — expands in focus mode */}
@@ -186,6 +256,10 @@ export default function App() {
               onTierChange={setCurrentTier}
               focusMode={focusMode}
               onFocusToggle={setFocusMode}
+              onChillToggle={setChillMode}
+              onThemePick={() => setThemePickerOpen(true)}
+              terminalSolid={terminalSolid}
+              onModeToggle={() => setTerminalSolid((v) => !v)}
             />
           </div>
 

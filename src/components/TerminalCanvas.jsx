@@ -32,7 +32,7 @@ const COSMIC_THEME = {
   brightWhite: '#e8f0ff'
 }
 
-export default function TerminalCanvas({ activeSessionId, sessionName, onSessionCreated, musicEnabled = true, audioMap, masterVolume = 0.75, mode = 'dynamic', staticTier = 0, onTierChange, focusMode, onFocusToggle }) {
+export default function TerminalCanvas({ activeSessionId, sessionName, onSessionCreated, musicEnabled = true, audioMap, masterVolume = 0.75, mode = 'dynamic', staticTier = 0, onTierChange, focusMode, onFocusToggle, onChillToggle, onThemePick, terminalSolid, onModeToggle }) {
   const containerRef = useRef(null)
   const termRef = useRef(null)
   const fitRef = useRef(null)
@@ -121,9 +121,10 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
 
     // Smart key handling: bypass xterm for non-terminal shortcuts
     term.attachCustomKeyEventHandler((e) => {
-      // Ctrl+K → bypass xterm, let GalaxySpotlight window listener catch it
+      // Ctrl+K → dispatch custom event for GalaxySpotlight (bypasses event propagation issues)
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault()
+        window.dispatchEvent(new CustomEvent('galaxy:spotlight'))
         return false
       }
 
@@ -175,6 +176,30 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
           cmdBufRef.current = ''
           onFocusToggle?.(false)
           term.write('\r\n\x1b[36m[Focus mode disabled — layout restored]\x1b[0m\r\n')
+          return
+        }
+        if (cmd === '/chill') {
+          cmdBufRef.current = ''
+          onChillToggle?.(true)
+          term.write('\r\n\x1b[35m[Chill mode on — ambient flow, reduced contrast]\x1b[0m\r\n')
+          return
+        }
+        if (cmd === '/unchill') {
+          cmdBufRef.current = ''
+          onChillToggle?.(false)
+          term.write('\r\n\x1b[35m[Chill mode off]\x1b[0m\r\n')
+          return
+        }
+        if (cmd === '/theme') {
+          cmdBufRef.current = ''
+          onThemePick?.()
+          term.write('\r\n\x1b[36m[Theme picker opened]\x1b[0m\r\n')
+          return
+        }
+        if (cmd === '/mode') {
+          cmdBufRef.current = ''
+          onModeToggle?.()
+          term.write('\r\n\x1b[36m[Terminal background toggled]\x1b[0m\r\n')
           return
         }
         cmdBufRef.current = ''
@@ -285,10 +310,13 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
   const title = sessionName ? `${sessionName} — pwsh` : 'pwsh — galaxy-terminal'
 
   return (
-    <div className="h-full flex flex-col terminal-area overflow-hidden" style={{
-      border: focusMode ? 'none' : '1px solid rgba(255,255,255,0.06)',
+    <div className="h-full flex flex-col overflow-hidden" style={{
       borderRadius: focusMode ? 0 : 12,
-      transition: 'border-radius 0.5s ease, border 0.5s ease'
+      background: terminalSolid ? 'rgba(0,0,0,0.9)' : 'transparent',
+      backdropFilter: terminalSolid ? 'none' : 'blur(15px)',
+      WebkitBackdropFilter: terminalSolid ? 'none' : 'blur(15px)',
+      border: terminalSolid ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255,255,255,0.05)',
+      transition: 'background 500ms ease, backdrop-filter 500ms ease, border 500ms ease',
     }}>
       <div className="terminal-chrome-bar">
         <div className="terminal-chrome-dots">
@@ -303,7 +331,7 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
         </div>
       </div>
 
-      <div className="relative flex-1 min-h-0">
+      <div className="relative flex-1 min-h-0 bg-transparent">
         {searchOpen && (
         <SearchBar
           searchAddon={searchAddonRef.current}

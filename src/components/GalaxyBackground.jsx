@@ -1,7 +1,7 @@
 import bgImage from '../assets/Snipaste_2026-05-17_11-45-36.png'
 import Starfield from './Starfield'
 
-export default function GalaxyBackground() {
+export default function GalaxyBackground({ chillMode }) {
   return (
     <>
       <div
@@ -9,11 +9,12 @@ export default function GalaxyBackground() {
         style={{
           backgroundImage: `url(${bgImage})`,
           zIndex: -1,
-          filter: 'brightness(0.5)',
+          filter: chillMode ? 'brightness(0.35) saturate(0.6)' : 'brightness(0.5)',
+          transition: 'filter 0.8s ease',
         }}
         aria-hidden
       />
-      <Starfield />
+      <Starfield chillMode={chillMode} />
       <div
         className="absolute inset-0 pointer-events-none"
         style={{

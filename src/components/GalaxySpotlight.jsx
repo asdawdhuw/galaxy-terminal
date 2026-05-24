@@ -1,10 +1,25 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 
+const ALL_COMMANDS = [
+  { cmd: '/shh',     desc: 'Enter focus mode' },
+  { cmd: '/unshh',   desc: 'Exit focus mode' },
+  { cmd: '/chill',   desc: 'Ambient nebula flow' },
+  { cmd: '/unchill', desc: 'Exit ambient mode' },
+  { cmd: '/theme',   desc: 'Switch gravity field' },
+  { cmd: '/mode',    desc: 'Toggle glass / solid terminal' },
+  { cmd: '/files',   desc: 'Show file tree' },
+  { cmd: '/sessions',desc: 'Show session list' },
+]
+
 export default function GalaxySpotlight({ onCommand }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const inputRef = useRef(null)
+
+  const filtered = query
+    ? ALL_COMMANDS.filter(c => c.cmd.startsWith(query.toLowerCase()))
+    : ALL_COMMANDS
 
   const openSpotlight = useCallback(() => {
     setOpen(true)
@@ -17,20 +32,27 @@ export default function GalaxySpotlight({ onCommand }) {
     setQuery('')
   }, [])
 
-  // Global Ctrl+K listener
+  // Custom event from TerminalCanvas + global Ctrl+K
   useEffect(() => {
-    function handler(e) {
+    function handleSpotlight() {
+      if (open) closeSpotlight()
+      else openSpotlight()
+    }
+    function handleKeydown(e) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault()
-        if (open) closeSpotlight()
-        else openSpotlight()
+        handleSpotlight()
       }
       if (e.key === 'Escape' && open) {
         closeSpotlight()
       }
     }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    window.addEventListener('galaxy:spotlight', handleSpotlight)
+    window.addEventListener('keydown', handleKeydown)
+    return () => {
+      window.removeEventListener('galaxy:spotlight', handleSpotlight)
+      window.removeEventListener('keydown', handleKeydown)
+    }
   }, [open, openSpotlight, closeSpotlight])
 
   function handleKeyDown(e) {
@@ -43,11 +65,23 @@ export default function GalaxySpotlight({ onCommand }) {
       } else if (cmd === '/unshh') {
         onCommand?.('focus', false)
         closeSpotlight()
+      } else if (cmd === '/chill') {
+        onCommand?.('chill', true)
+        closeSpotlight()
+      } else if (cmd === '/unchill') {
+        onCommand?.('chill', false)
+        closeSpotlight()
       } else if (cmd === '/files') {
         onCommand?.('viewMode', 'files')
         closeSpotlight()
       } else if (cmd === '/sessions') {
         onCommand?.('viewMode', 'sessions')
+        closeSpotlight()
+      } else if (cmd === '/theme') {
+        onCommand?.('themePick')
+        closeSpotlight()
+      } else if (cmd === '/mode') {
+        onCommand?.('modeToggle')
         closeSpotlight()
       } else if (cmd) {
         // Unknown command — send to terminal
@@ -85,7 +119,7 @@ export default function GalaxySpotlight({ onCommand }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type a command... /shh /unshh /files /sessions"
+              placeholder="Type a command..."
               spellCheck={false}
               autoComplete="off"
               className="spotlight-input"
@@ -95,18 +129,20 @@ export default function GalaxySpotlight({ onCommand }) {
             </div>
           </div>
 
-          {/* Quick commands */}
+          {/* Filtered commands — always visible */}
           <div className="spotlight-commands">
-            <div className="spotlight-cmd-group">
-              <span className="spotlight-cmd-label">MODE</span>
-              <span className="spotlight-cmd">/shh — Focus mode on</span>
-              <span className="spotlight-cmd">/unshh — Focus mode off</span>
-            </div>
-            <div className="spotlight-cmd-group">
-              <span className="spotlight-cmd-label">VIEW</span>
-              <span className="spotlight-cmd">/files — Switch to File Tree</span>
-              <span className="spotlight-cmd">/sessions — Switch to Sessions</span>
-            </div>
+            {filtered.length > 0 ? filtered.map((c) => (
+              <div key={c.cmd} className="spotlight-cmd-row"
+                onClick={() => { setQuery(c.cmd); inputRef.current?.focus() }}
+                onDoubleClick={() => { onCommand?.('terminal', c.cmd); setQuery(''); closeSpotlight() }}>
+                <span className="spotlight-cmd-key">{c.cmd}</span>
+                <span className="spotlight-cmd-desc">{c.desc}</span>
+              </div>
+            )) : (
+              <div className="spotlight-cmd-row">
+                <span className="spotlight-cmd-desc" style={{ opacity: 0.4 }}>No match — press Enter to send to terminal</span>
+              </div>
+            )}
           </div>
         </div>
       )}

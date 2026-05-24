@@ -1,7 +1,7 @@
 import SessionItem from './SessionItem'
 import FileTree from './FileTree'
 
-export default function SessionList({ sessions, activeId, onSwitch, onRename, onClose, onNew, viewMode, onViewModeChange, focusMode }) {
+export default function SessionList({ sessions, activeId, onSwitch, onRename, onClose, onNew, viewMode, onViewModeChange, focusMode, onFileOpen, cwd }) {
   const isFiles = viewMode === 'files'
 
   return (
@@ -73,7 +73,7 @@ export default function SessionList({ sessions, activeId, onSwitch, onRename, on
 
         {/* Back face: File Tree */}
         <div className="flip-face flip-back">
-          <FileTree />
+          <FileTree onFileOpen={onFileOpen} basePath={cwd} />
         </div>
       </div>
     </aside>

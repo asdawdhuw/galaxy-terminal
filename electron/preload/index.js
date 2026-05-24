@@ -49,5 +49,12 @@ contextBridge.exposeInMainWorld('terminal', {
   updateAudioMenu: (state) => ipcRenderer.send('menu:update-audio', state),
   itunesSearch: (params) => ipcRenderer.invoke('itunes:search', params),
   bilibiliSearch: (params) => ipcRenderer.invoke('bilibili:search', params),
-  bilibiliPlayurl: (params) => ipcRenderer.invoke('bilibili:playurl', params)
+  bilibiliPlayurl: (params) => ipcRenderer.invoke('bilibili:playurl', params),
+  readFile: (path) => ipcRenderer.invoke('fs:readFile', path),
+  listDir: (path) => ipcRenderer.invoke('fs:listDir', path),
+  onCwd: (callback) => {
+    const handler = (_event, data) => callback(data)
+    ipcRenderer.on('pty:cwd', handler)
+    return () => ipcRenderer.removeListener('pty:cwd', handler)
+  }
 })

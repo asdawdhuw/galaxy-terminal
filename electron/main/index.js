@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut, protocol, net } = require('electron')
-const { join } = require('path')
+const { join, extname, relative } = require('path')
+const fs = require('fs')
 const os = require('os')
 const pty = require('node-pty')
 const crypto = require('crypto')
@@ -63,9 +64,13 @@ function createSession(cols, rows) {
     POWERSHELL_TELEMETRY_OPTOUT: '1'
   }
 
+  const wrapperCmd =
+    'Invoke-Expression (&starship init powershell);' +
+    '$o=${function:prompt};' +
+    '${function:prompt}={$p=$PWD.Path;Write-Host -NoNewline "`e]777;cwd;$p`a";&$o}'
+
   const proc = pty.spawn(shellPath(), [
-    '-NoLogo', '-NoProfile', '-NoExit', '-Command',
-    'Invoke-Expression (&starship init powershell)'
+    '-NoLogo', '-NoProfile', '-NoExit', '-Command', wrapperCmd
   ], {
     name: 'xterm-256color',
     cols: cols || 120,
@@ -78,6 +83,19 @@ function createSession(cols, rows) {
   activeSessionId = id
 
   proc.onData((data) => {
+    // Parse CWD from custom OSC 777 sequence
+    const cwdMatch = data.match(/\x1b\]777;cwd;(.+?)\x07/)
+    if (cwdMatch) {
+      const newCwd = cwdMatch[1]
+      const s = sessions.get(id)
+      if (s) s.cwd = newCwd
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('pty:cwd', { sessionId: id, cwd: newCwd })
+      }
+      // Strip the OSC sequence before sending to terminal
+      data = data.replace(/\x1b\]777;cwd;.+?\x07/g, '')
+    }
+
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('pty:output', { sessionId: id, data })
     }
@@ -132,9 +150,13 @@ function respawnSession(id) {
   try { s.process.removeAllListeners?.() } catch (_) {}
   try { s.process.kill() } catch (_) {}
 
+  const wrapperCmd =
+    'Invoke-Expression (&starship init powershell);' +
+    '$o=${function:prompt};' +
+    '${function:prompt}={$p=$PWD.Path;Write-Host -NoNewline "`e]777;cwd;$p`a";&$o}'
+
   const proc = pty.spawn(shellPath(), [
-    '-NoLogo', '-NoProfile', '-NoExit', '-Command',
-    'Invoke-Expression (&starship init powershell)'
+    '-NoLogo', '-NoProfile', '-NoExit', '-Command', wrapperCmd
   ], {
     name: 'xterm-256color',
     cols,
@@ -148,6 +170,17 @@ function respawnSession(id) {
   s.rows = rows
 
   proc.onData((data) => {
+    const cwdMatch = data.match(/\x1b\]777;cwd;(.+?)\x07/)
+    if (cwdMatch) {
+      const newCwd = cwdMatch[1]
+      const cur = sessions.get(id)
+      if (cur) cur.cwd = newCwd
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('pty:cwd', { sessionId: id, cwd: newCwd })
+      }
+      data = data.replace(/\x1b\]777;cwd;.+?\x07/g, '')
+    }
+
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('pty:output', { sessionId: id, data })
     }
@@ -309,6 +342,58 @@ ipcMain.on('win:maximize', () => {
 })
 ipcMain.on('win:close', () => {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.close()
+})
+
+// Resolve a path — if absolute (Windows drive or /), use as-is; else relative to project root
+function resolvePath(inputPath) {
+  if (!inputPath || inputPath === '.') return join(__dirname, '../../..')
+  if (/^[a-zA-Z]:[\\/]/.test(inputPath) || inputPath.startsWith('/')) return inputPath
+  return join(__dirname, '../../..', inputPath)
+}
+
+// File reader — for FileTree double-click preview
+ipcMain.handle('fs:readFile', async (_event, inputPath) => {
+  const fullPath = resolvePath(inputPath)
+  try {
+    const stat = fs.statSync(fullPath)
+    if (stat.isDirectory()) {
+      return { ok: false, error: 'Cannot read a directory' }
+    }
+    if (stat.size > 500 * 1024) {
+      return { ok: false, error: 'File too large (>500KB)' }
+    }
+    const content = fs.readFileSync(fullPath, 'utf-8')
+    const ext = extname(fullPath).slice(1) || 'txt'
+    return { ok: true, content, ext, name: inputPath, size: stat.size }
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
+})
+
+// Directory listing — for dynamic FileTree
+ipcMain.handle('fs:listDir', async (_event, inputPath) => {
+  const fullPath = resolvePath(inputPath)
+  try {
+    const stat = fs.statSync(fullPath)
+    if (!stat.isDirectory()) {
+      return { ok: false, error: 'Not a directory' }
+    }
+    const entries = fs.readdirSync(fullPath, { withFileTypes: true })
+    const children = entries
+      .filter(e => !e.name.startsWith('.') && e.name !== 'node_modules' && e.name !== 'out' && e.name !== '$RECYCLE.BIN' && e.name !== 'System Volume Information')
+      .map(e => ({
+        name: e.name,
+        type: e.isDirectory() ? 'dir' : 'file',
+        path: `${fullPath.replace(/[\\/]+$/, '')}\\${e.name}`.replace(/\\/g, '/'),
+      }))
+      .sort((a, b) => {
+        if (a.type !== b.type) return a.type === 'dir' ? -1 : 1
+        return a.name.localeCompare(b.name)
+      })
+    return { ok: true, children }
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
 })
 
 ipcMain.handle('pty:create', (_event, cols, rows) => {
