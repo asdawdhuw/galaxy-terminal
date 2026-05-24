@@ -27,14 +27,9 @@ export default {
         mono: ['JetBrains Mono', 'Cascadia Code', 'Consolas', 'monospace']
       },
       animation: {
-        'scan-line': 'scan-line 8s linear infinite',
         'cursor-blink': 'cursor-blink 1s step-end infinite'
       },
       keyframes: {
-        'scan-line': {
-          '0%': { transform: 'translateY(-100%)' },
-          '100%': { transform: 'translateY(100vh)' }
-        },
         'cursor-blink': {
           '0%, 50%': { opacity: '1' },
           '51%, 100%': { opacity: '0' }

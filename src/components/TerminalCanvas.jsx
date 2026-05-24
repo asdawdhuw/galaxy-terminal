@@ -79,6 +79,11 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
     term.reset()
     try { fitRef.current?.fit() } catch (_) {}
 
+    // Sync PTY dimensions for the newly active session — critical for
+    // interactive TUI apps (claude, vim, htop) whose cursor positioning
+    // depends on the shell knowing the exact terminal grid size.
+    window.terminal.resizePty(term.cols, term.rows)
+
     const buf = buffersRef.current.get(toId) || ''
     if (buf) {
       term.write(buf)
@@ -112,11 +117,15 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
     termRef.current = term
     fitRef.current = fitAddon
 
-    // Global Ctrl+F → toggle search bar
+    // Custom key handling: Ctrl+F toggle search, Ctrl+C/V delegate to browser clipboard
     term.attachCustomKeyEventHandler((e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault()
         setSearchOpen((v) => !v)
+        return false
+      }
+      // Let Ctrl+C / Ctrl+V pass through to the browser for native copy/paste
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v')) {
         return false
       }
       return true

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 const TIER_NAMES = ['Deep Space', 'Particle Stream', 'Interstellar']
 
@@ -28,12 +29,15 @@ export default function TopMenuBar({
 }) {
   const [audioOpen, setAudioOpen] = useState(false)
   const panelRef = useRef(null)
+  const btnRef = useRef(null)
   const fileRefs = useRef([null, null, null])
 
   useEffect(() => {
     if (!audioOpen) return
     function handler(e) {
-      if (panelRef.current && !panelRef.current.contains(e.target)) setAudioOpen(false)
+      if (panelRef.current && !panelRef.current.contains(e.target) && !btnRef.current?.contains(e.target)) {
+        setAudioOpen(false)
+      }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -140,6 +144,7 @@ export default function TopMenuBar({
         </div>
 
         <button
+          ref={btnRef}
           type="button"
           onClick={() => setAudioOpen((v) => !v)}
           className={`flex items-center gap-1.5 text-xs uppercase tracking-wider font-mono transition-colors ${
@@ -153,10 +158,10 @@ export default function TopMenuBar({
           <span className="text-cosmos-dim">▾</span>
         </button>
 
-        {audioOpen && (
+        {audioOpen && createPortal(
           <div
             ref={panelRef}
-            className="absolute top-12 right-4 z-50 w-[340px] p-4 rounded-xl border border-cosmos-border/40 glass-panel shadow-2xl font-mono max-h-[calc(100vh-56px)] overflow-y-auto"
+            className="fixed top-12 right-4 z-[9999] w-[340px] p-4 rounded-xl border border-cosmos-border/40 glass-panel shadow-2xl font-mono max-h-[calc(100vh-56px)] overflow-y-auto"
           >
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-semibold text-cosmos-accent tracking-widest">AUDIO</span>
@@ -237,7 +242,8 @@ export default function TopMenuBar({
               />
               <span className="text-[10px] text-cosmos-dim w-8 text-right">{Math.round(masterVolume * 100)}%</span>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </div>

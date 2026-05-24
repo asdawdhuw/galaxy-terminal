@@ -5,7 +5,11 @@
       "PowerShell(scoop *)",
       "PowerShell(npm config *)",
       "Bash(npm run *)",
-      "Bash(Remove-Item *)"
+      "Bash(Remove-Item *)",
+      "Bash(~/.kimi-webbridge/bin/kimi-webbridge status *)",
+      "Bash(~/.kimi-webbridge/bin/kimi-webbridge start *)",
+      "Bash(code *)",
+      "Bash(node *)"
     ]
   }
 }

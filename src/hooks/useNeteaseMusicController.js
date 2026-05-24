@@ -77,7 +77,7 @@ export default function useMusicController() {
     setSearching(true)
     setError(null)
     try {
-      const r = await window.terminal?.bilibiliSearch?.({ keyword: query, limit: 20 })
+      const r = await window.terminal?.bilibiliSearch?.({ keyword: query })
       if (!r?.ok) throw new Error(r?.error || 'Search failed')
       setResults(r.results || [])
     } catch (e) {

@@ -1,5 +1,11 @@
 import { useState, useRef } from 'react'
 
+function toBiliImg(url) {
+  if (!url) return ''
+  const stripped = url.replace(/^https?:\/\//, '')
+  return `bili-img://${stripped}`
+}
+
 export default function RightMusicSidebar({
   visible,
   onClose,
@@ -94,7 +100,7 @@ export default function RightMusicSidebar({
               </span>
 
               {track.cover && (
-                <img src={track.cover} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+                <img src={toBiliImg(track.cover)} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
               )}
 
               <div className="flex-1 min-w-0">

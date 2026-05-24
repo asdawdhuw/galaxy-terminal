@@ -9,9 +9,10 @@ process.on('uncaughtException', (err) => {
   console.error(err)
 })
 
-// Register custom stream:// protocol (bypasses CSP for audio playback)
+// Register custom protocols (bypass CSP for audio + image hotlinking)
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'stream', privileges: { bypassCSP: true, stream: true, supportFetchAPI: true, corsEnabled: true } }
+  { scheme: 'stream', privileges: { bypassCSP: true, stream: true, supportFetchAPI: true, corsEnabled: true } },
+  { scheme: 'bili-img', privileges: { standard: true, secure: true, bypassCSP: true, supportFetchAPI: true, corsEnabled: true } }
 ])
 
 // --- Session Manager ---
@@ -38,8 +39,20 @@ function shellPath() {
   return process.env.SHELL || 'bash'
 }
 
+function nextSessionName() {
+  const nums = new Set()
+  for (const s of sessions.values()) {
+    const m = s.name.match(/^session_(\d+)$/)
+    if (m) nums.add(parseInt(m[1], 10))
+  }
+  let n = 1
+  while (nums.has(n)) n++
+  return `session_${n}`
+}
+
 function createSession(cols, rows) {
   const id = `s${++sessionSeq}`
+  const name = nextSessionName()
   const cwd = process.env.USERPROFILE || process.env.HOME || '.'
   const env = {
     ...process.env,
@@ -61,7 +74,6 @@ function createSession(cols, rows) {
     env
   })
 
-  const name = `session_${sessionSeq}`
   sessions.set(id, { id, process: proc, name, cwd })
   activeSessionId = id
 
@@ -444,10 +456,10 @@ function signParams(params, mixinKey) {
   return { ...params, wts, w_rid }
 }
 
-// --- Bilibili Search (non-WBI, public endpoint) ---
+// --- Bilibili Search (stable v2 endpoint, 20 results, no WBI needed) ---
 
-ipcMain.handle('bilibili:search', async (_event, { keyword, limit = 20 }) => {
-  const url = `https://api.bilibili.com/x/web-interface/search/all/v2?keyword=${encodeURIComponent(keyword)}&search_type=video&limit=${limit}`
+ipcMain.handle('bilibili:search', async (_event, { keyword }) => {
+  const url = `https://api.bilibili.com/x/web-interface/search/all/v2?keyword=${encodeURIComponent(keyword)}&search_type=video`
   console.log('[Bilibili] Searching:', keyword)
   try {
     const r = await fetch(url, {
@@ -535,7 +547,7 @@ ipcMain.handle('bilibili:playurl', async (_event, { bvid }) => {
 // --- App lifecycle ---
 
 app.whenReady().then(() => {
-  // Custom stream:// protocol — must be registered AFTER app is ready
+  // Custom stream:// protocol — proxies audio with B站 Referer
   protocol.handle('stream', async (request) => {
     try {
       const targetUrl = new URL(request.url).searchParams.get('url')
@@ -547,6 +559,40 @@ app.whenReady().then(() => {
     } catch (e) {
       console.error('[stream] Error:', e.message)
       return new Response('Audio fetch failed', { status: 500 })
+    }
+  })
+
+  // Custom bili-img:// protocol — proxies B站 images with Referer to bypass hotlink protection
+  protocol.handle('bili-img', async (request) => {
+    try {
+      let rawUrl = request.url.replace(/^bili-img:\/\//, '')
+      // Handle bili-img://https/xxx edge case (double scheme)
+      if (rawUrl.startsWith('https/')) rawUrl = rawUrl.replace('https/', 'https://')
+      else if (rawUrl.startsWith('http/')) rawUrl = rawUrl.replace('http/', 'http://')
+      else if (!rawUrl.startsWith('http')) rawUrl = 'https://' + rawUrl
+
+      console.log('[bili-img] Proxying:', rawUrl.slice(0, 80) + '...')
+
+      const res = await fetch(rawUrl, {
+        headers: {
+          Referer: 'https://www.bilibili.com',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+      })
+
+      if (!res.ok) {
+        console.error('[bili-img] HTTP', res.status)
+        return new Response(null, { status: res.status })
+      }
+
+      return new Response(res.body, {
+        status: res.status,
+        statusText: res.statusText,
+        headers: { 'Content-Type': res.headers.get('Content-Type') || 'image/jpeg' }
+      })
+    } catch (e) {
+      console.error('[bili-img] Error:', e.message)
+      return new Response(null, { status: 500 })
     }
   })
   createWindow()

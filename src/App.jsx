@@ -22,7 +22,6 @@ export default function App() {
   const [audioMap, setAudioMap] = useState({ 0: idleSrc, 1: activeSrc, 2: climaxSrc })
   const [searchOpen, setSearchOpen] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
-  const [showScanLine, setShowScanLine] = useState(true)
 
   const music = useMusicController()
 
@@ -109,7 +108,7 @@ export default function App() {
   return (
     <div className="relative h-screen w-full overflow-hidden bg-cosmos-bg">
       {splash && <SplashScreen onDone={() => setSplash(false)} />}
-      <GalaxyBackground showScanLine={showScanLine} />
+      <GalaxyBackground />
 
       <div className="relative z-10 h-full flex flex-col">
         <TopMenuBar
@@ -178,13 +177,6 @@ export default function App() {
             <span>当前: {activeSession?.name ?? '—'}</span>
           </div>
           <div className="flex items-center gap-4 text-cosmos-dim font-mono">
-            <button
-              type="button"
-              onClick={() => setShowScanLine((v) => !v)}
-              className={`hover:text-cosmos-text transition-colors ${!showScanLine ? 'line-through opacity-50' : ''}`}
-            >
-              扫描线
-            </button>
             <span>|</span>
             <span>双击播放 · 自动连播下一首</span>
           </div>
