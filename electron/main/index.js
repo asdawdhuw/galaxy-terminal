@@ -673,7 +673,11 @@ app.whenReady().then(() => {
       if (/^[a-zA-Z]:[\\/]/.test(targetUrl) || targetUrl.startsWith('/')) {
         const fs = require('fs')
         const path = require('path')
-        const mimeTypes = { '.mp3':'audio/mpeg','.wav':'audio/wav','.flac':'audio/flac','.ogg':'audio/ogg','.m4a':'audio/mp4','.aac':'audio/aac','.wma':'audio/x-ms-wma' }
+        const mimeTypes = {
+          '.mp3':'audio/mpeg','.wav':'audio/wav','.flac':'audio/flac','.ogg':'audio/ogg','.m4a':'audio/mp4','.aac':'audio/aac','.wma':'audio/x-ms-wma',
+          '.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.gif':'image/gif','.webp':'image/webp','.svg':'image/svg+xml','.bmp':'image/bmp','.ico':'image/x-icon',
+          '.mp4':'video/mp4','.webm':'video/webm','.mkv':'video/x-matroska','.avi':'video/x-msvideo','.mov':'video/quicktime','.wmv':'video/x-ms-wmv','.flv':'video/x-flv'
+        }
         const ext = path.extname(targetUrl).toLowerCase()
         const mime = mimeTypes[ext] || 'audio/mpeg'
 

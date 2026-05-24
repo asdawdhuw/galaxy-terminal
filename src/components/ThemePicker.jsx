@@ -25,8 +25,8 @@ const THEMES = [
   {
     id: 'gemini',
     name: 'Gemini',
-    desc: 'Hacker green',
-    color: '#22c55e',
+    desc: 'Light green breeze',
+    color: '#4ade80',
     bg: '#050505',
   },
   {

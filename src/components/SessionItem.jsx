@@ -56,7 +56,7 @@ export default function SessionItem({
           className="session-item-input"
         />
       ) : (
-        <span className="session-item-name">{name}</span>
+        <span className="session-item-name" title={session.name}>{name}</span>
       )}
 
       {hovered && canClose && !editing && (

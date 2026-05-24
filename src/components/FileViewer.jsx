@@ -22,6 +22,11 @@ export default function FileViewer({ file, onClose }) {
 
   useEffect(() => {
     if (!file) return
+    const ext = (file.name?.split('.').pop() || 'txt').toLowerCase()
+    const isMedia = ['png','jpg','jpeg','gif','webp','svg','bmp','ico','mp4','webm','mkv','avi','mov','wmv','flv'].includes(ext)
+    // Media files: stream directly, no need to read content
+    if (isMedia) { setLoading(false); return }
+
     if (file.path) {
       setLoading(true)
       setErr('')
@@ -140,7 +145,11 @@ export default function FileViewer({ file, onClose }) {
 
   if (!file) return null
 
-  const lang = file.name?.split('.').pop() || 'txt'
+  const ext = (file.name?.split('.').pop() || 'txt').toLowerCase()
+  const isImage = ['png','jpg','jpeg','gif','webp','svg','bmp','ico'].includes(ext)
+  const isVideo = ['mp4','webm','mkv','avi','mov','wmv','flv'].includes(ext)
+  const isMedia = isImage || isVideo
+  const mediaUrl = file.path ? `stream://audio?url=${encodeURIComponent(file.path)}` : ''
 
   return createPortal(
     <div ref={overlayRef} className="file-viewer-overlay" onClick={handleOverlayClick}>
@@ -189,10 +198,18 @@ export default function FileViewer({ file, onClose }) {
           </div>
         )}
 
-        <div className="file-viewer-body" ref={codeContainerRef}>
+        <div className={`file-viewer-body ${isMedia ? 'file-viewer-media' : ''}`} ref={codeContainerRef}>
           {loading && <div className="file-viewer-loading">Reading file...</div>}
           {err && <div className="file-viewer-error">{err}</div>}
-          {!loading && !err && (
+          {!loading && !err && isImage && (
+            <img src={mediaUrl} alt={file.name} />
+          )}
+          {!loading && !err && isVideo && (
+            <video controls autoPlay src={mediaUrl}>
+              Your browser does not support the video tag.
+            </video>
+          )}
+          {!loading && !err && !isMedia && (
             <pre className="file-viewer-code" style={{ fontSize }}>
               {highlightedHtml ? (
                 <code dangerouslySetInnerHTML={{ __html: highlightedHtml }} />
@@ -209,8 +226,10 @@ export default function FileViewer({ file, onClose }) {
         </div>
 
         <div className="file-viewer-footer">
-          <span>{lang}</span>
-          <span>{content.split('\n').length} lines</span>
+          <span>{ext}</span>
+          {isImage && file.size && <span>{formatSize(file.size)}</span>}
+          {isVideo && <span>Video</span>}
+          {!isMedia && <span>{content.split('\n').length} lines</span>}
         </div>
       </div>
     </div>,

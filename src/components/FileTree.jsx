@@ -37,7 +37,7 @@ function TreeNode({ node, depth = 0, onFileOpen, loadChildren }) {
         <span className="file-tree-icon">
           {hasChildren ? (open ? '\u{1F4C2}' : '\u{1F4C1}') : '\u{1F4C4}'}
         </span>
-        <span className="file-tree-name">{node.name}</span>
+        <span className="file-tree-name" title={node.name}>{node.name}</span>
       </div>
       {hasChildren && open && children && children.map((child, i) => (
         <TreeNode key={i} node={child} depth={depth + 1} onFileOpen={onFileOpen} loadChildren={loadChildren} />

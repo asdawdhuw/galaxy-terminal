@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 
 function toBiliImg(url) {
   if (!url) return ''
@@ -18,6 +18,8 @@ export default function RightMusicSidebar({
   focusMode
 }) {
   const [query, setQuery] = useState('')
+  const [panelWidth, setPanelWidth] = useState(260)
+  const sidebarRef = useRef(null)
   const timerRef = useRef(null)
 
   function handleInput(v) {
@@ -28,10 +30,31 @@ export default function RightMusicSidebar({
     }
   }
 
+  const handleResizeStart = useCallback((e) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startW = sidebarRef.current?.offsetWidth || panelWidth
+    function onMove(ev) {
+      const w = Math.max(180, Math.min(500, startW - (ev.clientX - startX)))
+      setPanelWidth(w)
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [panelWidth])
+
   if (!visible) return null
 
   return (
-    <aside className={`sidebar-right animate-slide-in-right ${focusMode ? 'panel-focus-out' : ''}`}>
+    <aside
+      ref={sidebarRef}
+      className={`sidebar-right animate-slide-in-right ${focusMode ? 'panel-focus-out' : ''}`}
+      style={{ width: panelWidth, minWidth: panelWidth, maxWidth: panelWidth }}
+    >
+      <div className="sidebar-resize-handle" onMouseDown={handleResizeStart} style={{ left: -3, right: 'auto' }} />
       <div className="sidebar-right-header">
         <span className="sidebar-right-title">Bilibili Music</span>
         <button

@@ -1,11 +1,38 @@
+import { useRef, useState, useEffect, useCallback } from 'react'
 import SessionItem from './SessionItem'
 import FileTree from './FileTree'
 
 export default function SessionList({ sessions, activeId, onSwitch, onRename, onClose, onNew, viewMode, onViewModeChange, focusMode, onFileOpen, cwd }) {
   const isFiles = viewMode === 'files'
+  const sidebarRef = useRef(null)
+  const [sidebarWidth, setSidebarWidth] = useState(176)
+
+  // Resize logic
+  const handleResizeStart = useCallback((e) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startW = sidebarRef.current?.offsetWidth || sidebarWidth
+    function onMove(ev) {
+      const w = Math.max(140, Math.min(500, startW + (ev.clientX - startX)))
+      setSidebarWidth(w)
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [sidebarWidth])
 
   return (
-    <aside className={`sidebar-left flip-perspective ${focusMode ? 'panel-focus-out' : ''}`}>
+    <aside
+      ref={sidebarRef}
+      className={`sidebar-left flip-perspective ${focusMode ? 'panel-focus-out' : ''}`}
+      style={{ width: sidebarWidth, minWidth: sidebarWidth, maxWidth: sidebarWidth }}
+    >
+      {/* Resize handle */}
+      <div className="sidebar-resize-handle" onMouseDown={handleResizeStart} />
+
       <div className="sidebar-left-header">
         <h2 className="sidebar-left-title">{isFiles ? 'File Tree' : 'Sessions'}</h2>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
