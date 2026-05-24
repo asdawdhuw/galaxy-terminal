@@ -32,7 +32,7 @@ const COSMIC_THEME = {
   brightWhite: '#e8f0ff'
 }
 
-export default function TerminalCanvas({ activeSessionId, sessionName, onSessionCreated, musicEnabled = true, audioMap, masterVolume = 0.75, mode = 'dynamic', staticTier = 0, onTierChange }) {
+export default function TerminalCanvas({ activeSessionId, sessionName, onSessionCreated, musicEnabled = true, audioMap, masterVolume = 0.75, mode = 'dynamic', staticTier = 0, onTierChange, focusMode, onFocusToggle }) {
   const containerRef = useRef(null)
   const termRef = useRef(null)
   const fitRef = useRef(null)
@@ -41,6 +41,7 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
   const shownIdRef = useRef(null)        // which session xterm is currently showing
   const fontSizeRef = useRef(14)         // live fontSize, avoids stale closures
   const toastTimerRef = useRef(null)
+  const cmdBufRef = useRef('')           // Z-axis: command interception buffer
 
   const [searchOpen, setSearchOpen] = useState(false)
   const [fontSize, setFontSize] = useState(14)
@@ -118,8 +119,14 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
     termRef.current = term
     fitRef.current = fitAddon
 
-    // Smart key handling: Ctrl+F search, Ctrl+V paste, Ctrl+C copy-or-explicit-SIGINT
+    // Smart key handling: bypass xterm for non-terminal shortcuts
     term.attachCustomKeyEventHandler((e) => {
+      // Ctrl+K → bypass xterm, let GalaxySpotlight window listener catch it
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        return false
+      }
+
       // Ctrl+F → toggle search bar
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault()
@@ -151,9 +158,38 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
       return true
     })
 
-    // Forward keystrokes + feed IKD engine
+    // Forward keystrokes + feed IKD engine + Z-axis command interception
     term.onData((data) => {
       updateTypingStrike()
+
+      // Z-axis: intercept /shh and /unshh typed in terminal
+      if (data === '\r') {
+        const cmd = cmdBufRef.current.trim()
+        if (cmd === '/shh' || cmd === '/focus') {
+          cmdBufRef.current = ''
+          onFocusToggle?.(true)
+          term.write('\r\n\x1b[36m[Focus mode enabled — sidebars hidden, terminal fullscreen]\x1b[0m\r\n\x1b[33mType /unshh to restore layout\x1b[0m\r\n')
+          return
+        }
+        if (cmd === '/unshh') {
+          cmdBufRef.current = ''
+          onFocusToggle?.(false)
+          term.write('\r\n\x1b[36m[Focus mode disabled — layout restored]\x1b[0m\r\n')
+          return
+        }
+        cmdBufRef.current = ''
+      } else if (data === '\x7f' || data === '\b') {
+        cmdBufRef.current = cmdBufRef.current.slice(0, -1)
+      } else if (data === '\x03') {
+        // Ctrl+C — reset buffer
+        cmdBufRef.current = ''
+      } else if (data.length === 1 && data.charCodeAt(0) >= 32) {
+        cmdBufRef.current += data
+      } else {
+        // Arrow keys, control sequences — reset buffer (user navigating/editing)
+        cmdBufRef.current = ''
+      }
+
       window.terminal.sendInput(data)
     })
 
@@ -249,7 +285,11 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
   const title = sessionName ? `${sessionName} — pwsh` : 'pwsh — galaxy-terminal'
 
   return (
-    <div className="h-full flex flex-col terminal-area overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12 }}>
+    <div className="h-full flex flex-col terminal-area overflow-hidden" style={{
+      border: focusMode ? 'none' : '1px solid rgba(255,255,255,0.06)',
+      borderRadius: focusMode ? 0 : 12,
+      transition: 'border-radius 0.5s ease, border 0.5s ease'
+    }}>
       <div className="terminal-chrome-bar">
         <div className="terminal-chrome-dots">
           <div className="terminal-dot red" />

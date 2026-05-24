@@ -23,7 +23,8 @@
       "PowerShell($f = Get-Item \"E:\\\\GitHub_tools\\\\galaxy-terminal\\\\temp_screenshot.png\"; Write-Host \"Size: $\\($f.Length\\) bytes\"; $bytes = [System.IO.File]::ReadAllBytes\\($f.FullName\\); Write-Host \"Header: $\\([System.BitConverter]::ToString\\($bytes[0..11]\\)\\)\")",
       "PowerShell(Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\(\"E:\\\\GitHub_tools\\\\galaxy-terminal\\\\temp_screenshot.png\"\\); Write-Host \"Dimensions: $\\($img.Width\\)x$\\($img.Height\\)\"; $img.Dispose\\(\\))",
       "Bash(Select-String -Pattern \"logo|icon|Logo|Icon|LOGO|ICON\")",
-      "Bash(Select-Object -First 60)"
+      "Bash(Select-Object -First 60)",
+      "Bash(Get-Content *)"
     ]
   }
 }

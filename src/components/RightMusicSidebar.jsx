@@ -14,7 +14,8 @@ export default function RightMusicSidebar({
   onSearch,
   onPlay,
   currentTrack,
-  error
+  error,
+  focusMode
 }) {
   const [query, setQuery] = useState('')
   const timerRef = useRef(null)
@@ -30,7 +31,7 @@ export default function RightMusicSidebar({
   if (!visible) return null
 
   return (
-    <aside className="sidebar-right animate-slide-in-right">
+    <aside className={`sidebar-right animate-slide-in-right ${focusMode ? 'panel-focus-out' : ''}`}>
       <div className="sidebar-right-header">
         <span className="sidebar-right-title">Bilibili Music</span>
         <button

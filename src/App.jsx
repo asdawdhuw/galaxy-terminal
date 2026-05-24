@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import SessionList from './components/SessionList'
 import TerminalCanvas from './components/TerminalCanvas'
 import SplashScreen from './components/SplashScreen'
 import GalaxyBackground from './components/GalaxyBackground'
 import TopMenuBar from './components/TopMenuBar'
 import RightMusicSidebar from './components/RightMusicSidebar'
+import GalaxySpotlight from './components/GalaxySpotlight'
 import useMusicController from './hooks/useNeteaseMusicController'
 import idleSrc from '../sound/idle.mp3'
 import activeSrc from '../sound/active.mp3'
@@ -22,6 +23,13 @@ export default function App() {
   const [audioMap, setAudioMap] = useState({ 0: idleSrc, 1: activeSrc, 2: climaxSrc })
   const [searchOpen, setSearchOpen] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
+
+  // X-axis: sidebar view mode
+  const [sidebarViewMode, setSidebarViewMode] = useState('sessions')
+  // Z-axis: focus mode
+  const [focusMode, setFocusMode] = useState(false)
+
+  const termRef = useRef(null)
 
   const music = useMusicController()
 
@@ -85,6 +93,22 @@ export default function App() {
     }
   }, [activeId])
 
+  // Galaxy Spotlight command handler
+  function handleSpotlightCommand(type, payload) {
+    switch (type) {
+      case 'focus':
+        setFocusMode(payload)
+        break
+      case 'viewMode':
+        setSidebarViewMode(payload)
+        break
+      case 'terminal':
+        // Forward unknown command to active PTY session
+        window.terminal.sendInput(payload + '\r')
+        break
+    }
+  }
+
   useEffect(() => {
     const unsub = window.terminal.onSwitched?.((newId) => {
       setActiveId(newId)
@@ -110,6 +134,9 @@ export default function App() {
       {splash && <SplashScreen onDone={() => setSplash(false)} />}
       <GalaxyBackground />
 
+      {/* Galaxy Spotlight — Ctrl+K */}
+      <GalaxySpotlight onCommand={handleSpotlightCommand} />
+
       <div className="app-layout">
         <TopMenuBar
           currentTime={currentTime}
@@ -132,6 +159,7 @@ export default function App() {
         />
 
         <div className="app-body">
+          {/* X-axis: Sidebar with flip */}
           <SessionList
             sessions={sessions}
             activeId={activeId}
@@ -139,9 +167,13 @@ export default function App() {
             onRename={handleRename}
             onClose={handleClose}
             onNew={handleNewSession}
+            viewMode={sidebarViewMode}
+            onViewModeChange={setSidebarViewMode}
+            focusMode={focusMode}
           />
 
-          <div style={{ flex: 1, padding: 12, overflow: 'hidden', minWidth: 0 }}>
+          {/* Terminal — expands in focus mode */}
+          <div style={{ flex: 1, padding: focusMode ? 0 : 12, overflow: 'hidden', minWidth: 0, transition: 'padding 0.5s ease' }}>
             <TerminalCanvas
               activeSessionId={activeId}
               sessionName={activeSession?.name}
@@ -152,9 +184,12 @@ export default function App() {
               mode={audioMode}
               staticTier={staticTier}
               onTierChange={setCurrentTier}
+              focusMode={focusMode}
+              onFocusToggle={setFocusMode}
             />
           </div>
 
+          {/* Z-axis: Right sidebar hidden in focus mode */}
           <RightMusicSidebar
             visible={searchOpen}
             onClose={() => setSearchOpen(false)}
@@ -164,10 +199,12 @@ export default function App() {
             onPlay={music.play}
             currentTrack={music.currentTrack}
             error={music.error}
+            focusMode={focusMode}
           />
         </div>
 
-        <div className="status-bar">
+        {/* Z-axis: Status bar hidden in focus mode */}
+        <div className={`status-bar ${focusMode ? 'focus-hidden' : 'focus-visible'}`}>
           <div className="status-bar-left">
             <span style={{ color: 'var(--accent)' }}>●</span>
             <span>{activeSession?.name ?? '—'}</span>
