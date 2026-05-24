@@ -51,14 +51,36 @@ export default function TopMenuBar({
 
   const isStatic = mode === 'static'
 
+  function handleWinClose() { window.win?.close() }
+  function handleWinMinimize() { window.win?.minimize() }
+  function handleWinMaximize() { window.win?.maximize() }
+
   return (
-    <div className="title-bar">
+    <div className="title-bar" style={{ WebkitAppRegion: 'drag' }}>
       {/* Left: window dots + music controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3" style={{ WebkitAppRegion: 'no-drag' }}>
         <div className="title-bar-dots">
-          <div className="title-bar-dot" style={{ background: 'var(--dot-red)' }} />
-          <div className="title-bar-dot" style={{ background: 'var(--dot-yellow)' }} />
-          <div className="title-bar-dot" style={{ background: 'var(--dot-green)' }} />
+          <button
+            className="title-bar-dot"
+            style={{ background: 'var(--dot-red)', border: 'none', cursor: 'pointer' }}
+            onClick={handleWinClose}
+            title="Close"
+            aria-label="Close"
+          />
+          <button
+            className="title-bar-dot"
+            style={{ background: 'var(--dot-yellow)', border: 'none', cursor: 'pointer' }}
+            onClick={handleWinMinimize}
+            title="Minimize"
+            aria-label="Minimize"
+          />
+          <button
+            className="title-bar-dot"
+            style={{ background: 'var(--dot-green)', border: 'none', cursor: 'pointer' }}
+            onClick={handleWinMaximize}
+            title="Maximize"
+            aria-label="Maximize"
+          />
         </div>
 
         <button
@@ -137,25 +159,8 @@ export default function TopMenuBar({
         <span>{currentTime}</span>
       </div>
 
-      {/* Right: volume + audio panel toggle */}
-      <div className="flex items-center gap-3 ml-auto">
-        <div className="hidden md:flex items-center gap-2 group">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--text-dim)' }}>
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" strokeLinecap="round" />
-          </svg>
-          <div style={{ width: 0, overflow: 'hidden', transition: 'width 0.3s' }} className="group-hover:w-20">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={Math.round(masterVolume * 100)}
-              onChange={(e) => onVolumeChange?.(Number(e.target.value) / 100)}
-              style={{ width: '100%', height: 3, accentColor: 'var(--accent)', cursor: 'pointer' }}
-            />
-          </div>
-        </div>
-
+      {/* Right: audio panel toggle */}
+      <div className="flex items-center gap-3 ml-auto" style={{ WebkitAppRegion: 'no-drag' }}>
         <button
           ref={btnRef}
           type="button"
@@ -194,7 +199,7 @@ export default function TopMenuBar({
               padding: 16,
               borderRadius: 12,
               boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
-              fontFamily: 'Cascadia Code, JetBrains Mono, Fira Code, monospace',
+              fontFamily: 'JetBrainsMono NF, FiraCode Nerd Font, Cascadia Code, DejaVu Sans Mono, Consolas, monospace',
               maxHeight: 'calc(100vh - 56px)',
               overflowY: 'auto',
             }}

@@ -149,7 +149,7 @@ export default function InputBar({ disabled, onFirstCommand }) {
           outline: 'none',
           color: 'var(--text-primary)',
           fontSize: 14,
-          fontFamily: 'Cascadia Code, JetBrains Mono, Fira Code, monospace',
+          fontFamily: 'JetBrainsMono NF, FiraCode Nerd Font, Cascadia Code, DejaVu Sans Mono, Consolas, monospace',
           caretColor: 'var(--accent)',
         }}
         placeholder="Type a command..."

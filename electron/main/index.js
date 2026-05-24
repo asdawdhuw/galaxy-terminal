@@ -105,7 +105,8 @@ function createSession(cols, rows) {
       return
     }
     // Auto-respawn after brief delay (avoid tight crash-loop)
-    console.log(`[Session ${id}] Process exited (code ${exitCode}), respawning in 300ms...`)
+    const ts = new Date().toISOString().slice(11, 19)
+    console.log(`[${ts}] [Session ${id}] Shell exited (code ${exitCode}, crash #${s._exitCount}), respawning in 300ms...`)
     setTimeout(() => respawnSession(id), 300)
   })
 
@@ -170,7 +171,8 @@ function respawnSession(id) {
       }
       return
     }
-    console.log(`[Session ${id}] Process exited (code ${exitCode}), respawning in 300ms...`)
+    const ts2 = new Date().toISOString().slice(11, 19)
+    console.log(`[${ts2}] [Session ${id}] Shell exited (code ${exitCode}, crash #${cur._exitCount}), respawning in 300ms...`)
     setTimeout(() => respawnSession(id), 300)
   })
 
@@ -261,7 +263,8 @@ function createWindow() {
     minWidth: 700,
     minHeight: 400,
     title: 'galaxy-terminal',
-    backgroundColor: '#06060f',
+    backgroundColor: '#070b14',
+    frame: false,
     show: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -294,6 +297,19 @@ function createWindow() {
 }
 
 // --- IPC ---
+
+// Window controls (for frameless title bar)
+ipcMain.on('win:minimize', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.minimize()
+})
+ipcMain.on('win:maximize', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize()
+  }
+})
+ipcMain.on('win:close', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.close()
+})
 
 ipcMain.handle('pty:create', (_event, cols, rows) => {
   try {

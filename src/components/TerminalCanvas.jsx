@@ -93,10 +93,11 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
   // Effect 1: Terminal lifecycle (mount once)
   useEffect(() => {
     const term = new Terminal({
+      allowTransparency: true,
       cursorBlink: true,
       cursorStyle: 'bar',
       fontSize: 14,
-      fontFamily: 'Cascadia Code, JetBrains Mono, Fira Code, monospace',
+      fontFamily: 'JetBrainsMono NF, FiraCode Nerd Font, Cascadia Code, DejaVu Sans Mono, Consolas, monospace',
       letterSpacing: 1,
       lineHeight: 1.5,
       theme: COSMIC_THEME,
@@ -119,25 +120,34 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
 
     // Smart key handling: Ctrl+F search, Ctrl+V paste, Ctrl+C copy-or-explicit-SIGINT
     term.attachCustomKeyEventHandler((e) => {
+      // Ctrl+F → toggle search bar
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault()
         setSearchOpen((v) => !v)
         return false
       }
-      // Ctrl+V: always let browser handle paste
+
+      // Ctrl+V → always let browser handle paste (bypass xterm to avoid deadlock)
       if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
         return false
       }
-      // Ctrl+C: copy if text selected, otherwise send \x03 directly via IPC
+
+      // Ctrl+C → copy if text selected, otherwise send SIGINT via IPC
       // Bypassing xterm's internal handler prevents windowsMode from crashing the PTY session
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
         if (term.hasSelection()) {
-          return false // browser copy
+          // Let browser handle copy natively
+          return false
         }
         // No selection → send SIGINT explicitly through IPC, NOT through xterm
         window.terminal.sendInput('\x03')
+        // Force-refocus terminal after interrupt to prevent IPC pipe deadlock
+        setTimeout(() => {
+          try { term.focus() } catch (_) {}
+        }, 100)
         return false
       }
+
       return true
     })
 
@@ -239,7 +249,7 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
   const title = sessionName ? `${sessionName} — pwsh` : 'pwsh — galaxy-terminal'
 
   return (
-    <div className="h-full flex flex-col terminal-area rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+    <div className="h-full flex flex-col terminal-area overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12 }}>
       <div className="terminal-chrome-bar">
         <div className="terminal-chrome-dots">
           <div className="terminal-dot red" />
@@ -278,7 +288,7 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
         </div>
         )}
 
-        <div ref={containerRef} className="w-full h-full" />
+        <div ref={containerRef} className="w-full h-full" style={{ background: 'transparent' }} />
       </div>
 
       <div className="status-bar">

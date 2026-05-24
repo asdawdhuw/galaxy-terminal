@@ -5,8 +5,12 @@ export default function GalaxyBackground() {
   return (
     <>
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-25"
-        style={{ backgroundImage: `url(${bgImage})`, zIndex: -1 }}
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url(${bgImage})`,
+          zIndex: -1,
+          filter: 'brightness(0.5)',
+        }}
         aria-hidden
       />
       <Starfield />
