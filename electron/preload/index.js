@@ -41,18 +41,6 @@ contextBridge.exposeInMainWorld('terminal', {
     return () => ipcRenderer.removeListener('menu:toggle-music', h)
   },
   updateAudioMenu: (state) => ipcRenderer.send('menu:update-audio', state),
-  openSpotifyAuth: (params) => ipcRenderer.invoke('spotify:auth', params),
-  onSpotifyTokenSuccess: (cb) => {
-    const h = (_e, data) => cb(data)
-    ipcRenderer.on('spotify-token-success', h)
-    return () => ipcRenderer.removeListener('spotify-token-success', h)
-  },
-  onSpotifyTokenError: (cb) => {
-    const h = (_e, msg) => cb(msg)
-    ipcRenderer.on('spotify-token-error', h)
-    return () => ipcRenderer.removeListener('spotify-token-error', h)
-  },
-  refreshSpotifyToken: (params) => ipcRenderer.invoke('spotify:refresh', params),
   itunesSearch: (params) => ipcRenderer.invoke('itunes:search', params),
   bilibiliSearch: (params) => ipcRenderer.invoke('bilibili:search', params),
   bilibiliPlayurl: (params) => ipcRenderer.invoke('bilibili:playurl', params)

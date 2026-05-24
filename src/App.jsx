@@ -6,9 +6,9 @@ import GalaxyBackground from './components/GalaxyBackground'
 import TopMenuBar from './components/TopMenuBar'
 import RightMusicSidebar from './components/RightMusicSidebar'
 import useMusicController from './hooks/useNeteaseMusicController'
-import idleSrc from '../sound/Afraid of Time.mp3'
-import activeSrc from '../sound/Cornfield Chase.mp3'
-import climaxSrc from '../sound/No time for caution.mp3'
+import idleSrc from '../sound/idle.mp3'
+import activeSrc from '../sound/active.mp3'
+import climaxSrc from '../sound/climax.mp3'
 
 export default function App() {
   const [splash, setSplash] = useState(true)

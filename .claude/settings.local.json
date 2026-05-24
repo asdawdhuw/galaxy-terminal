@@ -9,7 +9,16 @@
       "Bash(~/.kimi-webbridge/bin/kimi-webbridge status *)",
       "Bash(~/.kimi-webbridge/bin/kimi-webbridge start *)",
       "Bash(code *)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(curl *)",
+      "Bash(for: ' + l.htmlFor\\); }\\); return JSON.stringify\\(result\\); }\\)\\(\\)\"},\"session\":\"github\"}')",
+      "Bash(ffmpeg -version)",
+      "Bash(ffmpeg -f lavfi -i anullsrc=r=44100:cl=mono -t 2 -q:a 9 idle.mp3 -y)",
+      "Bash(ffmpeg -f lavfi -i anullsrc=r=44100:cl=mono -t 2 -q:a 9 active.mp3 -y)",
+      "Bash(ffmpeg -f lavfi -i anullsrc=r=44100:cl=mono -t 2 -q:a 9 climax.mp3 -y)",
+      "Bash(ffmpeg -f lavfi -i anullsrc=r=44100:cl=mono -t 0.5 -q:a 9 startSound3.mp3 -y)",
+      "Bash(git checkout *)",
+      "Bash(git add *)"
     ]
   }
 }

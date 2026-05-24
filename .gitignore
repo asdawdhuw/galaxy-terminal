@@ -5,3 +5,20 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
+
+# Environment variables (Spotify keys, etc.)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS
+Desktop.ini
+
+# v0 template leftovers
+.v0-import/
+
