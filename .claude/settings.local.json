@@ -18,7 +18,8 @@
       "Bash(ffmpeg -f lavfi -i anullsrc=r=44100:cl=mono -t 2 -q:a 9 climax.mp3 -y)",
       "Bash(ffmpeg -f lavfi -i anullsrc=r=44100:cl=mono -t 0.5 -q:a 9 startSound3.mp3 -y)",
       "Bash(git checkout *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }
