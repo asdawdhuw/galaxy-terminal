@@ -8,28 +8,28 @@ import SearchBar from './SearchBar'
 import useAudioEngine from '../hooks/useAudioEngine'
 
 const COSMIC_THEME = {
-  background: 'rgba(8, 8, 24, 0.08)',
-  foreground: '#e0e0f0',
-  cursor: '#6eb5d9',
-  cursorAccent: '#06060f',
-  selectionBackground: '#6eb5d944',
-  selectionForeground: '#f0f0f8',
-  black: '#1a1a2e',
-  red: '#ff6b6b',
-  green: '#66d9e8',
-  yellow: '#ffd43b',
-  blue: '#6eb5d9',
-  magenta: '#da77f2',
+  background: 'transparent',
+  foreground: '#c8d8f0',
+  cursor: '#3d7fff',
+  cursorAccent: '#070b14',
+  selectionBackground: 'rgba(61,127,255,0.3)',
+  selectionForeground: '#c8d8f0',
+  black: '#0a1030',
+  red: '#ff5f57',
+  green: '#28c840',
+  yellow: '#febc2e',
+  blue: '#3d7fff',
+  magenta: '#7c6ff7',
   cyan: '#22b8cf',
-  white: '#c8c8d8',
-  brightBlack: '#4a4a6a',
-  brightRed: '#ff8787',
-  brightGreen: '#8ce8f0',
-  brightYellow: '#ffe066',
-  brightBlue: '#a78bfa',
-  brightMagenta: '#e599f7',
-  brightCyan: '#66d9e8',
-  brightWhite: '#f0f0f8'
+  white: '#c8d8f0',
+  brightBlack: '#1a3060',
+  brightRed: '#ff7f77',
+  brightGreen: '#40e060',
+  brightYellow: '#ffd040',
+  brightBlue: '#609fff',
+  brightMagenta: '#a090ff',
+  brightCyan: '#40d8e8',
+  brightWhite: '#e8f0ff'
 }
 
 export default function TerminalCanvas({ activeSessionId, sessionName, onSessionCreated, musicEnabled = true, audioMap, masterVolume = 0.75, mode = 'dynamic', staticTier = 0, onTierChange }) {
@@ -96,7 +96,7 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
       cursorBlink: true,
       cursorStyle: 'bar',
       fontSize: 14,
-      fontFamily: 'JetBrainsMono NF, JetBrainsMonoNL NF, JetBrains Mono, Cascadia Code, Consolas, monospace',
+      fontFamily: 'Cascadia Code, JetBrains Mono, Fira Code, monospace',
       letterSpacing: 1,
       lineHeight: 1.5,
       theme: COSMIC_THEME,
@@ -239,17 +239,17 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
   const title = sessionName ? `${sessionName} — pwsh` : 'pwsh — galaxy-terminal'
 
   return (
-    <div className="h-full flex flex-col bg-cosmos-bg/80 backdrop-blur-sm rounded-lg overflow-hidden border border-cosmos-border/50">
-      <div className="terminal-chrome flex items-center gap-2 px-4 py-2 border-b border-cosmos-border/50 shrink-0">
-        <div className="flex gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-red-500/80" />
-          <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-          <div className="w-3 h-3 rounded-full bg-cosmos-accent/70 shadow-[0_0_6px_rgba(110,181,217,0.5)]" />
+    <div className="h-full flex flex-col terminal-area rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+      <div className="terminal-chrome-bar">
+        <div className="terminal-chrome-dots">
+          <div className="terminal-dot red" />
+          <div className="terminal-dot yellow" />
+          <div className="terminal-dot green" />
         </div>
-        <span className="text-sm text-cosmos-dim font-mono ml-2 truncate">{title}</span>
-        <div className="ml-auto flex items-center gap-2 text-xs text-cosmos-dim font-mono shrink-0">
-          <span className="animate-pulse text-cosmos-accent">●</span>
-          <span>已连接</span>
+        <span className="terminal-chrome-title">{title}</span>
+        <div className="ml-auto flex items-center gap-2" style={{ fontSize: 11, color: 'var(--text-dim)' }}>
+          <span style={{ color: 'var(--accent)', fontSize: 10 }}>●</span>
+          <span>Connected</span>
         </div>
       </div>
 
@@ -281,13 +281,15 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
         <div ref={containerRef} className="w-full h-full" />
       </div>
 
-      <div className="px-4 py-1.5 terminal-chrome border-t border-cosmos-border/50 flex items-center justify-between text-xs text-cosmos-dim font-mono shrink-0">
-        <span>Galaxy Terminal · xterm</span>
-        <div className="flex items-center gap-2">
-          <span className="text-cosmos-accent">●</span>
-          <span>UTF-8</span>
-          <span>|</span>
+      <div className="status-bar">
+        <div className="status-bar-left">
+          <span style={{ color: 'var(--accent)', fontSize: 10 }}>●</span>
+          <span>{sessionName || 'pwsh'}</span>
+          <span>·</span>
           <span>pwsh</span>
+        </div>
+        <div className="status-bar-right">
+          <span>UTF-8</span>
         </div>
       </div>
     </div>

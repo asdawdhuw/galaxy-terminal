@@ -1,142 +1,154 @@
 import { useEffect, useRef } from 'react'
 
+const STAR_COUNT = 220
+const BREATHE_RATIO = 0.15
+const METEOR_CHANCE = 0.01
+const METEOR_LENGTH_MIN = 60
+const METEOR_LENGTH_MAX = 120
+
 export default function Starfield() {
   const canvasRef = useRef(null)
   const starsRef = useRef([])
-  const shootingStarsRef = useRef([])
-  const animationRef = useRef(0)
+  const meteorsRef = useRef([])
+  const animRef = useRef(0)
+  const timeRef = useRef(0)
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const resizeCanvas = () => {
+    const resize = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
-      initStars()
     }
 
-    const initStars = () => {
-      const starCount = Math.floor((canvas.width * canvas.height) / 3000)
-      starsRef.current = Array.from({ length: starCount }, () => ({
+    const init = () => {
+      resize()
+
+      // 220 stars with random params
+      starsRef.current = Array.from({ length: STAR_COUNT }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        z: Math.random() * 3 + 1,
-        radius: Math.random() * 1.5 + 0.5,
-        opacity: Math.random() * 0.5 + 0.3,
-        twinkleSpeed: Math.random() * 0.02 + 0.01,
-        twinkleOffset: Math.random() * Math.PI * 2
+        radius: 0.3 + Math.random() * 1.5,
+        opacity: 0.2 + Math.random() * 0.8,
+        speed: 0.05 + Math.random() * 0.25,
+        breathe: Math.random() < BREATHE_RATIO,
+        breathePhase: Math.random() * Math.PI * 2,
+        breatheSpeed: 0.02 + Math.random() * 0.04,
       }))
 
-      shootingStarsRef.current = Array.from({ length: 3 }, () => ({
-        x: 0,
-        y: 0,
-        length: 80,
-        speed: 15,
-        opacity: 0,
-        angle: Math.PI / 4,
-        active: false
-      }))
+      meteorsRef.current = []
     }
 
-    const createShootingStar = () => {
-      const star = shootingStarsRef.current.find((s) => !s.active)
-      if (star && Math.random() < 0.002) {
-        star.x = Math.random() * canvas.width
-        star.y = Math.random() * (canvas.height / 3)
-        star.length = Math.random() * 60 + 40
-        star.speed = Math.random() * 10 + 10
-        star.opacity = 1
-        star.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.3
-        star.active = true
+    const spawnMeteor = () => {
+      if (Math.random() < METEOR_CHANCE) {
+        const angle = Math.PI / 4 + (Math.random() - 0.5) * 0.5
+        meteorsRef.current.push({
+          x: Math.random() * canvas.width * 0.8,
+          y: Math.random() * canvas.height * 0.3,
+          length: METEOR_LENGTH_MIN + Math.random() * (METEOR_LENGTH_MAX - METEOR_LENGTH_MIN),
+          angle,
+          speed: 8 + Math.random() * 12,
+          opacity: 0.6 + Math.random() * 0.4,
+        })
       }
     }
 
-    const animate = (time) => {
+    const animate = (timestamp) => {
+      timeRef.current = timestamp * 0.001
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      starsRef.current.forEach((star) => {
-        const twinkle = Math.sin(time * star.twinkleSpeed + star.twinkleOffset)
-        const currentOpacity = star.opacity + twinkle * 0.3
-        const currentRadius = star.radius + twinkle * 0.2
+      // Draw stars
+      for (const star of starsRef.current) {
+        let opacity = star.opacity
+
+        if (star.breathe) {
+          const phase = Math.sin(timeRef.current * star.breatheSpeed + star.breathePhase)
+          opacity = star.opacity * (0.4 + 0.6 * ((phase + 1) / 2))
+        }
 
         ctx.beginPath()
-        ctx.arc(star.x, star.y, Math.max(0.1, currentRadius), 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, currentOpacity)})`
+        ctx.arc(star.x, star.y, Math.max(0.1, star.radius), 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(200, 216, 240, ${Math.max(0, Math.min(1, opacity))})`
         ctx.fill()
 
-        if (star.radius > 1) {
-          const gradient = ctx.createRadialGradient(
-            star.x, star.y, 0,
-            star.x, star.y, star.radius * 3
-          )
-          gradient.addColorStop(0, `rgba(180, 220, 255, ${currentOpacity * 0.3})`)
-          gradient.addColorStop(1, 'rgba(180, 220, 255, 0)')
+        // Glow for larger stars
+        if (star.radius > 1.0) {
+          const g = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.radius * 3)
+          g.addColorStop(0, `rgba(61, 127, 255, ${opacity * 0.25})`)
+          g.addColorStop(1, 'rgba(61, 127, 255, 0)')
           ctx.beginPath()
           ctx.arc(star.x, star.y, star.radius * 3, 0, Math.PI * 2)
-          ctx.fillStyle = gradient
+          ctx.fillStyle = g
           ctx.fill()
         }
-      })
 
-      createShootingStar()
-      shootingStarsRef.current.forEach((star) => {
-        if (!star.active) return
+        // Drift downward
+        star.y += star.speed
+        if (star.y > canvas.height + 5) {
+          star.y = -5
+          star.x = Math.random() * canvas.width
+        }
+      }
 
-        const gradient = ctx.createLinearGradient(
-          star.x, star.y,
-          star.x - Math.cos(star.angle) * star.length,
-          star.y - Math.sin(star.angle) * star.length
-        )
-        gradient.addColorStop(0, `rgba(255, 255, 255, ${star.opacity})`)
-        gradient.addColorStop(0.3, `rgba(180, 220, 255, ${star.opacity * 0.5})`)
-        gradient.addColorStop(1, 'rgba(180, 220, 255, 0)')
+      // Spawn and draw meteors
+      spawnMeteor()
+
+      for (let i = meteorsRef.current.length - 1; i >= 0; i--) {
+        const m = meteorsRef.current[i]
+
+        const startX = m.x
+        const startY = m.y
+        const endX = startX + Math.cos(m.angle) * m.length
+        const endY = startY + Math.sin(m.angle) * m.length
+
+        const grad = ctx.createLinearGradient(startX, startY, endX, endY)
+        grad.addColorStop(0, `rgba(200, 216, 240, ${m.opacity})`)
+        grad.addColorStop(0.2, `rgba(200, 216, 240, ${m.opacity * 0.5})`)
+        grad.addColorStop(1, 'rgba(200, 216, 240, 0)')
 
         ctx.beginPath()
-        ctx.moveTo(star.x, star.y)
-        ctx.lineTo(
-          star.x - Math.cos(star.angle) * star.length,
-          star.y - Math.sin(star.angle) * star.length
-        )
-        ctx.strokeStyle = gradient
-        ctx.lineWidth = 2
+        ctx.moveTo(startX, startY)
+        ctx.lineTo(endX, endY)
+        ctx.strokeStyle = grad
+        ctx.lineWidth = 1.5
         ctx.stroke()
 
+        // Head dot
         ctx.beginPath()
-        ctx.arc(star.x, star.y, 2, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`
+        ctx.arc(startX, startY, 1.5, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(255, 255, 255, ${m.opacity})`
         ctx.fill()
 
-        star.x += Math.cos(star.angle) * star.speed
-        star.y += Math.sin(star.angle) * star.speed
-        star.opacity -= 0.015
+        // Move and fade
+        m.x += Math.cos(m.angle) * m.speed
+        m.y += Math.sin(m.angle) * m.speed
+        m.opacity -= 0.012
 
-        if (star.opacity <= 0 || star.x > canvas.width || star.y > canvas.height) {
-          star.active = false
+        if (m.opacity <= 0 || m.x > canvas.width || m.y > canvas.height) {
+          meteorsRef.current.splice(i, 1)
         }
-      })
+      }
 
-      animationRef.current = requestAnimationFrame(animate)
+      animRef.current = requestAnimationFrame(animate)
     }
 
-    resizeCanvas()
-    window.addEventListener('resize', resizeCanvas)
-    animationRef.current = requestAnimationFrame(animate)
+    init()
+    window.addEventListener('resize', init)
+    animRef.current = requestAnimationFrame(animate)
 
     return () => {
-      window.removeEventListener('resize', resizeCanvas)
-      cancelAnimationFrame(animationRef.current)
+      window.removeEventListener('resize', init)
+      cancelAnimationFrame(animRef.current)
     }
   }, [])
 
   return (
     <canvas
+      id="starfield"
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none"
-      style={{ zIndex: 1 }}
       aria-hidden
     />
   )

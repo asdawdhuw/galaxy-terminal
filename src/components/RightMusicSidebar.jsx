@@ -30,56 +30,53 @@ export default function RightMusicSidebar({
   if (!visible) return null
 
   return (
-    <aside className="w-64 shrink-0 border-l border-cosmos-border/30 flex flex-col animate-slide-in-right glass-panel">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-cosmos-border/30">
-        <span className="text-xs font-semibold text-cosmos-dim/80 uppercase tracking-widest font-mono">
-          Bilibili Music
-        </span>
+    <aside className="sidebar-right animate-slide-in-right">
+      <div className="sidebar-right-header">
+        <span className="sidebar-right-title">Bilibili Music</span>
         <button
           type="button"
           onClick={onClose}
-          className="text-cosmos-dim hover:text-red-400 transition-colors text-lg leading-none"
+          className="sidebar-right-close"
           title="Close"
         >
           ×
         </button>
       </div>
 
-      <div className="px-3 py-3 border-b border-cosmos-border/20">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-cosmos-border/30 bg-cosmos-panel/40">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(139,139,168,0.6)" strokeWidth="2" strokeLinecap="round">
+      <div className="music-search-wrap">
+        <div className="music-search-inner">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" strokeWidth="2" strokeLinecap="round">
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
           <input
             type="text"
             value={query}
             onChange={(e) => handleInput(e.target.value)}
-            placeholder="搜索 B站 歌曲..."
+            placeholder="Search B站 songs..."
             spellCheck={false}
-            className="flex-1 bg-transparent outline-none text-xs text-cosmos-text/90 font-mono placeholder:text-cosmos-dim/40"
           />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="music-track-list">
         {error && (
-          <div className="px-4 py-3 text-[10px] text-red-400/70 font-mono text-center">
+          <div style={{ padding: '12px 16px', fontSize: 10, color: 'var(--dot-red)', opacity: 0.7, textAlign: 'center' }}>
             {error}
           </div>
         )}
         {searching && (
-          <div className="px-4 py-8 text-center text-[10px] text-cosmos-dim/50 font-mono">
+          <div style={{ padding: '32px 16px', textAlign: 'center', fontSize: 10, color: 'var(--text-dim)', opacity: 0.4 }}>
             Searching...
           </div>
         )}
         {!searching && results.length === 0 && query && (
-          <div className="px-4 py-8 text-center text-[10px] text-cosmos-dim/50 font-mono">
+          <div style={{ padding: '32px 16px', textAlign: 'center', fontSize: 10, color: 'var(--text-dim)', opacity: 0.4 }}>
             No results
           </div>
         )}
         {!searching && results.length === 0 && !query && (
-          <div className="px-4 py-6 text-center text-[10px] text-cosmos-dim/35 font-mono italic">
-            搜索 B站音乐 · 双击播放
+          <div style={{ padding: '24px 16px', textAlign: 'center', fontSize: 10, color: 'var(--text-dim)', opacity: 0.3, fontStyle: 'italic' }}>
+            Search B站 music · Double-click to play
           </div>
         )}
         {results.map((track, i) => {
@@ -88,38 +85,27 @@ export default function RightMusicSidebar({
             <div
               key={track.bvid || i}
               onDoubleClick={() => onPlay?.(track)}
-              className={`group flex items-center gap-3 px-4 py-3 cursor-pointer border-b border-cosmos-border/20
-                          transition-colors duration-150 font-mono
-                          ${isActive
-                            ? 'bg-cosmos-accent/12 text-cosmos-text'
-                            : 'text-cosmos-dim/75 hover:bg-cosmos-panel/40 hover:text-cosmos-text/90'
-                          }`}
+              className={`music-track-item${isActive ? ' playing' : ''}`}
             >
-              <span className={`w-5 text-[11px] shrink-0 ${isActive ? 'text-cosmos-accent' : 'text-cosmos-dim/45'}`}>
-                {i + 1}
-              </span>
+              <span className="music-track-index">{i + 1}</span>
 
               {track.cover && (
-                <img src={toBiliImg(track.cover)} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+                <img src={toBiliImg(track.cover)} alt="" className="music-track-cover" />
               )}
 
-              <div className="flex-1 min-w-0">
-                <div className={`text-xs truncate ${isActive ? 'text-cosmos-accent' : 'text-cosmos-text/85'}`}>
-                  {track.title}
-                </div>
-                <div className="text-[10px] text-cosmos-dim/60 truncate mt-0.5">
-                  {track.artist}
-                </div>
+              <div className="music-track-info">
+                <div className="music-track-title">{track.title}</div>
+                <div className="music-track-artist">{track.artist}</div>
               </div>
 
-              <span className="text-[10px] text-cosmos-dim/45 shrink-0 group-hover:hidden">
+              <span className="music-track-duration">
                 {track.duration || '--:--'}
               </span>
 
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onPlay?.(track) }}
-                className="hidden group-hover:flex items-center justify-center w-6 h-6 rounded text-cosmos-accent hover:bg-cosmos-accent/15 transition-colors shrink-0"
+                className="music-track-play"
                 title="Play"
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
@@ -131,8 +117,8 @@ export default function RightMusicSidebar({
         })}
       </div>
 
-      <div className="px-4 py-2 border-t border-cosmos-border/20 text-[9px] text-cosmos-dim/45 font-mono text-center">
-        Double-click or ▶ to play · 自动连播下一首
+      <div className="music-track-footer">
+        Double-click or ▶ to play · Auto-play next
       </div>
     </aside>
   )

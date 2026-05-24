@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg-deep: #070b14;
+  --bg-panel: rgba(8, 13, 28, 0.85);
+  --bg-terminal: rgba(4, 8, 18, 0.75);
+  --border: rgba(40, 80, 160, 0.25);
+  --accent: #3d7fff;
+  --accent-dim: #1a3a80;
+  --text-primary: #c8d8f0;
+  --text-dim: #4a6080;
+  --session-active: rgba(30, 60, 140, 0.6);
+  --dot-red: #ff5f57;
+  --dot-yellow: #febc2e;
+  --dot-green: #28c840;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -12,69 +27,528 @@ html, body, #root {
   height: 100%;
   width: 100%;
   overflow: hidden;
-  background: #0a0a14;
-  font-family: 'JetBrainsMono NF', 'JetBrainsMonoNL NF', 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+  background: var(--bg-deep);
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-/* --- Galaxy background (v0) --- */
-.galaxy-layer::after {
-  content: '';
-  position: absolute;
+/* ==============================
+   Starfield Canvas
+   ============================== */
+#starfield {
+  position: fixed;
   inset: 0;
-  background: rgba(6, 6, 15, 0.15);
+  z-index: 0;
+  pointer-events: none;
 }
 
-.nebula-overlay {
-  background:
-    radial-gradient(ellipse at 30% 20%, rgba(100, 150, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 80%, rgba(200, 100, 255, 0.08) 0%, transparent 50%);
+/* ==============================
+   Layout — three-column flex
+   ============================== */
+.app-layout {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-.cosmic-border-glow {
-  box-shadow: inset 0 0 0 1px rgba(110, 181, 217, 0.12);
+.app-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
 }
 
-.glass-panel {
-  background: rgba(18, 18, 31, 0.35);
+/* ==============================
+   Left Sidebar — Sessions (176px)
+   ============================== */
+.sidebar-left {
+  width: 176px;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
-.terminal-chrome {
-  background: rgba(18, 18, 31, 0.5);
-  backdrop-filter: blur(8px);
+.sidebar-left-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 8px;
 }
 
-.terminal-text-glow {
-  text-shadow: 0 0 5px currentColor;
+.sidebar-left-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-/* --- Glass panels for text readability --- */
-.terminal-mask {
-  background: rgba(6, 6, 15, 0.3);
-  backdrop-filter: blur(6px);
+.sidebar-left-add {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.sidebar-left-add:hover {
+  color: var(--accent);
 }
 
-/* --- Scrollbar styling --- */
+.sidebar-left-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.sidebar-left-footer {
+  padding: 12px 16px;
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ==============================
+   Session Item
+   ============================== */
+.session-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-dim);
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+  border-left: 2px solid transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  position: relative;
+}
+.session-item:hover {
+  background: rgba(30, 60, 140, 0.3);
+}
+.session-item.active {
+  background: var(--session-active);
+  color: var(--text-primary);
+  border-left-color: var(--accent);
+}
+
+.session-item-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.session-item-dot.active {
+  background: var(--dot-green);
+  box-shadow: 0 0 6px var(--dot-green);
+}
+.session-item-dot.idle {
+  background: var(--text-dim);
+}
+
+.session-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-item-close {
+  position: absolute;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+.session-item:hover .session-item-close {
+  opacity: 1;
+}
+.session-item-close:hover {
+  color: var(--dot-red);
+  background: rgba(255, 95, 87, 0.15);
+}
+
+.session-item-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--accent);
+  outline: none;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  min-width: 0;
+}
+
+/* ==============================
+   Center — Terminal Area
+   ============================== */
+.terminal-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  background: var(--bg-terminal);
+}
+
+/* Terminal chrome / tab bar */
+.terminal-chrome-bar {
+  height: 36px;
+  background: rgba(8, 13, 28, 0.9);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+  flex-shrink: 0;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.terminal-tab {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+  border-bottom: 2px solid transparent;
+  cursor: default;
+}
+.terminal-tab.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
+}
+
+.terminal-chrome-dots {
+  display: flex;
+  gap: 6px;
+  margin-right: 8px;
+}
+.terminal-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.terminal-dot.red    { background: var(--dot-red); }
+.terminal-dot.yellow { background: var(--dot-yellow); }
+.terminal-dot.green  { background: var(--dot-green); }
+
+.terminal-chrome-title {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+  margin-left: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==============================
+   Right Sidebar — Music (260px)
+   ============================== */
+.sidebar-right {
+  width: 260px;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.sidebar-right-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 8px;
+}
+
+.sidebar-right-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.sidebar-right-close {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+}
+.sidebar-right-close:hover {
+  color: var(--dot-red);
+  background: rgba(255, 95, 87, 0.12);
+}
+
+/* Music search input */
+.music-search-wrap {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.music-search-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgba(4, 8, 18, 0.4);
+}
+
+.music-search-inner input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+}
+.music-search-inner input::placeholder {
+  color: var(--text-dim);
+  opacity: 0.5;
+}
+
+/* Music track list */
+.music-track-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.music-track-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(40, 80, 160, 0.12);
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+  transition: background 0.15s, color 0.15s;
+}
+.music-track-item:hover {
+  background: rgba(30, 60, 140, 0.2);
+  color: var(--text-primary);
+}
+.music-track-item.playing {
+  background: rgba(30, 60, 140, 0.35);
+  color: var(--text-primary);
+}
+
+.music-track-index {
+  width: 18px;
+  font-size: 11px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  text-align: center;
+}
+.music-track-item.playing .music-track-index {
+  color: var(--accent);
+}
+
+.music-track-cover {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.music-track-info {
+  flex: 1;
+  min-width: 0;
+}
+.music-track-title {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.music-track-item.playing .music-track-title {
+  color: var(--accent);
+}
+.music-track-artist {
+  font-size: 10px;
+  color: var(--text-dim);
+  opacity: 0.6;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-track-duration {
+  font-size: 10px;
+  color: var(--text-dim);
+  opacity: 0.45;
+  flex-shrink: 0;
+}
+
+.music-track-play {
+  display: none;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.music-track-item:hover .music-track-play {
+  display: flex;
+}
+.music-track-play:hover {
+  background: rgba(61, 127, 255, 0.15);
+}
+
+.music-track-footer {
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 9px;
+  color: var(--text-dim);
+  opacity: 0.45;
+  text-align: center;
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ==============================
+   Custom Title Bar (TopMenuBar)
+   ============================== */
+.title-bar {
+  height: 36px;
+  background: rgba(4, 8, 20, 0.95);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  flex-shrink: 0;
+  position: relative;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.title-bar-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.title-bar-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.title-bar-name {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: -apple-system, 'Segoe UI', sans-serif;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ==============================
+   Bottom Status Bar
+   ============================== */
+.status-bar {
+  height: 24px;
+  background: rgba(4, 8, 20, 0.9);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+  flex-shrink: 0;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.status-bar-left,
+.status-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ==============================
+   Scrollbar
+   ============================== */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e1e3a;
-  border-radius: 3px;
+  background: rgba(61, 127, 255, 0.3);
+  border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2e2e5a;
+  background: rgba(61, 127, 255, 0.6);
+}
+
+/* Xterm viewport scrollbar */
+.xterm-viewport::-webkit-scrollbar {
+  width: 4px;
+}
+.xterm-viewport::-webkit-scrollbar-thumb {
+  background: rgba(61, 127, 255, 0.3);
+  border-radius: 2px;
 }
 
 /* ==============================
-   Splash Screen  v2 — deep-space upgrade
+   Splash Screen — deep-space
    ============================== */
-
-/* ---------- overlay ---------- */
 .splash-overlay {
   position: fixed;
   inset: 0;
@@ -88,7 +562,6 @@ html, body, #root {
   overflow: hidden;
 }
 
-/* ---------- nebula depth layers ---------- */
 .nebula {
   position: fixed;
   border-radius: 50%;
@@ -99,38 +572,38 @@ html, body, #root {
 .nebula-a {
   width: 55vw; height: 55vh;
   left: -12vw; top: 8vh;
-  background: radial-gradient(ellipse at center, rgba(124, 111, 247, 0.09) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(61, 127, 255, 0.08) 0%, transparent 70%);
   animation: nebula-drift 11s ease-in-out infinite;
 }
 .nebula-b {
   width: 48vw; height: 48vh;
   right: -10vw; bottom: 2vh;
-  background: radial-gradient(ellipse at center, rgba(110, 181, 217, 0.07) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(40, 80, 160, 0.07) 0%, transparent 70%);
   animation: nebula-drift 13s ease-in-out infinite reverse;
 }
 .nebula-c {
   width: 40vw; height: 40vh;
   left: 30vw; top: 50vh;
-  background: radial-gradient(ellipse at center, rgba(201, 143, 212, 0.06) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(61, 127, 255, 0.05) 0%, transparent 70%);
   animation: nebula-drift 15s ease-in-out infinite;
 }
 
-/* ---------- starfield ---------- */
 .splash-star {
   position: fixed;
   border-radius: 50%;
-  background: #e8e4ff;
+  background: #c8d8f0;
   animation: star-twinkle ease-in-out infinite;
   pointer-events: none;
   will-change: opacity, transform;
 }
+
 @keyframes star-twinkle {
   0%, 100% { opacity: 0.08; transform: translate3d(0, 0, 0) scale(0.6); }
   40%      { opacity: 0.4;  transform: translate3d(0, 0, 0) scale(1); }
   70%      { opacity: 0.9;  transform: translate3d(0, 0, 0) scale(1.5); }
 }
 
-/* ---------- galaxy centrepiece ---------- */
+/* Galaxy centrepiece */
 .galaxy-container {
   position: relative;
   width: 280px;
@@ -138,27 +611,26 @@ html, body, #root {
   margin-bottom: 52px;
 }
 
-/* ----- orbital particle rings ----- */
 .orbit-ring {
   position: absolute;
   border-radius: 50%;
   pointer-events: none;
   will-change: transform;
-  border: 1px solid rgba(124, 111, 247, 0.22);
+  border: 1px solid rgba(61, 127, 255, 0.22);
 }
 .ring-r1 {
   inset: 20%;
-  border-color: rgba(167, 139, 250, 0.42);
+  border-color: rgba(61, 127, 255, 0.42);
   animation: orbit-spin 7s linear infinite;
 }
 .ring-r2 {
   inset: 10%;
-  border-color: rgba(124, 111, 247, 0.3);
+  border-color: rgba(61, 127, 255, 0.3);
   animation: orbit-spin 11s linear infinite reverse;
 }
 .ring-r3 {
   inset: 0;
-  border-color: rgba(196, 181, 253, 0.24);
+  border-color: rgba(61, 127, 255, 0.24);
   animation: orbit-spin 16s linear infinite;
 }
 
@@ -169,8 +641,8 @@ html, body, #root {
   width: 5px; height: 5px;
   margin-left: -2.5px;
   border-radius: 50%;
-  background: #c4b5fd;
-  box-shadow: 0 0 8px 2px rgba(167, 139, 250, 0.7), 0 0 18px 4px rgba(124, 111, 247, 0.3);
+  background: #c8d8f0;
+  box-shadow: 0 0 8px 2px rgba(61, 127, 255, 0.7), 0 0 18px 4px rgba(61, 127, 255, 0.3);
 }
 
 @keyframes orbit-spin {
@@ -178,7 +650,7 @@ html, body, #root {
   100% { transform: translate3d(0, 0, 0) rotate(360deg); }
 }
 
-/* ----- spiral arms ----- */
+/* Spiral arms */
 .galaxy-arm {
   position: absolute;
   inset: 0;
@@ -187,26 +659,26 @@ html, body, #root {
   opacity: 0;
 }
 .arm-1 {
-  border-top-color: rgba(124, 111, 247, 0.45);
-  border-right-color: rgba(167, 139, 250, 0.2);
+  border-top-color: rgba(61, 127, 255, 0.45);
+  border-right-color: rgba(61, 127, 255, 0.2);
   animation: arm-unfurl 1.5s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards,
              arm-spin 10s 1.7s linear infinite;
 }
 .arm-2 {
-  border-top-color: rgba(167, 139, 250, 0.4);
-  border-left-color: rgba(124, 111, 247, 0.22);
+  border-top-color: rgba(61, 127, 255, 0.4);
+  border-left-color: rgba(61, 127, 255, 0.22);
   animation: arm-unfurl 1.4s 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards,
              arm-spin 13s 1.75s linear infinite reverse;
 }
 .arm-3 {
-  border-bottom-color: rgba(124, 111, 247, 0.35);
-  border-right-color: rgba(196, 181, 253, 0.2);
+  border-bottom-color: rgba(61, 127, 255, 0.35);
+  border-right-color: rgba(61, 127, 255, 0.2);
   animation: arm-unfurl 1.3s 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards,
              arm-spin 17s 1.8s linear infinite;
 }
 .arm-4 {
-  border-top-color: rgba(167, 139, 250, 0.28);
-  border-left-color: rgba(218, 119, 242, 0.18);
+  border-top-color: rgba(61, 127, 255, 0.28);
+  border-left-color: rgba(61, 127, 255, 0.18);
   animation: arm-unfurl 1.2s 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards,
              arm-spin 21s 1.85s linear infinite reverse;
 }
@@ -220,7 +692,7 @@ html, body, #root {
   100% { transform: translate3d(0, 0, 0) rotate(360deg); }
 }
 
-/* ----- core (3-layer for depth) ----- */
+/* Core */
 .galaxy-core {
   position: absolute;
   inset: 0;
@@ -232,7 +704,6 @@ html, body, #root {
   transform: translate3d(0, 0, 0) scale(0);
 }
 
-/* Outer — soft wide aura */
 .galaxy-core::before {
   content: '';
   position: absolute;
@@ -242,24 +713,22 @@ html, body, #root {
   will-change: box-shadow;
 }
 
-/* Inner glow orb */
 .core-mid {
   width: 32px; height: 32px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #ddd6fe, #8b7cf7 55%, #5b4fcf);
+  background: radial-gradient(circle at 35% 35%, #c8d8f0, #3d7fff 55%, #1a3a80);
   box-shadow:
-    0 0 20px 3px rgba(139, 124, 247, 0.6),
-    0 0 50px 10px rgba(124, 111, 247, 0.25);
+    0 0 20px 3px rgba(61, 127, 255, 0.6),
+    0 0 50px 10px rgba(61, 127, 255, 0.25);
   animation: core-breathe 2.8s 1.4s ease-in-out infinite;
 }
 
-/* Hot centre pin-prick */
 .core-hot {
   position: absolute;
   width: 8px; height: 8px;
   border-radius: 50%;
-  background: #f5f0ff;
-  box-shadow: 0 0 12px 3px rgba(167, 139, 250, 0.85);
+  background: #f0f4ff;
+  box-shadow: 0 0 12px 3px rgba(61, 127, 255, 0.85);
 }
 
 @keyframes core-emerge {
@@ -271,30 +740,30 @@ html, body, #root {
 @keyframes core-breathe {
   0%, 100% {
     box-shadow:
-      0 0 22px 4px rgba(139, 124, 247, 0.55),
-      0 0 55px 12px rgba(124, 111, 247, 0.22);
+      0 0 22px 4px rgba(61, 127, 255, 0.55),
+      0 0 55px 12px rgba(61, 127, 255, 0.22);
   }
   50% {
     box-shadow:
-      0 0 36px 8px rgba(167, 139, 250, 0.75),
-      0 0 80px 22px rgba(124, 111, 247, 0.32);
+      0 0 36px 8px rgba(61, 127, 255, 0.75),
+      0 0 80px 22px rgba(40, 80, 160, 0.32);
   }
 }
 
 @keyframes core-aura {
   0%, 100% {
     box-shadow:
-      0 0 40px 8px rgba(124, 111, 247, 0.18),
-      0 0 100px 24px rgba(110, 181, 217, 0.06);
+      0 0 40px 8px rgba(61, 127, 255, 0.18),
+      0 0 100px 24px rgba(40, 80, 160, 0.06);
   }
   50% {
     box-shadow:
-      0 0 60px 14px rgba(167, 139, 250, 0.28),
-      0 0 140px 36px rgba(124, 111, 247, 0.1);
+      0 0 60px 14px rgba(61, 127, 255, 0.28),
+      0 0 140px 36px rgba(40, 80, 160, 0.1);
   }
 }
 
-/* ---------- title block ---------- */
+/* Title */
 .splash-title-wrap {
   text-align: center;
   animation: title-emerge 1s 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -303,11 +772,11 @@ html, body, #root {
 }
 
 .splash-title {
-  font-family: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 2.25rem;
   font-weight: 800;
   letter-spacing: 0.38em;
-  background: linear-gradient(135deg, #7c6ff7 0%, #c4b5fd 18%, #a78bfa 50%, #da77f2 78%, #7c6ff7 100%);
+  background: linear-gradient(135deg, #3d7fff 0%, #c8d8f0 18%, #3d7fff 50%, #1a3a80 78%, #3d7fff 100%);
   background-size: 220% 220%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -318,18 +787,18 @@ html, body, #root {
 }
 
 .splash-sub {
-  font-family: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 0.68rem;
   font-weight: 400;
   letter-spacing: 0.5em;
-  color: rgba(167, 139, 250, 0.65);
+  color: rgba(61, 127, 255, 0.65);
   user-select: none;
-  min-height: 1.2em;  /* prevent layout jump while typing */
+  min-height: 1.2em;
 }
 
 .splash-cursor {
   display: inline-block;
-  color: rgba(196, 181, 253, 0.85);
+  color: rgba(200, 216, 240, 0.85);
   font-weight: 300;
   animation: cursor-flash 0.55s step-end infinite;
 }
@@ -338,8 +807,6 @@ html, body, #root {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0; }
 }
-
-/* ---------- shared keyframes ---------- */
 
 @keyframes nebula-drift {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
@@ -363,9 +830,8 @@ html, body, #root {
 }
 
 /* ==============================
-   Search Bar  — frosted glass slide-in
+   Search Bar — frosted glass
    ============================== */
-
 .search-bar {
   animation: search-slide-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -377,15 +843,13 @@ html, body, #root {
   margin: 8px 12px;
   padding: 6px 10px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(2, 2, 10, 0.88);
+  border: 1px solid var(--border);
+  background: rgba(4, 8, 18, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  will-change: transform;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(61, 127, 255, 0.04);
 }
 
-/* input row */
 .search-input-wrap {
   display: flex;
   align-items: center;
@@ -394,7 +858,7 @@ html, body, #root {
   min-width: 0;
 }
 .search-icon {
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-dim);
   flex-shrink: 0;
 }
 .search-input {
@@ -403,51 +867,49 @@ html, body, #root {
   background: transparent;
   border: none;
   outline: none;
-  color: #f0f0f5;
-  font-family: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: var(--text-primary);
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 13px;
-  caret-color: #6eb5d9;
+  caret-color: var(--accent);
 }
 .search-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-dim);
+  opacity: 0.5;
 }
 
-/* match counter */
 .search-counter {
-  font-family: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--text-dim);
   white-space: nowrap;
   flex-shrink: 0;
   min-width: 42px;
   text-align: right;
 }
 
-/* toggle buttons */
 .search-toggle {
   padding: 3px 6px;
   border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border);
   background: transparent;
-  color: rgba(255, 255, 255, 0.5);
-  font-family: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: var(--text-dim);
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 11px;
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
 }
 .search-toggle:hover {
-  color: rgba(255, 255, 255, 0.85);
-  border-color: rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  border-color: rgba(61, 127, 255, 0.4);
+  background: rgba(61, 127, 255, 0.08);
 }
 .search-toggle.active {
   color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(61, 127, 255, 0.5);
+  background: rgba(61, 127, 255, 0.15);
 }
 
-/* nav arrows */
 .search-nav-btn {
   display: flex;
   align-items: center;
@@ -457,21 +919,20 @@ html, body, #root {
   border-radius: 5px;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-dim);
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
 }
 .search-nav-btn:hover:not(:disabled) {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  background: rgba(61, 127, 255, 0.1);
 }
 .search-nav-btn:disabled {
-  color: rgba(255, 255, 255, 0.12);
+  color: rgba(74, 96, 128, 0.2);
   cursor: default;
 }
 
-/* close button */
 .search-close-btn {
   display: flex;
   align-items: center;
@@ -481,14 +942,14 @@ html, body, #root {
   border-radius: 5px;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-dim);
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
 }
 .search-close-btn:hover {
-  color: #ff6b6b;
-  background: rgba(255, 107, 107, 0.1);
+  color: var(--dot-red);
+  background: rgba(255, 95, 87, 0.1);
 }
 
 @keyframes search-slide-in {
@@ -496,7 +957,9 @@ html, body, #root {
   100% { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
-/* --- Right sidebar slide-in --- */
+/* ==============================
+   Right sidebar slide-in
+   ============================== */
 .animate-slide-in-right {
   animation: slide-in-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -505,7 +968,9 @@ html, body, #root {
   100% { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
-/* --- Font-size toast --- */
+/* ==============================
+   Font-size toast
+   ============================== */
 .font-toast {
   animation: toast-pop-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -516,16 +981,17 @@ html, body, #root {
   display: inline-block;
   padding: 6px 16px;
   border-radius: 20px;
-  background: rgba(2, 2, 12, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(4, 8, 20, 0.88);
+  border: 1px solid var(--border);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  color: #e0e0f0;
-  font-family: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: var(--text-primary);
+  font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 13px;
   user-select: none;
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
 }
+
 @keyframes toast-pop-in {
   0%   { opacity: 0; transform: translate3d(0, 6px, 0) scale(0.9); }
   100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
@@ -535,7 +1001,9 @@ html, body, #root {
   100% { opacity: 0; }
 }
 
-/* --- Xterm.js overrides --- */
+/* ==============================
+   Xterm.js overrides
+   ============================== */
 .xterm {
   padding: 8px 12px;
 }
@@ -545,10 +1013,37 @@ html, body, #root {
 .xterm-viewport {
   background: transparent !important;
 }
-.xterm-viewport::-webkit-scrollbar {
-  width: 6px;
+
+/* ==============================
+   Command Block cards
+   ============================== */
+.command-block {
+  border: 1px solid var(--border);
+  background: rgba(4, 8, 18, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
-.xterm-viewport::-webkit-scrollbar-thumb {
-  background: rgba(30, 30, 58, 0.6);
-  border-radius: 3px;
+
+.command-block-header {
+  background: rgba(4, 8, 18, 0.3);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ==============================
+   TopMenuBar Audio panel
+   ============================== */
+.audio-panel {
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ==============================
+   Utility
+   ============================== */
+.glass-panel {
+  background: var(--bg-panel);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }

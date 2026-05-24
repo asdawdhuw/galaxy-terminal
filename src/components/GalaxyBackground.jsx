@@ -5,14 +5,17 @@ export default function GalaxyBackground() {
   return (
     <>
       <div
-        className="galaxy-layer absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
-        style={{ backgroundImage: `url(${bgImage})` }}
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-25"
+        style={{ backgroundImage: `url(${bgImage})`, zIndex: -1 }}
         aria-hidden
       />
       <Starfield />
       <div
-        className="absolute inset-0 pointer-events-none nebula-overlay"
-        style={{ zIndex: 2 }}
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          zIndex: 0,
+          background: 'radial-gradient(ellipse at 30% 20%, rgba(61,127,255,0.06) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(40,80,160,0.05) 0%, transparent 50%)'
+        }}
         aria-hidden
       />
     </>

@@ -128,11 +128,11 @@ export default function InputBar({ disabled, onFirstCommand }) {
 
   return (
     <div
-      className="flex items-center gap-2 px-3 py-2 border-t-2 border-black/60 shrink-0 cursor-text"
-      style={{ background: 'rgba(8, 8, 24, 0.4)' }}
+      className="flex items-center gap-2 px-3 py-2 shrink-0 cursor-text"
+      style={{ background: 'rgba(4, 8, 18, 0.5)', borderTop: '1px solid var(--border)' }}
       onClick={focus}
     >
-      <span className="text-cosmos-accent text-sm font-mono shrink-0 select-none">{'>'}</span>
+      <span style={{ color: 'var(--accent)', fontSize: 14, fontFamily: 'monospace', flexShrink: 0, userSelect: 'none' }}>{'>'}</span>
       <input
         ref={inputRef}
         type="text"
@@ -142,8 +142,16 @@ export default function InputBar({ disabled, onFirstCommand }) {
         disabled={disabled}
         spellCheck={false}
         autoComplete="off"
-        className="flex-1 bg-transparent outline-none text-sm text-cosmos-text font-mono
-                   caret-cosmos-accent"
+        style={{
+          flex: 1,
+          background: 'transparent',
+          border: 'none',
+          outline: 'none',
+          color: 'var(--text-primary)',
+          fontSize: 14,
+          fontFamily: 'Cascadia Code, JetBrains Mono, Fira Code, monospace',
+          caretColor: 'var(--accent)',
+        }}
         placeholder="Type a command..."
       />
     </div>

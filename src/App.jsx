@@ -106,11 +106,11 @@ export default function App() {
   const activeSession = sessions.find((s) => s.id === activeId)
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-cosmos-bg">
+    <div className="relative h-screen w-full overflow-hidden" style={{ background: 'var(--bg-deep)' }}>
       {splash && <SplashScreen onDone={() => setSplash(false)} />}
       <GalaxyBackground />
 
-      <div className="relative z-10 h-full flex flex-col">
+      <div className="app-layout">
         <TopMenuBar
           currentTime={currentTime}
           musicOn={musicOn}
@@ -131,7 +131,7 @@ export default function App() {
           onMusicResume={music.resume}
         />
 
-        <div className="flex-1 flex overflow-hidden min-h-0">
+        <div className="app-body">
           <SessionList
             sessions={sessions}
             activeId={activeId}
@@ -141,7 +141,7 @@ export default function App() {
             onNew={handleNewSession}
           />
 
-          <div className="flex-1 p-4 overflow-hidden min-w-0">
+          <div style={{ flex: 1, padding: 12, overflow: 'hidden', minWidth: 0 }}>
             <TerminalCanvas
               activeSessionId={activeId}
               sessionName={activeSession?.name}
@@ -167,27 +167,18 @@ export default function App() {
           />
         </div>
 
-        <div className="h-7 glass-panel border-t border-cosmos-border/30 flex items-center justify-between px-4 text-xs shrink-0">
-          <div className="flex items-center gap-4 text-cosmos-dim font-mono">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-cosmos-accent animate-pulse shadow-[0_0_8px_rgba(110,181,217,0.6)]" />
-              {sessions.length} 个会话
-            </span>
+        <div className="status-bar">
+          <div className="status-bar-left">
+            <span style={{ color: 'var(--accent)' }}>●</span>
+            <span>{activeSession?.name ?? '—'}</span>
             <span>·</span>
-            <span>当前: {activeSession?.name ?? '—'}</span>
+            <span>pwsh</span>
           </div>
-          <div className="flex items-center gap-4 text-cosmos-dim font-mono">
-            <span>|</span>
-            <span>双击播放 · 自动连播下一首</span>
+          <div className="status-bar-right">
+            <span>UTF-8</span>
           </div>
         </div>
       </div>
-
-      <div
-        className="absolute inset-0 pointer-events-none cosmic-border-glow rounded-lg"
-        style={{ zIndex: 20 }}
-        aria-hidden
-      />
     </div>
   )
 }
