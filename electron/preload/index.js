@@ -22,6 +22,11 @@ contextBridge.exposeInMainWorld('terminal', {
     ipcRenderer.on('pty:switched', handler)
     return () => ipcRenderer.removeListener('pty:switched', handler)
   },
+  onRespawned: (callback) => {
+    const handler = (_event, data) => callback(data)
+    ipcRenderer.on('pty:respawned', handler)
+    return () => ipcRenderer.removeListener('pty:respawned', handler)
+  },
   resizePty: (cols, rows) => ipcRenderer.send('pty:resize', cols, rows),
   onMenuNewSession: (cb) => {
     const h = () => cb(); ipcRenderer.on('menu:new-session', h)

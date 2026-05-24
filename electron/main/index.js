@@ -74,7 +74,7 @@ function createSession(cols, rows) {
     env
   })
 
-  sessions.set(id, { id, process: proc, name, cwd })
+  sessions.set(id, { id, process: proc, name, cwd, cols: cols || 120, rows: rows || 30 })
   activeSessionId = id
 
   proc.onData((data) => {
@@ -84,7 +84,14 @@ function createSession(cols, rows) {
   })
 
   proc.onExit(({ exitCode }) => {
-    if (sessions.has(id)) {
+    // If session was already removed (intentional close via pty:close), skip
+    if (!sessions.has(id)) return
+
+    const s = sessions.get(id)
+    s._exitCount = (s._exitCount || 0) + 1
+    if (s._exitCount > 5) {
+      // Too many consecutive crashes — give up to avoid infinite loop
+      console.error(`[Session ${id}] Crashed ${s._exitCount} times, giving up`)
       sessions.delete(id)
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('pty:exit', { id, exitCode })
@@ -95,10 +102,82 @@ function createSession(cols, rows) {
           mainWindow.webContents.send('pty:switched', activeSessionId)
         }
       }
+      return
     }
+    // Auto-respawn after brief delay (avoid tight crash-loop)
+    console.log(`[Session ${id}] Process exited (code ${exitCode}), respawning in 300ms...`)
+    setTimeout(() => respawnSession(id), 300)
   })
 
   return { id, name }
+}
+
+function respawnSession(id) {
+  const s = sessions.get(id)
+  if (!s) return
+
+  const cols = s.cols || 120
+  const rows = s.rows || 30
+  const env = {
+    ...process.env,
+    TERM: 'xterm-256color',
+    LANG: 'en_US.UTF-8',
+    LC_ALL: 'en_US.UTF-8',
+    POWERSHELL_UPDATECHECK: 'Off',
+    POWERSHELL_TELEMETRY_OPTOUT: '1'
+  }
+
+  // Remove listeners from old dead process
+  try { s.process.removeAllListeners?.() } catch (_) {}
+  try { s.process.kill() } catch (_) {}
+
+  const proc = pty.spawn(shellPath(), [
+    '-NoLogo', '-NoProfile', '-NoExit', '-Command',
+    'Invoke-Expression (&starship init powershell)'
+  ], {
+    name: 'xterm-256color',
+    cols,
+    rows,
+    cwd: s.cwd,
+    env
+  })
+
+  s.process = proc
+  s.cols = cols
+  s.rows = rows
+
+  proc.onData((data) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('pty:output', { sessionId: id, data })
+    }
+  })
+
+  proc.onExit(({ exitCode }) => {
+    if (!sessions.has(id)) return
+    const cur = sessions.get(id)
+    cur._exitCount = (cur._exitCount || 0) + 1
+    if (cur._exitCount > 5) {
+      console.error(`[Session ${id}] Crashed ${cur._exitCount} times, giving up`)
+      sessions.delete(id)
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('pty:exit', { id, exitCode })
+      }
+      if (activeSessionId === id) {
+        activeSessionId = sessions.size > 0 ? [...sessions.keys()][0] : null
+        if (activeSessionId && mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('pty:switched', activeSessionId)
+        }
+      }
+      return
+    }
+    console.log(`[Session ${id}] Process exited (code ${exitCode}), respawning in 300ms...`)
+    setTimeout(() => respawnSession(id), 300)
+  })
+
+  // Notify frontend to clear buffer and reset terminal for this session
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('pty:respawned', { id, name: s.name })
+  }
 }
 
 function killAll() {
@@ -255,8 +334,10 @@ ipcMain.handle('pty:rename', (_event, id, newName) => {
 ipcMain.handle('pty:close', (_event, id) => {
   const s = sessions.get(id)
   if (!s) return false
-  try { s.process.kill() } catch (_) {}
+  // Delete BEFORE killing so onExit handler knows this was intentional
   sessions.delete(id)
+  try { s.process.removeAllListeners?.() } catch (_) {}
+  try { s.process.kill() } catch (_) {}
   if (activeSessionId === id) {
     activeSessionId = sessions.size > 0 ? [...sessions.keys()][0] : null
     if (mainWindow && !mainWindow.isDestroyed()) {

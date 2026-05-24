@@ -117,15 +117,25 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
     termRef.current = term
     fitRef.current = fitAddon
 
-    // Custom key handling: Ctrl+F toggle search, Ctrl+C/V delegate to browser clipboard
+    // Smart key handling: Ctrl+F search, Ctrl+V paste, Ctrl+C copy-or-explicit-SIGINT
     term.attachCustomKeyEventHandler((e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault()
         setSearchOpen((v) => !v)
         return false
       }
-      // Let Ctrl+C / Ctrl+V pass through to the browser for native copy/paste
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v')) {
+      // Ctrl+V: always let browser handle paste
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        return false
+      }
+      // Ctrl+C: copy if text selected, otherwise send \x03 directly via IPC
+      // Bypassing xterm's internal handler prevents windowsMode from crashing the PTY session
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        if (term.hasSelection()) {
+          return false // browser copy
+        }
+        // No selection → send SIGINT explicitly through IPC, NOT through xterm
+        window.terminal.sendInput('\x03')
         return false
       }
       return true
@@ -157,6 +167,15 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
     // Handle auto-switch (exit / close of active session)
     const unsubSwitched = window.terminal.onSwitched((newId) => {
       if (newId) switchDisplay(newId)
+    })
+
+    // Handle session respawn — clear buffer and reset terminal
+    const unsubRespawned = window.terminal.onRespawned(({ id }) => {
+      buffersRef.current.set(id, '')
+      if (id === shownIdRef.current) {
+        term.reset()
+        term.write('\x1b[36m[Session respawned]\x1b[0m\r\n')
+      }
     })
 
     // Ctrl+Wheel → font size + toast
@@ -205,6 +224,7 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
       unsubOutput()
       unsubExit()
       unsubSwitched()
+      unsubRespawned()
       term.dispose()
     }
   }, [])
