@@ -8,6 +8,7 @@ const ALL_COMMANDS = [
   { cmd: '/unchill', desc: 'Exit ambient mode' },
   { cmd: '/theme',   desc: 'Switch gravity field' },
   { cmd: '/mode',    desc: 'Toggle glass / solid terminal' },
+  { cmd: '/music',   desc: 'Open local music player' },
   { cmd: '/files',   desc: 'Show file tree' },
   { cmd: '/sessions',desc: 'Show session list' },
 ]
@@ -82,6 +83,9 @@ export default function GalaxySpotlight({ onCommand }) {
         closeSpotlight()
       } else if (cmd === '/mode') {
         onCommand?.('modeToggle')
+        closeSpotlight()
+      } else if (cmd === '/music') {
+        onCommand?.('musicPlayer')
         closeSpotlight()
       } else if (cmd) {
         // Unknown command — send to terminal

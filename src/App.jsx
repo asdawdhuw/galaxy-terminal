@@ -8,12 +8,22 @@ import RightMusicSidebar from './components/RightMusicSidebar'
 import GalaxySpotlight from './components/GalaxySpotlight'
 import FileViewer from './components/FileViewer'
 import ThemePicker from './components/ThemePicker'
+import MusicPlayer from './components/MusicPlayer'
 import useMusicController from './hooks/useNeteaseMusicController'
 import idleSrc from '../sound/idle.mp3'
 import activeSrc from '../sound/active.mp3'
 import climaxSrc from '../sound/climax.mp3'
 
 export default function App() {
+  // Music popup window — render standalone player
+  if (window.location.hash === '#/music') {
+    return (
+      <div className="h-screen w-full" style={{ background: 'var(--bg-deep)' }}>
+        <MusicPlayer isPopup onClose={() => window.close()} />
+      </div>
+    )
+  }
+
   const [splash, setSplash] = useState(true)
   const [sessions, setSessions] = useState([])
   const [activeId, setActiveId] = useState(null)
@@ -121,6 +131,9 @@ export default function App() {
       case 'modeToggle':
         setTerminalSolid((v) => !v)
         break
+      case 'musicPlayer':
+        window.terminal.openMusicWindow()
+        break
       case 'terminal':
         // Forward unknown command to active PTY session
         window.terminal.sendInput(payload + '\r')
@@ -204,6 +217,7 @@ export default function App() {
           onClose={() => setThemePickerOpen(false)}
         />
       )}
+
 
       <div className="app-layout">
         <TopMenuBar

@@ -202,6 +202,12 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
           term.write('\r\n\x1b[36m[Terminal background toggled]\x1b[0m\r\n')
           return
         }
+        if (cmd === '/music') {
+          cmdBufRef.current = ''
+          window.terminal.openMusicWindow()
+          term.write('\r\n\x1b[36m[Music popup opened]\x1b[0m\r\n')
+          return
+        }
         cmdBufRef.current = ''
       } else if (data === '\x7f' || data === '\b') {
         cmdBufRef.current = cmdBufRef.current.slice(0, -1)

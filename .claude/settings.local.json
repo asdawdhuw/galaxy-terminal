@@ -26,7 +26,17 @@
       "Bash(Select-Object -First 60)",
       "Bash(Get-Content *)",
       "Bash(npx electron-vite *)",
-      "Bash(starship config *)"
+      "Bash(starship config *)",
+      "WebSearch",
+      "Bash(bash *)",
+      "PowerShell($r = Invoke-RestMethod -Uri \"http://127.0.0.1:10086/command\" -Method POST -Body '{\"action\":\"screenshot\",\"args\":{\"format\":\"png\",\"quality\":50},\"session\":\"archive2\"}' -ContentType \"application/json\"; $bytes = [Convert]::FromBase64String\\($r.data.data\\); [System.IO.File]::WriteAllBytes\\(\"E:\\\\GitHub_tools\\\\galaxy-terminal\\\\temp_screenshot.png\", $bytes\\); Write-Host \"Saved: temp_screenshot.png \\($\\($bytes.Length\\) bytes\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(f'{doc.get\\(\\\\\"identifier\\\\\",\\\\\"?\\\\\"\\)} | {doc.get\\(\\\\\"title\\\\\",\\\\\"?\\\\\"\\)[:80]} | DL:{doc.get\\(\\\\\"downloads\\\\\",0\\)}'\\) for doc in d['response']['docs']]\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(f'Total: {d[\\\\\"response\\\\\"][\\\\\"numFound\\\\\"]}'\\); [print\\(f'  {doc.get\\(\\\\\"identifier\\\\\",\\\\\"?\\\\\"\\)}'\\) for doc in d['response']['docs']]\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(f'Total: {d[\\\\\"response\\\\\"][\\\\\"numFound\\\\\"]}'\\); [print\\(f'  DL:{doc.get\\(\\\\\"downloads\\\\\",0\\):>6} | {doc.get\\(\\\\\"identifier\\\\\",\\\\\"?\\\\\"\\)[:70]} | {doc.get\\(\\\\\"title\\\\\",\\\\\"?\\\\\"\\)[:80]}'\\) for doc in d['response']['docs']]\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(f'Total: {d[\\\\\"response\\\\\"][\\\\\"numFound\\\\\"]}'\\); [print\\(f'  DL:{doc.get\\(\\\\\"downloads\\\\\",0\\):>6} | {doc.get\\(\\\\\"identifier\\\\\",\\\\\"?\\\\\"\\)[:80]}'\\) for doc in d['response']['docs']]\")",
+      "Bash(python3 -c ' *)",
+      "PowerShell(Get-ChildItem \"E:\\\\GitHub_tools\\\\galaxy-terminal\\\\music\" -File | Select-Object Name, @{N='Size';E={\"{0:N1} KB\" -f \\($_.Length/1KB\\)}})",
+      "PowerShell(node -e \"const path = require\\('path'\\); console.log\\(path.join\\(__dirname, '../../..', 'music'\\)\\)\" 2>&1)"
     ]
   }
 }

@@ -56,5 +56,7 @@ contextBridge.exposeInMainWorld('terminal', {
     const handler = (_event, data) => callback(data)
     ipcRenderer.on('pty:cwd', handler)
     return () => ipcRenderer.removeListener('pty:cwd', handler)
-  }
+  },
+  musicList: () => ipcRenderer.invoke('music:list'),
+  openMusicWindow: () => ipcRenderer.send('music:open-window')
 })

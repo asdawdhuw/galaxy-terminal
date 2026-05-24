@@ -408,6 +408,48 @@ ipcMain.handle('pty:create', (_event, cols, rows) => {
   }
 })
 
+// Music library — scan project music folder
+ipcMain.handle('music:list', async () => {
+  const musicDir = join(__dirname, '../..', 'music')
+  try {
+    if (!fs.existsSync(musicDir)) return { ok: true, files: [] }
+    const entries = fs.readdirSync(musicDir, { withFileTypes: true })
+    const files = entries
+      .filter(e => e.isFile() && /\.(mp3|wav|flac|ogg|m4a|aac|wma)$/i.test(e.name))
+      .map(e => ({
+        name: e.name,
+        path: join(musicDir, e.name).replace(/\\/g, '/'),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+    return { ok: true, files }
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
+})
+
+// Music popup window
+let musicPopup = null
+ipcMain.on('music:open-window', () => {
+  if (musicPopup && !musicPopup.isDestroyed()) {
+    musicPopup.focus()
+    return
+  }
+  musicPopup = new BrowserWindow({
+    width: 420, height: 620, minWidth: 320, minHeight: 400,
+    title: 'Galaxy Music',
+    backgroundColor: '#070b14',
+    frame: false,
+    resizable: true,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      contextIsolation: true, nodeIntegration: false, sandbox: false
+    }
+  })
+  const baseUrl = process.env.ELECTRON_RENDERER_URL || `file://${join(__dirname, '../../out/renderer/index.html')}`
+  musicPopup.loadURL(baseUrl + '#/music')
+  musicPopup.on('closed', () => { musicPopup = null })
+})
+
 ipcMain.handle('pty:list', () => {
   return [...sessions.values()].map(s => ({ id: s.id, name: s.name }))
 })
@@ -621,11 +663,59 @@ ipcMain.handle('bilibili:playurl', async (_event, { bvid }) => {
 // --- App lifecycle ---
 
 app.whenReady().then(() => {
-  // Custom stream:// protocol — proxies audio with B站 Referer
+  // Custom stream:// protocol — proxies remote audio + local music files
   protocol.handle('stream', async (request) => {
     try {
       const targetUrl = new URL(request.url).searchParams.get('url')
       if (!targetUrl) return new Response('Missing url param', { status: 400 })
+
+      // Local file: serve with proper streaming + range support for audio seek
+      if (/^[a-zA-Z]:[\\/]/.test(targetUrl) || targetUrl.startsWith('/')) {
+        const fs = require('fs')
+        const path = require('path')
+        const mimeTypes = { '.mp3':'audio/mpeg','.wav':'audio/wav','.flac':'audio/flac','.ogg':'audio/ogg','.m4a':'audio/mp4','.aac':'audio/aac','.wma':'audio/x-ms-wma' }
+        const ext = path.extname(targetUrl).toLowerCase()
+        const mime = mimeTypes[ext] || 'audio/mpeg'
+
+        if (!fs.existsSync(targetUrl)) return new Response('Not found', { status: 404 })
+        const stat = fs.statSync(targetUrl)
+        const fileSize = stat.size
+
+        // Handle Range requests (needed for audio seeking)
+        const rangeHeader = request.headers.get('range')
+        if (rangeHeader) {
+          const parts = rangeHeader.replace(/bytes=/, '').split('-')
+          const start = parseInt(parts[0], 10)
+          const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1
+          const chunkSize = (end - start) + 1
+          const buf = Buffer.alloc(chunkSize)
+          const fd = fs.openSync(targetUrl, 'r')
+          fs.readSync(fd, buf, 0, chunkSize, start)
+          fs.closeSync(fd)
+          return new Response(buf, {
+            status: 206,
+            headers: {
+              'Content-Type': mime,
+              'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+              'Content-Length': String(chunkSize),
+              'Accept-Ranges': 'bytes',
+            }
+          })
+        }
+
+        // Full file response (initial load)
+        const data = fs.readFileSync(targetUrl)
+        return new Response(data, {
+          status: 200,
+          headers: {
+            'Content-Type': mime,
+            'Content-Length': String(fileSize),
+            'Accept-Ranges': 'bytes',
+          }
+        })
+      }
+
+      // Remote URL — proxy with B站 Referer
       console.log('[stream] Proxying:', targetUrl.slice(0, 80) + '...')
       return net.fetch(targetUrl, {
         headers: { Referer: 'https://www.bilibili.com' }

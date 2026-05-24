@@ -14,6 +14,7 @@
   --border:          rgba(56, 189, 248, 0.12);
   --accent:          #38bdf8;
   --accent-dim:      #0c4a6e;
+  --accent-r:        56; --accent-g: 189; --accent-b: 248;
   --accent-glow:     0 0 10px rgba(56, 189, 248, 0.4);
   --foreground:      #e2e8f0;
   --text-primary:    #e2e8f0;
@@ -49,6 +50,7 @@
   --border:          rgba(34, 211, 238, 0.12);
   --accent:          #22d3ee;
   --accent-dim:      #0e7490;
+  --accent-r:        34; --accent-g: 211; --accent-b: 238;
   --accent-glow:     0 0 12px rgba(34, 211, 238, 0.5);
   --foreground:      #e0f2fe;
   --text-primary:    #e0f2fe;
@@ -84,6 +86,7 @@
   --border:          rgba(249, 115, 22, 0.12);
   --accent:          #f97316;
   --accent-dim:      #9a3412;
+  --accent-r:        249; --accent-g: 115; --accent-b: 22;
   --accent-glow:     0 0 12px rgba(249, 115, 22, 0.5);
   --foreground:      #fef3c7;
   --text-primary:    #fef3c7;
@@ -119,6 +122,7 @@
   --border:          rgba(34, 197, 94, 0.12);
   --accent:          #22c55e;
   --accent-dim:      #166534;
+  --accent-r:        34; --accent-g: 197; --accent-b: 94;
   --accent-glow:     0 0 12px rgba(34, 197, 94, 0.5);
   --foreground:      #e8ffe8;
   --text-primary:    #d0f0d0;
@@ -154,6 +158,7 @@
   --border:          rgba(0, 0, 0, 0.12);
   --accent:          #000000;
   --accent-dim:      #333333;
+  --accent-r:        0; --accent-g: 0; --accent-b: 0;
   --accent-glow:     0 0 0 1px rgba(0, 0, 0, 0.2);
   --foreground:      #000000;
   --text-primary:    #000000;
@@ -1656,6 +1661,54 @@ html, body, #root {
   display: block;
 }
 
+/* File viewer search bar */
+.file-viewer-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(4, 8, 18, 0.35);
+  flex-shrink: 0;
+}
+.file-viewer-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: 'JetBrainsMono NF', 'FiraCode Nerd Font', 'Cascadia Code', 'DejaVu Sans Mono', 'Consolas', monospace;
+  caret-color: var(--accent);
+}
+.file-viewer-search-input::placeholder { color: var(--text-dim); opacity: 0.4; }
+.file-viewer-search-count {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: 'JetBrainsMono NF', 'FiraCode Nerd Font', 'Cascadia Code', 'DejaVu Sans Mono', 'Consolas', monospace;
+  white-space: nowrap;
+}
+.file-viewer-search-close {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none;
+  color: var(--text-dim);
+  cursor: pointer; font-size: 16px; border-radius: 3px;
+}
+.file-viewer-search-close:hover { color: var(--dot-red); background: rgba(255,95,87,0.1); }
+
+/* Search highlights */
+.file-search-match {
+  background: rgba(61, 127, 255, 0.35);
+  color: inherit;
+  border-radius: 2px;
+}
+.file-search-current {
+  background: rgba(249, 115, 22, 0.6);
+  color: #fff;
+  border-radius: 2px;
+}
+
 .file-viewer-footer {
   display: flex;
   align-items: center;
@@ -1906,4 +1959,135 @@ html, body, #root {
   background: rgba(61, 127, 255, 0.08);
   font-family: inherit;
   font-size: 9px;
+}
+
+/* ==============================
+   Music Player
+   ============================== */
+.music-player-overlay {
+  position: fixed; inset: 0; z-index: 260;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(4, 8, 18, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: overlay-fade-in 0.2s ease;
+}
+.music-player-panel {
+  width: 380px; max-width: 90vw; max-height: 80vh;
+  border-radius: 16px; border: 1px solid var(--border);
+  background: var(--bg-panel);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  display: flex; flex-direction: column; overflow: hidden;
+  animation: spotlight-slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.music-popup-full {
+  width: 100%; max-width: none; max-height: none;
+  height: 100%; border-radius: 0; border: none;
+  animation: none;
+}
+
+/* Search bar */
+.music-player-search {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px; flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+.music-player-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; flex-shrink: 0;
+}
+.music-player-title {
+  font-size: 13px; font-weight: 600; color: var(--text-primary);
+  letter-spacing: 1px;
+  font-family: 'JetBrainsMono NF', 'FiraCode Nerd Font', 'Cascadia Code', monospace;
+}
+
+/* Now playing */
+.music-player-now {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  background: rgba(4, 8, 18, 0.3);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.music-player-cover {
+  width: 48px; height: 48px;
+  border-radius: 8px;
+  background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.music-player-info {
+  flex: 1; min-width: 0;
+}
+.music-player-track {
+  font-size: 12px; color: var(--text-primary); font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: 'JetBrainsMono NF', 'FiraCode Nerd Font', 'Cascadia Code', monospace;
+}
+.music-player-time {
+  font-size: 10px; color: var(--text-dim); opacity: 0.6; margin-top: 3px;
+}
+
+/* Progress bar */
+.music-player-bar-wrap {
+  height: 3px; background: rgba(255,255,255,0.05); cursor: pointer; flex-shrink: 0;
+}
+.music-player-bar {
+  height: 100%; background: var(--accent);
+  transition: width 0.15s linear;
+}
+
+/* Controls */
+.music-player-controls {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  padding: 12px 0; flex-shrink: 0;
+}
+.music-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%; border: 1px solid var(--accent);
+  background: transparent; color: var(--accent);
+  font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  opacity: 0.7;
+}
+.music-btn:hover { opacity: 1; background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.12); }
+.music-btn-play {
+  width: 44px; height: 44px;
+  background: var(--accent); border-color: var(--accent);
+  color: #fff; font-size: 16px;
+}
+.music-btn-play:hover { background: var(--accent-dim); }
+
+/* Playlist */
+.music-player-list {
+  flex: 1; overflow-y: auto; min-height: 0;
+  border-top: 1px solid var(--border);
+  padding: 4px 0;
+}
+.music-track {
+  display: flex; align-items: center; gap: 10px;
+  height: 40px; padding: 0 16px; cursor: pointer;
+  font-family: 'JetBrainsMono NF', 'FiraCode Nerd Font', 'Cascadia Code', monospace;
+  font-size: 13px; color: var(--text-primary); opacity: 0.7;
+  transition: background 0.1s, color 0.1s, opacity 0.1s;
+  border-left: 3px solid transparent;
+}
+.music-track:hover { background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.08); opacity: 0.9; }
+.music-track.active { color: var(--accent); background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.1); opacity: 1; font-weight: 600; border-left-color: var(--accent); }
+.music-track-idx {
+  width: 24px; font-size: 11px; opacity: 0.45; text-align: right; flex-shrink: 0;
+}
+.music-track.active .music-track-idx { opacity: 0.8; }
+.music-track-name {
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.music-track-playing { font-size: 12px; flex-shrink: 0; }
+
+.music-player-empty {
+  text-align: center; padding: 32px 16px; font-size: 11px;
+  color: var(--text-dim); opacity: 0.5;
+  font-family: 'JetBrainsMono NF', 'FiraCode Nerd Font', 'Cascadia Code', monospace;
 }
