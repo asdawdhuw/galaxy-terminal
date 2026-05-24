@@ -19,7 +19,11 @@
       "Bash(ffmpeg -f lavfi -i anullsrc=r=44100:cl=mono -t 0.5 -q:a 9 startSound3.mp3 -y)",
       "Bash(git checkout *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "PowerShell($f = Get-Item \"E:\\\\GitHub_tools\\\\galaxy-terminal\\\\temp_screenshot.png\"; Write-Host \"Size: $\\($f.Length\\) bytes\"; $bytes = [System.IO.File]::ReadAllBytes\\($f.FullName\\); Write-Host \"Header: $\\([System.BitConverter]::ToString\\($bytes[0..11]\\)\\)\")",
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\(\"E:\\\\GitHub_tools\\\\galaxy-terminal\\\\temp_screenshot.png\"\\); Write-Host \"Dimensions: $\\($img.Width\\)x$\\($img.Height\\)\"; $img.Dispose\\(\\))",
+      "Bash(Select-String -Pattern \"logo|icon|Logo|Icon|LOGO|ICON\")",
+      "Bash(Select-Object -First 60)"
     ]
   }
 }

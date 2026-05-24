@@ -151,6 +151,30 @@ export default function TopMenuBar({
 
       {/* Center: app name + clock */}
       <div className="title-bar-name" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <svg width="20" height="20" viewBox="0 0 40 40" fill="none" style={{ flexShrink: 0 }}>
+          {/* Orbit rings — tilted ellipses for 3D depth */}
+          <ellipse cx="20" cy="20" rx="16" ry="5" transform="rotate(-15 20 20)"
+            stroke="var(--accent)" strokeWidth="0.4" opacity="0.3" fill="none" />
+          <ellipse cx="20" cy="20" rx="13" ry="4" transform="rotate(45 20 20)"
+            stroke="var(--accent)" strokeWidth="0.35" opacity="0.25" fill="none" />
+          <ellipse cx="20" cy="20" rx="10" ry="3" transform="rotate(-60 20 20)"
+            stroke="var(--accent)" strokeWidth="0.3" opacity="0.2" fill="none" />
+
+          {/* Far-back star (small, dim, on rear orbit) */}
+          <circle cx="12" cy="14" r="1.2" fill="#c8d8f0" opacity="0.35" />
+          {/* Mid-orbit star (medium) */}
+          <circle cx="29" cy="22" r="1.4" fill="#c8d8f0" opacity="0.55" />
+          {/* Front-orbit star (larger, brighter) */}
+          <circle cx="18" cy="30" r="1.6" fill="#c8d8f0" opacity="0.75" />
+
+          {/* Central star — 4-point starburst */}
+          <path d="M20 4 L21.5 18.5 L36 20 L21.5 21.5 L20 36 L18.5 21.5 L4 20 L18.5 18.5 Z"
+            fill="var(--accent)" opacity="0.9" />
+          {/* Core glow */}
+          <circle cx="20" cy="20" r="3" fill="#fff" opacity="0.8" />
+          {/* Outer halo */}
+          <circle cx="20" cy="20" r="7" fill="var(--accent)" opacity="0.15" />
+        </svg>
         <span style={{ fontWeight: 600 }}>Galaxy Terminal</span>
         <span style={{ opacity: 0.5, fontSize: 10 }}>|</span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ opacity: 0.5 }}>
