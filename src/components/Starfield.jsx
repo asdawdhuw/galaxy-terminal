@@ -35,7 +35,7 @@ export default function Starfield({ chillMode }) {
         y: Math.random() * canvas.height,
         radius: 0.3 + Math.random() * 1.5,
         opacity: 0.2 + Math.random() * 0.8,
-        speed: 0.05 + Math.random() * 0.25,
+        speed: 0.02 + Math.random() * 0.12,
         breathe: Math.random() < BREATHE_RATIO,
         breathePhase: Math.random() * Math.PI * 2,
         breatheSpeed: 0.02 + Math.random() * 0.04,

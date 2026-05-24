@@ -2021,6 +2021,73 @@ html, body, #root {
 }
 
 /* ==============================
+   Multiverse Canvas
+   ============================== */
+.multiverse-canvas {
+  width: 100%; height: 100%;
+}
+.multiverse-canvas .react-flow__pane {
+  cursor: grab;
+}
+.multiverse-controls {
+  background: rgba(8,14,24,0.8) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+.multiverse-controls button {
+  background: transparent !important;
+  border-color: var(--border) !important;
+  color: var(--text-dim) !important;
+  fill: var(--text-dim) !important;
+  transition: background 0.15s, color 0.15s;
+}
+.multiverse-controls button:hover {
+  background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.12) !important;
+}
+
+/* Terminal Node */
+.terminal-node-wrapper {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.terminal-node-chrome {
+  display: flex; align-items: center; gap: 8px;
+  height: 32px; padding: 0 10px;
+  background: rgba(4,8,18,0.4);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.terminal-node-title {
+  font-size: 11px; color: var(--text-dim);
+  font-family: 'JetBrainsMono NF', 'FiraCode Nerd Font', 'Cascadia Code', monospace;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  flex: 1;
+}
+.terminal-node-body {
+  height: 180px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(2,6,14,0.6);
+}
+.terminal-node-preview {
+  text-align: center;
+  font-family: 'JetBrainsMono NF', 'FiraCode Nerd Font', 'Cascadia Code', monospace;
+}
+
+/* Node dots */
+.node-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  border: none; cursor: pointer; padding: 0;
+  transition: filter 0.15s, transform 0.15s;
+}
+.node-dot:hover { filter: brightness(1.4); transform: scale(1.2); }
+.node-dot-red    { background: var(--dot-red); }
+.node-dot-yellow { background: var(--dot-yellow); }
+.node-dot-green  { background: var(--dot-green); }
+
+/* ==============================
    Music Player
    ============================== */
 .music-player-overlay {

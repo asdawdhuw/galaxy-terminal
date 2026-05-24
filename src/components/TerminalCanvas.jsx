@@ -32,7 +32,7 @@ const COSMIC_THEME = {
   brightWhite: '#e8f0ff'
 }
 
-export default function TerminalCanvas({ activeSessionId, sessionName, onSessionCreated, musicEnabled = true, audioMap, masterVolume = 0.75, mode = 'dynamic', staticTier = 0, onTierChange, focusMode, onFocusToggle, onChillToggle, onThemePick, terminalSolid, onModeToggle }) {
+export default function TerminalCanvas({ activeSessionId, sessionName, onSessionCreated, musicEnabled = true, audioMap, masterVolume = 0.75, mode = 'dynamic', staticTier = 0, onTierChange, focusMode, onFocusToggle, onChillToggle, onThemePick, terminalSolid, onModeToggle, onCanvasToggle, onCloseSession }) {
   const containerRef = useRef(null)
   const termRef = useRef(null)
   const fitRef = useRef(null)
@@ -208,6 +208,13 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
           setTimeout(() => { term.write('\r\n\x1b[36m[Music popup opened]\x1b[0m\r\n') }, 50)
           return
         }
+        if (cmd === '/canvas') {
+          cmdBufRef.current = ''
+          window.terminal.sendInput('\x03')
+          onCanvasToggle?.()
+          setTimeout(() => { term.write('\r\n\x1b[36m[Canvas toggled]\x1b[0m\r\n') }, 50)
+          return
+        }
         cmdBufRef.current = ''
       } else if (data === '\x7f' || data === '\b') {
         cmdBufRef.current = cmdBufRef.current.slice(0, -1)
@@ -326,9 +333,9 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
     }}>
       <div className="terminal-chrome-bar">
         <div className="terminal-chrome-dots">
-          <div className="terminal-dot red" />
-          <div className="terminal-dot yellow" />
-          <div className="terminal-dot green" />
+          <button className="terminal-dot red" onClick={() => onCloseSession?.()} title="Close session" />
+          <button className="terminal-dot yellow" onClick={() => onModeToggle?.()} title="Toggle glass/solid" />
+          <button className="terminal-dot green" onClick={() => onFocusToggle?.(!focusMode)} title="Toggle focus mode" />
         </div>
         <span className="terminal-chrome-title">{title}</span>
         <div className="ml-auto flex items-center gap-2" style={{ fontSize: 11, color: 'var(--text-dim)' }}>

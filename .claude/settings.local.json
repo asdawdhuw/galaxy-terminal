@@ -36,7 +36,8 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(f'Total: {d[\\\\\"response\\\\\"][\\\\\"numFound\\\\\"]}'\\); [print\\(f'  DL:{doc.get\\(\\\\\"downloads\\\\\",0\\):>6} | {doc.get\\(\\\\\"identifier\\\\\",\\\\\"?\\\\\"\\)[:80]}'\\) for doc in d['response']['docs']]\")",
       "Bash(python3 -c ' *)",
       "PowerShell(Get-ChildItem \"E:\\\\GitHub_tools\\\\galaxy-terminal\\\\music\" -File | Select-Object Name, @{N='Size';E={\"{0:N1} KB\" -f \\($_.Length/1KB\\)}})",
-      "PowerShell(node -e \"const path = require\\('path'\\); console.log\\(path.join\\(__dirname, '../../..', 'music'\\)\\)\" 2>&1)"
+      "PowerShell(node -e \"const path = require\\('path'\\); console.log\\(path.join\\(__dirname, '../../..', 'music'\\)\\)\" 2>&1)",
+      "Bash(npm install *)"
     ]
   }
 }

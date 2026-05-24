@@ -9,6 +9,7 @@ import GalaxySpotlight from './components/GalaxySpotlight'
 import FileViewer from './components/FileViewer'
 import ThemePicker from './components/ThemePicker'
 import MusicPlayer from './components/MusicPlayer'
+import MultiverseView from './components/MultiverseView'
 import useMusicController from './hooks/useNeteaseMusicController'
 import idleSrc from '../sound/idle.mp3'
 import activeSrc from '../sound/active.mp3'
@@ -47,6 +48,7 @@ export default function App() {
   const [themePickerOpen, setThemePickerOpen] = useState(false)
   const [terminalSolid, setTerminalSolid] = useState(false)
   const [uiOpacity, setUiOpacity] = useState(0.85)
+  const [canvasMode, setCanvasMode] = useState(false)
 
   const termRef = useRef(null)
 
@@ -134,6 +136,9 @@ export default function App() {
         break
       case 'musicPlayer':
         window.terminal.openMusicWindow()
+        break
+      case 'canvasToggle':
+        setCanvasMode((v) => !v)
         break
       case 'terminal':
         // Forward unknown command to active PTY session
@@ -259,25 +264,40 @@ export default function App() {
             cwd={activeCwd}
           />
 
-          {/* Terminal — expands in focus mode */}
+          {/* Terminal or Multiverse Canvas */}
           <div style={{ flex: 1, padding: focusMode ? 0 : 12, overflow: 'hidden', minWidth: 0, transition: 'padding 0.5s ease' }}>
-            <TerminalCanvas
-              activeSessionId={activeId}
-              sessionName={activeSession?.name}
-              onSessionCreated={handleSessionCreated}
-              musicEnabled={musicOn && !splash}
-              audioMap={audioMap}
-              masterVolume={masterVolume}
-              mode={audioMode}
-              staticTier={staticTier}
-              onTierChange={setCurrentTier}
-              focusMode={focusMode}
-              onFocusToggle={setFocusMode}
-              onChillToggle={setChillMode}
-              onThemePick={() => setThemePickerOpen(true)}
-              terminalSolid={terminalSolid}
-              onModeToggle={() => setTerminalSolid((v) => !v)}
-            />
+            {canvasMode ? (
+              <MultiverseView
+                sessions={sessions}
+                onNodeClick={(id) => handleSwitch(id)}
+                onCanvasClick={() => {}}
+                onNodeClose={(id) => handleClose(id)}
+                onNodeFocus={(id) => {
+                  handleSwitch(id)
+                  // Focus handled inside MultiverseCanvas
+                }}
+              />
+            ) : (
+              <TerminalCanvas
+                activeSessionId={activeId}
+                sessionName={activeSession?.name}
+                onSessionCreated={handleSessionCreated}
+                musicEnabled={musicOn && !splash}
+                audioMap={audioMap}
+                masterVolume={masterVolume}
+                mode={audioMode}
+                staticTier={staticTier}
+                onTierChange={setCurrentTier}
+                focusMode={focusMode}
+                onFocusToggle={setFocusMode}
+                onChillToggle={setChillMode}
+                onThemePick={() => setThemePickerOpen(true)}
+                terminalSolid={terminalSolid}
+                onModeToggle={() => setTerminalSolid((v) => !v)}
+                onCanvasToggle={() => setCanvasMode((v) => !v)}
+                onCloseSession={() => { if (activeId) handleClose(activeId) }}
+              />
+            )}
           </div>
 
           {/* Z-axis: Right sidebar hidden in focus mode */}
