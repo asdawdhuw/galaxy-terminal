@@ -308,15 +308,18 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
     })
     resizeObserver.observe(containerRef.current)
 
-    // Create first PTY session
-    window.terminal.createPty(term.cols, term.rows).then((session) => {
-      if (session && onSessionCreated) {
-        shownIdRef.current = session.id
-        if (!buffersRef.current.has(session.id)) {
-          buffersRef.current.set(session.id, '')
+    // Create first PTY session only if none exist
+    window.terminal.listSessions().then((list) => {
+      if (list && list.length > 0) return
+      window.terminal.createPty(term.cols, term.rows).then((session) => {
+        if (session && onSessionCreated) {
+          shownIdRef.current = session.id
+          if (!buffersRef.current.has(session.id)) {
+            buffersRef.current.set(session.id, '')
+          }
+          onSessionCreated(session)
         }
-        onSessionCreated(session)
-      }
+      })
     })
 
     return () => {

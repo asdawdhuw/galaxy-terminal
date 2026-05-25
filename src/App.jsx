@@ -15,6 +15,83 @@ import idleSrc from '../sound/idle.mp3'
 import activeSrc from '../sound/active.mp3'
 import climaxSrc from '../sound/climax.mp3'
 
+function WebBrowser() {
+  const [url, setUrl] = useState('https://www.bing.com')
+  const [inputVal, setInputVal] = useState('https://www.bing.com')
+  const wvRef = useRef(null)
+
+  function navigate() {
+    let u = inputVal.trim()
+    if (!u) return
+    if (!/^https?:\/\//i.test(u)) u = 'https://' + u
+    setUrl(u)
+    setInputVal(u)
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter') navigate()
+  }
+
+  useEffect(() => {
+    const wv = wvRef.current
+    if (!wv) return
+    function handleNav(e) { setInputVal(e.url); setUrl(e.url) }
+    wv.addEventListener('did-navigate', handleNav)
+    wv.addEventListener('did-navigate-in-page', handleNav)
+    return () => {
+      wv.removeEventListener('did-navigate', handleNav)
+      wv.removeEventListener('did-navigate-in-page', handleNav)
+    }
+  }, [])
+
+  return (
+    <div className="h-full flex flex-col overflow-hidden" style={{
+      borderRadius: 12,
+      border: '1px solid rgba(255,255,255,0.05)',
+      background: 'rgba(0,0,0,0.85)',
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px',
+        borderBottom: '1px solid var(--border)', background: 'rgba(4,8,18,0.4)',
+      }}>
+        <button
+          onClick={() => { try { wvRef.current?.goBack() } catch (_) {} }}
+          style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 14, padding: '0 4px' }}
+          title="Back"
+        >←</button>
+        <button
+          onClick={() => { try { wvRef.current?.goForward() } catch (_) {} }}
+          style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 14, padding: '0 4px' }}
+          title="Forward"
+        >→</button>
+        <button
+          onClick={() => { try { wvRef.current?.reload() } catch (_) {} }}
+          style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 13, padding: '0 4px' }}
+          title="Reload"
+        >↻</button>
+        <input
+          type="text"
+          value={inputVal}
+          onChange={(e) => setInputVal(e.target.value)}
+          onKeyDown={handleKey}
+          placeholder="Enter URL..."
+          spellCheck={false}
+          style={{
+            flex: 1, background: 'rgba(4,8,18,0.6)', border: '1px solid var(--border)',
+            borderRadius: 6, padding: '4px 10px', color: 'var(--text-primary)', fontSize: 11,
+            fontFamily: 'inherit', outline: 'none',
+          }}
+        />
+      </div>
+      <webview
+        ref={wvRef}
+        src={url}
+        style={{ flex: 1, width: '100%', height: '100%' }}
+      />
+    </div>
+  )
+}
+
 export default function App() {
   // Music popup window — render standalone player
   if (window.location.hash === '#/music') {
@@ -50,6 +127,10 @@ export default function App() {
   const [uiOpacity, setUiOpacity] = useState(0.85)
   const [canvasMode, setCanvasMode] = useState(false)
   const [canvasFocusId, setCanvasFocusId] = useState(null)
+
+  const WEB_SESSION_ID = '__web__'
+  const webActive = activeId === WEB_SESSION_ID
+  const allSessions = [{ id: WEB_SESSION_ID, name: 'Web', type: 'web' }, ...sessions]
 
   const termRef = useRef(null)
 
@@ -89,6 +170,7 @@ export default function App() {
   }, [])
 
   const handleSwitch = useCallback(async (id) => {
+    if (id === WEB_SESSION_ID) { setActiveId(id); return }
     const ok = await window.terminal.switchSession(id)
     if (ok) setActiveId(id)
   }, [])
@@ -250,12 +332,14 @@ export default function App() {
           onMusicResume={music.resume}
           uiOpacity={uiOpacity}
           onOpacityChange={setUiOpacity}
+          webMode={webActive}
+          onWebToggle={() => webActive ? handleSwitch(sessions[0]?.id || '') : handleSwitch(WEB_SESSION_ID)}
         />
 
         <div className="app-body">
           {/* X-axis: Sidebar with flip */}
           <SessionList
-            sessions={sessions}
+            sessions={allSessions}
             activeId={activeId}
             onSwitch={handleSwitch}
             onRename={handleRename}
@@ -282,6 +366,8 @@ export default function App() {
                   setCanvasMode(false)
                 }}
               />
+            ) : webActive ? (
+              <WebBrowser />
             ) : (
               <TerminalCanvas
                 activeSessionId={activeId}
