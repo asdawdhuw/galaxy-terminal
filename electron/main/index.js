@@ -41,18 +41,17 @@ function shellPath() {
 }
 
 function nextSessionName() {
-  const nums = new Set()
+  let max = 0
   for (const s of sessions.values()) {
     const m = s.name.match(/^session_(\d+)$/)
-    if (m) nums.add(parseInt(m[1], 10))
+    if (m) max = Math.max(max, parseInt(m[1], 10))
   }
-  let n = 1
-  while (nums.has(n)) n++
-  return `session_${n}`
+  return `session_${max + 1}`
 }
 
 function createSession(cols, rows) {
-  const id = `s${++sessionSeq}`
+  sessionSeq++
+  const id = `s${sessionSeq}`
   const name = nextSessionName()
   const cwd = process.env.USERPROFILE || process.env.HOME || '.'
   const env = {
@@ -477,7 +476,6 @@ ipcMain.handle('pty:rename', (_event, id, newName) => {
 ipcMain.handle('pty:close', (_event, id) => {
   const s = sessions.get(id)
   if (!s) return false
-  // Delete BEFORE killing so onExit handler knows this was intentional
   sessions.delete(id)
   try { s.process.removeAllListeners?.() } catch (_) {}
   try { s.process.kill() } catch (_) {}

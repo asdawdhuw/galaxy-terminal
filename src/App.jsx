@@ -49,6 +49,7 @@ export default function App() {
   const [terminalSolid, setTerminalSolid] = useState(false)
   const [uiOpacity, setUiOpacity] = useState(0.85)
   const [canvasMode, setCanvasMode] = useState(false)
+  const [canvasFocusId, setCanvasFocusId] = useState(null)
 
   const termRef = useRef(null)
 
@@ -121,12 +122,15 @@ export default function App() {
         setFocusMode(payload)
         if (payload) setChillMode(false)
         break
-      case 'viewMode':
-        setSidebarViewMode(payload)
+      case 'focusToggle':
+        setFocusMode((v) => !v)
         break
       case 'chill':
         setChillMode(payload)
         if (payload) setFocusMode(false)
+        break
+      case 'chillToggle':
+        setChillMode((v) => !v)
         break
       case 'themePick':
         setThemePickerOpen(true)
@@ -269,12 +273,13 @@ export default function App() {
             {canvasMode ? (
               <MultiverseView
                 sessions={sessions}
+                focusId={canvasFocusId}
                 onNodeClick={(id) => handleSwitch(id)}
                 onCanvasClick={() => {}}
                 onNodeClose={(id) => handleClose(id)}
                 onNodeFocus={(id) => {
                   handleSwitch(id)
-                  // Focus handled inside MultiverseCanvas
+                  setCanvasMode(false)
                 }}
               />
             ) : (
@@ -294,7 +299,7 @@ export default function App() {
                 onThemePick={() => setThemePickerOpen(true)}
                 terminalSolid={terminalSolid}
                 onModeToggle={() => setTerminalSolid((v) => !v)}
-                onCanvasToggle={() => setCanvasMode((v) => !v)}
+                onCanvasToggle={(sessionId) => { setCanvasFocusId(sessionId || null); setCanvasMode((v) => !v) }}
                 onCloseSession={() => { if (activeId) handleClose(activeId) }}
               />
             )}

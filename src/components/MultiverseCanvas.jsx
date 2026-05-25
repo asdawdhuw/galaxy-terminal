@@ -20,7 +20,7 @@ const INITIAL_NODES = [
   { id: 'n3', type: 'terminalNode', position: { x: 300, y: 380 }, data: { label: 'Session 3', width: 320 } },
 ]
 
-export default function MultiverseCanvas({ sessions, onNodeClick, onCanvasClick, onNodeClose, onNodeFocus }) {
+export default function MultiverseCanvas({ sessions, focusId, onNodeClick, onCanvasClick, onNodeClose, onNodeFocus }) {
   const [nodes, setNodes, onNodesChange] = useNodesState(INITIAL_NODES)
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [focusedId, setFocusedId] = useState(null)
@@ -29,7 +29,11 @@ export default function MultiverseCanvas({ sessions, onNodeClick, onCanvasClick,
 
   // Sync nodes from sessions
   useEffect(() => {
-    if (!sessions || sessions.length === 0) return
+    if (!sessions || sessions.length === 0) {
+      setNodes([])
+      setFocusedId(null)
+      return
+    }
     const existing = new Map(nodes.map((n) => [n.id, n]))
     const newNodes = sessions.map((s, i) => {
       const existingNode = existing.get(s.id)
@@ -43,6 +47,17 @@ export default function MultiverseCanvas({ sessions, onNodeClick, onCanvasClick,
     setNodes(newNodes)
   }, [sessions])
 
+  // Auto-focus on a node when entering canvas from terminal yellow button
+  useEffect(() => {
+    if (!focusId) return
+    const node = nodes.find((n) => n.id === focusId)
+    if (!node) return
+    setFocusedId(focusId)
+    setTimeout(() => {
+      setCenter(node.position.x + 160, node.position.y + 120, { zoom: 1.0, duration: 800 })
+    }, 100)
+  }, [focusId, nodes])
+
   // Update dimmed state when focus changes
   useEffect(() => {
     setNodes((nds) =>
@@ -52,22 +67,6 @@ export default function MultiverseCanvas({ sessions, onNodeClick, onCanvasClick,
       }))
     )
   }, [focusedId])
-
-  // Focus via green dot — handled before React Flow click
-  useEffect(() => {
-    const fn = (e) => {
-      const id = e.detail
-      if (!id) return
-      const node = nodes.find((n) => n.id === id)
-      if (node) {
-        setFocusedId(id)
-        setCenter(node.position.x + 160, node.position.y + 120, { zoom: 1.0, duration: 800 })
-        onNodeFocus?.(id)
-      }
-    }
-    window.addEventListener('canvas:focus-node', fn)
-    return () => window.removeEventListener('canvas:focus-node', fn)
-  }, [nodes, setCenter, onNodeFocus])
 
   // Focus a node — warp zoom
   const handleNodeClick = useCallback(

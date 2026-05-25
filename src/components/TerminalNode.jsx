@@ -16,9 +16,10 @@ function TerminalNodeComponent({ data, selected, id }) {
     setCompact(!compact)
   }
 
-  function handleZoom(e) {
+  function handleOpen(e) {
     e.stopPropagation()
-    window.dispatchEvent(new CustomEvent('canvas:focus-node', { detail: id }))
+    e.preventDefault()
+    data.onFocus?.(id)
   }
 
   return (
@@ -41,7 +42,7 @@ function TerminalNodeComponent({ data, selected, id }) {
         <div className="flex items-center gap-1.5">
           <button className="node-dot node-dot-red" onClick={handleClose} title="Close" />
           <button className="node-dot node-dot-yellow" onClick={handleMinimize} title={compact ? 'Expand' : 'Minimize'} />
-          <button className="node-dot node-dot-green" onClick={handleZoom} title="Zoom in" />
+          <button className="node-dot node-dot-green" onPointerDownCapture={handleOpen} title="Open terminal" />
         </div>
         <span className="terminal-node-title">{data.label || 'Terminal'}</span>
       </div>

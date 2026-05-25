@@ -2,10 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 
 const ALL_COMMANDS = [
-  { cmd: '/shh',     desc: 'Enter focus mode' },
-  { cmd: '/unshh',   desc: 'Exit focus mode' },
-  { cmd: '/chill',   desc: 'Ambient nebula flow' },
-  { cmd: '/unchill', desc: 'Exit ambient mode' },
+  { cmd: '/shh',   desc: 'Toggle focus mode' },
+  { cmd: '/chill', desc: 'Toggle ambient flow' },
   { cmd: '/theme',   desc: 'Switch gravity field' },
   { cmd: '/mode',    desc: 'Toggle glass / solid terminal' },
   { cmd: '/canvas',  desc: 'Toggle multiverse canvas' },
@@ -34,15 +32,16 @@ export default function GalaxySpotlight({ onCommand }) {
     setQuery('')
   }, [])
 
-  // Custom event from TerminalCanvas + global Ctrl+K
+  // Custom event from TerminalCanvas + global Ctrl+S
   useEffect(() => {
     function handleSpotlight() {
       if (open) closeSpotlight()
       else openSpotlight()
     }
     function handleKeydown(e) {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
+        e.stopPropagation()
         handleSpotlight()
       }
       if (e.key === 'Escape' && open) {
@@ -50,52 +49,40 @@ export default function GalaxySpotlight({ onCommand }) {
       }
     }
     window.addEventListener('galaxy:spotlight', handleSpotlight)
-    window.addEventListener('keydown', handleKeydown)
+    window.addEventListener('keydown', handleKeydown, { capture: true })
     return () => {
       window.removeEventListener('galaxy:spotlight', handleSpotlight)
-      window.removeEventListener('keydown', handleKeydown)
+      window.removeEventListener('keydown', handleKeydown, { capture: true })
     }
   }, [open, openSpotlight, closeSpotlight])
+
+  const runCommand = useCallback((cmd) => {
+    if (cmd === '/shh' || cmd === '/focus') {
+      onCommand?.('focusToggle')
+    } else if (cmd === '/chill') {
+      onCommand?.('chillToggle')
+    } else if (cmd === '/files') {
+      onCommand?.('viewMode', 'files')
+    } else if (cmd === '/sessions') {
+      onCommand?.('viewMode', 'sessions')
+    } else if (cmd === '/theme') {
+      onCommand?.('themePick')
+    } else if (cmd === '/mode') {
+      onCommand?.('modeToggle')
+    } else if (cmd === '/music') {
+      onCommand?.('musicPlayer')
+    } else if (cmd === '/canvas') {
+      onCommand?.('canvasToggle')
+    } else if (cmd) {
+      onCommand?.('terminal', cmd)
+    }
+    closeSpotlight()
+  }, [onCommand, closeSpotlight])
 
   function handleKeyDown(e) {
     if (e.key === 'Enter') {
       e.preventDefault()
-      const cmd = query.trim()
-      if (cmd === '/shh' || cmd === '/focus') {
-        onCommand?.('focus', true)
-        closeSpotlight()
-      } else if (cmd === '/unshh') {
-        onCommand?.('focus', false)
-        closeSpotlight()
-      } else if (cmd === '/chill') {
-        onCommand?.('chill', true)
-        closeSpotlight()
-      } else if (cmd === '/unchill') {
-        onCommand?.('chill', false)
-        closeSpotlight()
-      } else if (cmd === '/files') {
-        onCommand?.('viewMode', 'files')
-        closeSpotlight()
-      } else if (cmd === '/sessions') {
-        onCommand?.('viewMode', 'sessions')
-        closeSpotlight()
-      } else if (cmd === '/theme') {
-        onCommand?.('themePick')
-        closeSpotlight()
-      } else if (cmd === '/mode') {
-        onCommand?.('modeToggle')
-        closeSpotlight()
-      } else if (cmd === '/music') {
-        onCommand?.('musicPlayer')
-        closeSpotlight()
-      } else if (cmd === '/canvas') {
-        onCommand?.('canvasToggle')
-        closeSpotlight()
-      } else if (cmd) {
-        // Unknown command — send to terminal
-        onCommand?.('terminal', cmd)
-        closeSpotlight()
-      }
+      runCommand(query.trim())
     }
     if (e.key === 'Escape') {
       closeSpotlight()
@@ -133,7 +120,7 @@ export default function GalaxySpotlight({ onCommand }) {
               className="spotlight-input"
             />
             <div className="spotlight-hint">
-              <kbd>Enter</kbd> run · <kbd>Esc</kbd> close · <kbd>Ctrl+K</kbd> toggle
+              <kbd>Enter</kbd> run · <kbd>Esc</kbd> close · <kbd>Ctrl+S</kbd> toggle
             </div>
           </div>
 
@@ -141,8 +128,7 @@ export default function GalaxySpotlight({ onCommand }) {
           <div className="spotlight-commands">
             {filtered.length > 0 ? filtered.map((c) => (
               <div key={c.cmd} className="spotlight-cmd-row"
-                onClick={() => { setQuery(c.cmd); inputRef.current?.focus() }}
-                onDoubleClick={() => { onCommand?.('terminal', c.cmd); setQuery(''); closeSpotlight() }}>
+                onClick={() => runCommand(c.cmd)}>
                 <span className="spotlight-cmd-key">{c.cmd}</span>
                 <span className="spotlight-cmd-desc">{c.desc}</span>
               </div>

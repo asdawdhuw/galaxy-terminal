@@ -121,8 +121,8 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
 
     // Smart key handling: bypass xterm for non-terminal shortcuts
     term.attachCustomKeyEventHandler((e) => {
-      // Ctrl+K → dispatch custom event for GalaxySpotlight (bypasses event propagation issues)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      // Ctrl+S → dispatch custom event for GalaxySpotlight (bypasses event propagation issues)
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
         window.dispatchEvent(new CustomEvent('galaxy:spotlight'))
         return false
@@ -163,31 +163,19 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
     term.onData((data) => {
       updateTypingStrike()
 
-      // Z-axis: intercept /shh and /unshh typed in terminal
+      // Z-axis: intercept toggle commands typed in terminal
       if (data === '\r') {
         const cmd = cmdBufRef.current.trim()
         if (cmd === '/shh' || cmd === '/focus') {
           cmdBufRef.current = ''
-          onFocusToggle?.(true)
-          term.write('\r\n\x1b[36m[Focus mode enabled — sidebars hidden, terminal fullscreen]\x1b[0m\r\n\x1b[33mType /unshh to restore layout\x1b[0m\r\n')
-          return
-        }
-        if (cmd === '/unshh') {
-          cmdBufRef.current = ''
-          onFocusToggle?.(false)
-          term.write('\r\n\x1b[36m[Focus mode disabled — layout restored]\x1b[0m\r\n')
+          onFocusToggle?.((v) => !v)
+          term.write('\r\n\x1b[36m[Focus mode toggled]\x1b[0m\r\n')
           return
         }
         if (cmd === '/chill') {
           cmdBufRef.current = ''
-          onChillToggle?.(true)
-          term.write('\r\n\x1b[35m[Chill mode on — ambient flow, reduced contrast]\x1b[0m\r\n')
-          return
-        }
-        if (cmd === '/unchill') {
-          cmdBufRef.current = ''
-          onChillToggle?.(false)
-          term.write('\r\n\x1b[35m[Chill mode off]\x1b[0m\r\n')
+          onChillToggle?.((v) => !v)
+          term.write('\r\n\x1b[35m[Chill mode toggled]\x1b[0m\r\n')
           return
         }
         if (cmd === '/theme') {
@@ -211,7 +199,7 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
         if (cmd === '/canvas') {
           cmdBufRef.current = ''
           window.terminal.sendInput('\x03')
-          onCanvasToggle?.()
+          onCanvasToggle?.(activeSessionId)
           setTimeout(() => { term.write('\r\n\x1b[36m[Canvas toggled]\x1b[0m\r\n') }, 50)
           return
         }
@@ -334,7 +322,7 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
       <div className="terminal-chrome-bar">
         <div className="terminal-chrome-dots">
           <button className="terminal-dot red" onClick={() => onCloseSession?.()} title="Close session" />
-          <button className="terminal-dot yellow" onClick={() => onModeToggle?.()} title="Toggle glass/solid" />
+          <button className="terminal-dot yellow" onClick={() => onCanvasToggle?.(activeSessionId)} title="Open in canvas" />
           <button className="terminal-dot green" onClick={() => onFocusToggle?.(!focusMode)} title="Toggle focus mode" />
         </div>
         <span className="terminal-chrome-title">{title}</span>
