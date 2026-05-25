@@ -529,6 +529,53 @@ ipcMain.on('pty:resize', (_event, cols, rows) => {
   if (s) s.process.resize(cols, rows)
 })
 
+// --- LRCLIB Lyrics API (free, open-source lyrics database) ---
+
+ipcMain.handle('lyrics:search', async (_event, { artist, title }) => {
+  // Clean B站 title noise: remove bracketed tags, author suffixes
+  const cleanTitle = title
+    .replace(/【.*?】/g, '')
+    .replace(/\[.*?\]/g, '')
+    .replace(/\(.*?\)/g, '')
+    .replace(/[-–—].*$/, '')
+    .trim() || title
+  const ua = 'galaxy-terminal/0.1 (lyrics lookup)'
+  const timeout = { signal: AbortSignal.timeout(8000) }
+  try {
+    // First try exact match
+    let url = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(cleanTitle)}`
+    let r = await fetch(url, { headers: { 'User-Agent': ua }, ...timeout })
+    if (r.ok) {
+      const data = await r.json()
+      return {
+        ok: true,
+        syncedLyrics: data.syncedLyrics || null,
+        plainLyrics: data.plainLyrics || null
+      }
+    }
+
+    // Fallback: search by track name
+    url = `https://lrclib.net/api/search?track_name=${encodeURIComponent(cleanTitle)}`
+    r = await fetch(url, { headers: { 'User-Agent': ua }, ...timeout })
+    if (!r.ok) return { ok: false, error: 'No lyrics found' }
+    const results = await r.json()
+    if (!Array.isArray(results) || results.length === 0) return { ok: false, error: 'No lyrics found' }
+
+    // Get full lyrics from first search result
+    const id = results[0].id
+    r = await fetch(`https://lrclib.net/api/get/${id}`, { headers: { 'User-Agent': ua }, ...timeout })
+    if (!r.ok) return { ok: false, error: 'No lyrics found' }
+    const data = await r.json()
+    return {
+      ok: true,
+      syncedLyrics: data.syncedLyrics || null,
+      plainLyrics: data.plainLyrics || null
+    }
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
+})
+
 // --- iTunes Search API proxy (free, no auth, previewUrl built-in) ---
 
 ipcMain.handle('itunes:search', async (_event, { term, limit = 20 }) => {

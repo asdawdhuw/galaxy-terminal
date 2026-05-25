@@ -316,6 +316,8 @@ export default function App() {
             currentTrack={music.currentTrack}
             error={music.error}
             focusMode={focusMode}
+            playing={music.playing}
+            getTime={music.getTime}
           />
         </div>
 

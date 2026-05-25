@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 
 /* ================================================================== */
-/*  Bilibili Audio Stream — WBI-signed, stream:// protocol, Referer    */
+/*  Music Audio Stream — WBI-signed, stream:// protocol, Referer    */
 /* ================================================================== */
 
 let _player = null
@@ -32,7 +32,7 @@ export default function useMusicController() {
     // Get WBI-signed audio URL from main process
     const r = await window.terminal?.bilibiliPlayurl?.({ bvid: track.bvid })
     if (!r?.ok) {
-      setError(r?.error || 'Bilibili playurl failed')
+      setError(r?.error || 'Playback failed')
       return false
     }
 
@@ -100,5 +100,7 @@ export default function useMusicController() {
     setPlaying(false); setCurrentTrack(null)
   }, [])
 
-  return { search, results, searching, play, pause, resume, stop, playing, currentTrack, error }
+  const getTime = useCallback(() => getPlayer().currentTime, [])
+
+  return { search, results, searching, play, pause, resume, stop, playing, currentTrack, error, getTime }
 }

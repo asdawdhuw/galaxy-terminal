@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron')
+const { contextBridge, ipcRenderer, webUtils } = require('electron')
 
 contextBridge.exposeInMainWorld('win', {
   minimize: () => ipcRenderer.send('win:minimize'),
@@ -58,5 +58,7 @@ contextBridge.exposeInMainWorld('terminal', {
     return () => ipcRenderer.removeListener('pty:cwd', handler)
   },
   musicList: () => ipcRenderer.invoke('music:list'),
-  openMusicWindow: () => ipcRenderer.send('music:open-window')
+  openMusicWindow: () => ipcRenderer.send('music:open-window'),
+  getFilePath: (file) => webUtils.getPathForFile(file),
+  searchLyrics: (params) => ipcRenderer.invoke('lyrics:search', params)
 })

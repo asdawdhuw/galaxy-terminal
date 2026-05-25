@@ -46,6 +46,7 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
   const [searchOpen, setSearchOpen] = useState(false)
   const [fontSize, setFontSize] = useState(14)
   const [toast, setToast] = useState(null)  // { text, visible }
+  const [dragOver, setDragOver] = useState(false)
 
   const openSearch = useCallback(() => setSearchOpen(true), [])
   const closeSearch = useCallback(() => setSearchOpen(false), [])
@@ -118,6 +119,35 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
 
     termRef.current = term
     fitRef.current = fitAddon
+
+    // Native drag-drop for cd: drag a folder onto the terminal
+    const el = containerRef.current
+    function onDragOver(e) {
+      e.preventDefault()
+      e.stopPropagation()
+      setDragOver(el.contains(e.target))
+    }
+    function onDragLeave(e) {
+      e.preventDefault()
+      e.stopPropagation()
+      if (!el.contains(e.relatedTarget)) {
+        setDragOver(false)
+      }
+    }
+    function onDrop(e) {
+      e.preventDefault()
+      e.stopPropagation()
+      setDragOver(false)
+      if (!el.contains(e.target)) return
+      const file = e.dataTransfer.files?.[0]
+      if (!file) return
+      const path = window.terminal.getFilePath(file)
+      if (!path) return
+      window.terminal.sendInput(`cd "${path}"\r`)
+    }
+    window.addEventListener('dragover', onDragOver)
+    window.addEventListener('drop', onDrop)
+    el.addEventListener('dragleave', onDragLeave)
 
     // Smart key handling: bypass xterm for non-terminal shortcuts
     term.attachCustomKeyEventHandler((e) => {
@@ -291,6 +321,9 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
 
     return () => {
       containerRef.current?.removeEventListener('wheel', handleWheel, { capture: true })
+      window.removeEventListener('dragover', onDragOver)
+      containerRef.current?.removeEventListener('dragleave', onDragLeave)
+      window.removeEventListener('drop', onDrop)
       clearTimeout(toastTimerRef.current)
       resizeObserver.disconnect()
       unsubOutput()
@@ -311,13 +344,18 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
   const title = sessionName ? `${sessionName} — pwsh` : 'pwsh — galaxy-terminal'
 
   return (
-    <div className="h-full flex flex-col overflow-hidden" style={{
+    <div
+      className="h-full flex flex-col overflow-hidden"
+      style={{
       borderRadius: focusMode ? 0 : 12,
       background: terminalSolid ? 'rgba(0,0,0,0.9)' : 'transparent',
       backdropFilter: terminalSolid ? 'none' : 'blur(15px)',
       WebkitBackdropFilter: terminalSolid ? 'none' : 'blur(15px)',
-      border: terminalSolid ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255,255,255,0.05)',
-      transition: 'background 500ms ease, backdrop-filter 500ms ease, border 500ms ease',
+      border: dragOver
+        ? '2px solid var(--accent)'
+        : terminalSolid ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255,255,255,0.05)',
+      boxShadow: dragOver ? '0 0 30px rgba(var(--accent-r, 61), var(--accent-g, 127), var(--accent-b, 255), 0.3)' : 'none',
+      transition: 'background 500ms ease, backdrop-filter 500ms ease, border 500ms ease, box-shadow 0.2s ease',
     }}>
       <div className="terminal-chrome-bar">
         <div className="terminal-chrome-dots">
