@@ -2385,14 +2385,14 @@ html, body, #root {
 .music-player-now {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 16px;
-  background: rgba(4, 8, 18, 0.3);
+  background: var(--session-active);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
 .music-player-cover {
   width: 48px; height: 48px;
   border-radius: 8px;
-  background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.1);
+  background: var(--session-active);
   display: flex; align-items: center; justify-content: center;
   font-size: 22px; flex-shrink: 0;
 }
@@ -2410,7 +2410,7 @@ html, body, #root {
 
 /* Progress bar */
 .music-player-bar-wrap {
-  height: 3px; background: rgba(255,255,255,0.05); cursor: pointer; flex-shrink: 0;
+  height: 3px; background: var(--border); cursor: pointer; flex-shrink: 0;
 }
 .music-player-bar {
   height: 100%; background: var(--accent);
@@ -2455,8 +2455,8 @@ html, body, #root {
   transition: background 0.1s, color 0.1s, opacity 0.1s;
   border-left: 3px solid transparent;
 }
-.music-track:hover { background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.08); opacity: 0.9; }
-.music-track.active { color: var(--accent); background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.1); opacity: 1; font-weight: 600; border-left-color: var(--accent); }
+.music-track:hover { background: var(--session-active); opacity: 0.9; }
+.music-track.active { color: var(--accent); background: var(--session-active); opacity: 1; font-weight: 600; border-left-color: var(--accent); }
 .music-track-idx {
   width: 24px; font-size: 11px; opacity: 0.45; text-align: right; flex-shrink: 0;
 }
@@ -2468,7 +2468,7 @@ html, body, #root {
 
 .music-player-empty {
   text-align: center; padding: 32px 16px; font-size: 11px;
-  color: var(--text-dim); opacity: 0.5;
+  color: var(--text-dim);
   font-family: 'JetBrainsMono NF', 'FiraCode Nerd Font', 'Cascadia Code', monospace;
 }
 
@@ -2559,12 +2559,21 @@ html, body, #root {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   box-shadow: 0 4px 32px rgba(0,0,0,0.5);
-  overflow: hidden;
-  transition: all 0.2s ease;
+  overflow: visible;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.music-mini-bar.pinned-bar {
+  cursor: default;
+  border-color: var(--accent);
+  box-shadow: 0 4px 32px rgba(0,0,0,0.5), 0 0 12px var(--accent-glow);
 }
 .music-mini-bar:hover {
   border-color: rgba(61,127,255,0.3);
   box-shadow: 0 4px 40px rgba(0,0,0,0.6), 0 0 20px rgba(61,127,255,0.08);
+}
+.music-mini-bar.pinned-bar:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 32px rgba(0,0,0,0.5), 0 0 12px var(--accent-glow);
 }
 .music-mini-main {
   display: flex;
@@ -2653,9 +2662,108 @@ html, body, #root {
   background: var(--accent);
   color: #fff;
 }
+.music-mini-pin {
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 10px;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  padding: 0;
+}
+.music-mini-pin:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.music-mini-pin.pinned {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Mini search */
+.music-mini-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.music-mini-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 11px;
+  color: var(--text-primary);
+  font-family: 'JetBrainsMono NF', 'FiraCode Nerd Font', 'Cascadia Code', monospace;
+}
+.music-mini-search-input::placeholder {
+  color: var(--text-dim);
+  opacity: 0.4;
+}
+.music-mini-search-close {
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: none;
+  color: var(--text-dim); cursor: pointer;
+  font-size: 12px; flex-shrink: 0;
+}
+.music-mini-results {
+  position: absolute;
+  bottom: 100%;
+  left: 0; right: 0;
+  margin-bottom: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.music-mini-result-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 10px;
+  cursor: pointer;
+  font-family: 'JetBrainsMono NF', 'FiraCode Nerd Font', 'Cascadia Code', monospace;
+  font-size: 11px;
+  color: var(--text-primary);
+  opacity: 0.7;
+  transition: background 0.1s, opacity 0.1s;
+}
+.music-mini-result-item:hover,
+.music-mini-result-item.active {
+  background: var(--session-active);
+  opacity: 1;
+}
+.music-mini-result-item.active {
+  color: var(--accent);
+}
+.music-mini-result-idx {
+  width: 20px;
+  font-size: 10px;
+  opacity: 0.5;
+  text-align: right;
+  flex-shrink: 0;
+}
+.music-mini-result-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .music-mini-progress {
   height: 2px;
-  background: rgba(255,255,255,0.06);
+  background: var(--border);
   cursor: pointer;
   transition: height 0.15s;
 }

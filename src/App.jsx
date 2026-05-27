@@ -107,8 +107,10 @@ function WebUrlBar({ onClose }) {
 }
 
 export default function App() {
-  // Music popup window — render standalone player
+  // Music popup window — apply saved theme then render standalone player
   if (window.location.hash === '#/music') {
+    const savedTheme = localStorage.getItem('galaxy-theme') || 'orion'
+    document.documentElement.setAttribute('data-theme', savedTheme)
     return (
       <div className="h-screen w-full" style={{ background: 'var(--bg-deep)' }}>
         <MusicPlayer isPopup onClose={() => window.close()} />
@@ -288,12 +290,14 @@ export default function App() {
   function handleThemeSelect(themeId) {
     setCurrentTheme(themeId)
     document.documentElement.setAttribute('data-theme', themeId)
+    localStorage.setItem('galaxy-theme', themeId)
     setThemePickerOpen(false)
   }
 
   // Apply theme on mount
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', currentTheme)
+    localStorage.setItem('galaxy-theme', currentTheme)
   }, [])
 
   const activeSession = sessions.find((s) => s.id === activeId)

@@ -463,6 +463,16 @@ ipcMain.on('music:open-window', () => {
   musicPopup.on('closed', () => { musicPopup = null })
 })
 
+// Music popup — toggle always-on-top
+ipcMain.handle('music:toggle-pin', () => {
+  if (musicPopup && !musicPopup.isDestroyed()) {
+    const pinned = !musicPopup.isAlwaysOnTop()
+    musicPopup.setAlwaysOnTop(pinned)
+    return { pinned }
+  }
+  return { pinned: false }
+})
+
 ipcMain.handle('pty:list', () => {
   return [...sessions.values()].map(s => ({ id: s.id, name: s.name }))
 })

@@ -17,11 +17,21 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
   const [duration, setDuration] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [miniMode, setMiniMode] = useState(false)
+  const [miniSearch, setMiniSearch] = useState(false)
+  const [popupPinned, setPopupPinned] = useState(false) // always-on-top for popup window
   const audioRef = useRef(null)
   const panelRef = useRef(null)
   const miniBarRef = useRef(null)
-  const dragRef = useRef({ dragging: false, startX: 0, startY: 0 })
-  const [miniPos, setMiniPos] = useState({ x: 0, y: 0 })
+  const dragRef = useRef({ dragging: false, startX: 0, startY: 0, offX: 0, offY: 0, init: false })
+  const [miniOff, setMiniOff] = useState({ x: 0, y: 0 })
+
+  // Init mini bar position (centered, near bottom)
+  useEffect(() => {
+    if (!miniMode || dragRef.current.init) return
+    dragRef.current.init = true
+    dragRef.current.offX = 0
+    dragRef.current.offY = 0
+  }, [miniMode])
 
   useEffect(() => {
     window.terminal.musicList().then((res) => {
@@ -35,6 +45,9 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
     const q = searchQuery.toLowerCase()
     return files.filter((f) => f.name.toLowerCase().includes(q))
   }, [files, searchQuery])
+
+  // Show up to 5 filtered results in mini search dropdown
+  const miniResults = miniSearch && searchQuery ? filtered.slice(0, 5) : []
 
   useEffect(() => {
     const audio = audioRef.current
@@ -119,19 +132,28 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
     onClose?.()
   }
 
-  // Mini bar drag — plain functions with refs to avoid stale closures
+  // ---- Mini bar drag (disabled when pinned) ----
   function onMiniMouseDown(e) {
-    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return
+    if (pinned) return
+    if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.tagName === 'INPUT') return
     e.preventDefault()
-    dragRef.current.dragging = true
-    dragRef.current.startX = e.clientX - miniPos.x
-    dragRef.current.startY = e.clientY - miniPos.y
+    const off = dragRef.current
+    off.dragging = true
+    off.startX = e.clientX
+    off.startY = e.clientY
     document.addEventListener('mousemove', onMiniMouseMove)
     document.addEventListener('mouseup', onMiniMouseUp)
   }
   function onMiniMouseMove(e) {
-    if (!dragRef.current.dragging) return
-    setMiniPos({ x: e.clientX - dragRef.current.startX, y: e.clientY - dragRef.current.startY })
+    const off = dragRef.current
+    if (!off.dragging) return
+    const dx = e.clientX - off.startX
+    const dy = e.clientY - off.startY
+    off.offX += dx
+    off.offY += dy
+    off.startX = e.clientX
+    off.startY = e.clientY
+    setMiniOff({ x: off.offX, y: off.offY })
   }
   function onMiniMouseUp() {
     dragRef.current.dragging = false
@@ -139,7 +161,7 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
     document.removeEventListener('mouseup', onMiniMouseUp)
   }
 
-  // Click outside to close (full overlay only, not mini/popup/pinned)
+  // Click outside to close (full overlay only)
   useEffect(() => {
     if (miniMode || isPopup || pinned) return
     function handleClick(e) {
@@ -161,15 +183,56 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
     return createPortal(
       <div
         ref={miniBarRef}
-        className="music-mini-bar"
+        className={`music-mini-bar${pinned ? ' pinned-bar' : ''}`}
         style={{
-          left: `calc(50% + ${miniPos.x}px)`,
-          bottom: miniPos.y ? 'auto' : 12,
-          top: miniPos.y ? `${miniPos.y}px` : 'auto',
-          transform: 'translateX(-50%)',
+          left: '50%',
+          bottom: 12,
+          transform: `translate(calc(-50% + ${miniOff.x}px), ${miniOff.y}px)`,
         }}
         onMouseDown={onMiniMouseDown}
       >
+        {/* Search results dropdown (appears above mini bar) */}
+        {miniSearch && miniResults.length > 0 && (
+          <div className="music-mini-results">
+            {miniResults.map((f, i) => {
+              const realIdx = files.indexOf(f)
+              return (
+                <div
+                  key={realIdx}
+                  className={`music-mini-result-item ${realIdx === currentIdx ? 'active' : ''}`}
+                  onClick={() => { play(realIdx); setMiniSearch(false) }}
+                >
+                  <span className="music-mini-result-idx">{realIdx + 1}</span>
+                  <span className="music-mini-result-name">{f.name}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Search row */}
+        {miniSearch && (
+          <div className="music-mini-search">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round">
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search..."
+              spellCheck={false}
+              autoFocus
+              className="music-mini-search-input"
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') { setMiniSearch(false); setSearchQuery('') }
+                if (e.key === 'Enter' && miniResults.length > 0) { play(files.indexOf(miniResults[0])); setMiniSearch(false) }
+              }}
+            />
+            <button className="music-mini-search-close" onClick={() => { setMiniSearch(false); setSearchQuery('') }}>{'×'}</button>
+          </div>
+        )}
+
         <div className="music-mini-main">
           <button className="music-mini-expand" onClick={() => setMiniMode(false)} title="Expand">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -197,6 +260,22 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
             <button className="music-mini-btn" onClick={playNext} title="Next">{'>>'}</button>
           </div>
 
+          <button className="music-mini-btn" onClick={() => setMiniSearch((v) => !v)} title="Search">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+            </svg>
+          </button>
+
+          {onTogglePin && (
+            <button
+              className={`music-mini-pin ${pinned ? 'pinned' : ''}`}
+              onClick={onTogglePin}
+              title={pinned ? 'Unpin — allow drag & auto-hide' : 'Pin — lock position & prevent close'}
+            >
+              {pinned ? '◉' : '○'}
+            </button>
+          )}
+
           <button className="music-mini-close" onClick={onClose} title="Close">{'×'}</button>
         </div>
 
@@ -216,7 +295,20 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
       <div className="music-player-header" style={isPopup ? { WebkitAppRegion: 'drag' } : {}}>
         <span className="music-player-title">{'\u{1F3B5}'} Galaxy Music</span>
         <div className="file-viewer-actions">
-          {!isPopup && (
+          {isPopup ? (
+            <button
+              className={`file-viewer-pin ${popupPinned ? 'pinned' : ''}`}
+              onClick={async () => {
+                const r = await window.terminal?.toggleMusicPin()
+                if (r?.pinned !== undefined) setPopupPinned(r.pinned)
+                else setPopupPinned((v) => !v)
+              }}
+              title={popupPinned ? 'Unpin — let window hide behind others' : 'Pin — keep window on top'}
+              style={{ WebkitAppRegion: 'no-drag' }}
+            >
+              {popupPinned ? '◉' : '○'}
+            </button>
+          ) : (
             <>
               <button className="file-viewer-pin" onClick={() => setMiniMode(true)} title="Mini mode" style={{ WebkitAppRegion: 'no-drag' }}>
                 {'━'}
@@ -224,16 +316,6 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
               <button className="file-viewer-pin" onClick={handlePopOut} title="Pop out" style={{ WebkitAppRegion: 'no-drag' }}>
                 {'⧉'}
               </button>
-              {onTogglePin && (
-                <button
-                  className={`file-viewer-pin ${pinned ? 'pinned' : ''}`}
-                  onClick={onTogglePin}
-                  title={pinned ? 'Unpin' : 'Pin'}
-                  style={{ WebkitAppRegion: 'no-drag' }}
-                >
-                  {pinned ? '◉' : '○'}
-                </button>
-              )}
             </>
           )}
           <button className="file-viewer-close" onClick={onClose} style={isPopup ? { WebkitAppRegion: 'no-drag' } : {}}>{'×'}</button>

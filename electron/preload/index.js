@@ -59,6 +59,7 @@ contextBridge.exposeInMainWorld('terminal', {
   },
   musicList: () => ipcRenderer.invoke('music:list'),
   openMusicWindow: () => ipcRenderer.send('music:open-window'),
+  toggleMusicPin: () => ipcRenderer.invoke('music:toggle-pin'),
   getFilePath: (file) => webUtils.getPathForFile(file),
   searchLyrics: (params) => ipcRenderer.invoke('lyrics:search', params),
   openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
