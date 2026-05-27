@@ -13,7 +13,7 @@ function initPos() {
   }
 }
 
-export default function FileViewer({ file, onClose }) {
+export default function FileViewer({ file, onClose, pinned, onTogglePin }) {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState('')
@@ -255,6 +255,13 @@ export default function FileViewer({ file, onClose }) {
             {file.size && <span className="file-viewer-size">{formatSize(file.size)}</span>}
           </div>
           <div className="file-viewer-actions">
+            <button
+              className={`file-viewer-pin ${pinned ? 'pinned' : ''}`}
+              onClick={onTogglePin}
+              title={pinned ? 'Unpin — auto-hide on terminal click' : 'Pin — keep open'}
+            >
+              {pinned ? '\u{25C9}' : '\u{25CB}'}
+            </button>
             <button className="file-viewer-maximize" onClick={toggleMaximize}
               title={maximized ? 'Restore' : 'Maximize'}>
               {maximized ? '\u{25E3}' : '\u{25E2}'}

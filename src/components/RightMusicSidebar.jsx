@@ -33,7 +33,9 @@ export default function RightMusicSidebar({
   error,
   focusMode,
   playing,
-  getTime
+  getTime,
+  pinned,
+  onTogglePin
 }) {
   const [query, setQuery] = useState('')
   const [panelWidth, setPanelWidth] = useState(260)
@@ -136,6 +138,19 @@ export default function RightMusicSidebar({
     }
   }, [currentTrack])
 
+  // Click outside to close (when not pinned)
+  useEffect(() => {
+    if (!visible || pinned) return
+    function handleClick(e) {
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
+        onClose?.()
+      }
+    }
+    // Use mousedown so it fires before other handlers
+    document.addEventListener('mousedown', handleClick, { capture: true })
+    return () => document.removeEventListener('mousedown', handleClick, { capture: true })
+  }, [visible, pinned, onClose])
+
   if (!visible) return null
 
   return (
@@ -147,14 +162,24 @@ export default function RightMusicSidebar({
       <div className="sidebar-resize-handle" onMouseDown={handleResizeStart} style={{ left: -3, right: 'auto' }} />
       <div className="sidebar-right-header">
         <span className="sidebar-right-title">Music</span>
-        <button
-          type="button"
-          onClick={onClose}
-          className="sidebar-right-close"
-          title="Close"
-        >
-          ×
-        </button>
+        <div className="sidebar-right-actions">
+          <button
+            type="button"
+            onClick={onTogglePin}
+            className={`sidebar-right-pin${pinned ? ' pinned' : ''}`}
+            title={pinned ? 'Unpin — click outside to hide' : 'Pin — keep open'}
+          >
+            {pinned ? '◉' : '○'}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="sidebar-right-close"
+            title="Close"
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       <div className="music-search-wrap">

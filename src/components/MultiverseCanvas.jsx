@@ -127,7 +127,7 @@ export default function MultiverseCanvas({ sessions, focusId, onNodeClick, onCan
         style={{ background: 'transparent' }}
       >
         <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(61,127,255,0.12)" />
-        <Controls className="multiverse-controls" />
+        <Controls className="multiverse-controls" showInteractive={false} />
         <MiniMap
           style={{ background: 'rgba(8,14,24,0.85)', border: '1px solid var(--border)' }}
           maskColor="rgba(0,0,0,0.4)"

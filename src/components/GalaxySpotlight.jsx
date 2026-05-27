@@ -7,6 +7,7 @@ const ALL_COMMANDS = [
   { cmd: '/theme',   desc: 'Switch gravity field' },
   { cmd: '/mode',    desc: 'Toggle glass / solid terminal' },
   { cmd: '/canvas',  desc: 'Toggle multiverse canvas' },
+  { cmd: '/memo',   desc: 'Toggle Aether Map memo system' },
   { cmd: '/music',   desc: 'Open local music player' },
   { cmd: '/files',   desc: 'Show file tree' },
   { cmd: '/sessions',desc: 'Show session list' },
@@ -73,6 +74,8 @@ export default function GalaxySpotlight({ onCommand }) {
       onCommand?.('musicPlayer')
     } else if (cmd === '/canvas') {
       onCommand?.('canvasToggle')
+    } else if (cmd === '/memo') {
+      onCommand?.('memoToggle')
     } else if (cmd) {
       onCommand?.('terminal', cmd)
     }

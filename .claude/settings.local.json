@@ -39,7 +39,8 @@
       "PowerShell(node -e \"const path = require\\('path'\\); console.log\\(path.join\\(__dirname, '../../..', 'music'\\)\\)\" 2>&1)",
       "Bash(npm install *)",
       "PowerShell(Get-Process *)",
-      "Bash(Start-Sleep -Seconds 5)"
+      "Bash(Start-Sleep -Seconds 5)",
+      "Bash(Select-Object -Last 20)"
     ]
   }
 }

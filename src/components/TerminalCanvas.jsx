@@ -5,6 +5,7 @@ import { WebLinksAddon } from '@xterm/addon-web-links'
 import { SearchAddon } from '@xterm/addon-search'
 import '@xterm/xterm/css/xterm.css'
 import SearchBar from './SearchBar'
+import { memoStore } from './AetherMap'
 import useAudioEngine from '../hooks/useAudioEngine'
 
 const COSMIC_THEME = {
@@ -32,7 +33,7 @@ const COSMIC_THEME = {
   brightWhite: '#e8f0ff'
 }
 
-export default function TerminalCanvas({ activeSessionId, sessionName, onSessionCreated, musicEnabled = true, audioMap, masterVolume = 0.75, mode = 'dynamic', staticTier = 0, onTierChange, focusMode, onFocusToggle, onChillToggle, onThemePick, terminalSolid, onModeToggle, onCanvasToggle, onCloseSession }) {
+export default function TerminalCanvas({ activeSessionId, sessionName, onSessionCreated, musicEnabled = true, audioMap, masterVolume = 0.75, mode = 'dynamic', staticTier = 0, onTierChange, focusMode, onFocusToggle, onChillToggle, onThemePick, terminalSolid, onModeToggle, onCanvasToggle, onMemoToggle, onMusicPlayerToggle, onCloseSession }) {
   const containerRef = useRef(null)
   const termRef = useRef(null)
   const fitRef = useRef(null)
@@ -222,8 +223,8 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
         }
         if (cmd === '/music') {
           cmdBufRef.current = ''
-          window.terminal.sendInput('\x03')
-          setTimeout(() => { term.write('\r\n\x1b[36m[Music popup opened]\x1b[0m\r\n') }, 50)
+          onMusicPlayerToggle?.()
+          term.write('\r\n\x1b[36m[Music player toggled]\x1b[0m\r\n')
           return
         }
         if (cmd === '/canvas') {
@@ -231,6 +232,39 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
           window.terminal.sendInput('\x03')
           onCanvasToggle?.(activeSessionId)
           setTimeout(() => { term.write('\r\n\x1b[36m[Canvas toggled]\x1b[0m\r\n') }, 50)
+          return
+        }
+        if (cmd === '/memo') {
+          cmdBufRef.current = ''
+          onMemoToggle?.()
+          term.write('\r\n\x1b[35m[Aether Map toggled]\x1b[0m\r\n')
+          return
+        }
+        if (cmd.startsWith('/memo create ')) {
+          cmdBufRef.current = ''
+          const title = cmd.slice('/memo create '.length).trim()
+          memoStore.createStar(title)
+          term.write(`\r\n\x1b[35m[Star "${title}" created]\x1b[0m\r\n`)
+          return
+        }
+        if (cmd.startsWith('/memo add ')) {
+          cmdBufRef.current = ''
+          const title = cmd.slice('/memo add '.length).trim()
+          memoStore.addPlanet(title)
+          term.write(`\r\n\x1b[35m[Planet "${title}" spawned]\x1b[0m\r\n`)
+          return
+        }
+        if (cmd.startsWith('/memo remove ')) {
+          cmdBufRef.current = ''
+          const title = cmd.slice('/memo remove '.length).trim()
+          memoStore.removePlanet(title)
+          term.write(`\r\n\x1b[35m[Removed "${title}"]\x1b[0m\r\n`)
+          return
+        }
+        if (cmd === '/memo clear') {
+          cmdBufRef.current = ''
+          memoStore.clearAll()
+          term.write('\r\n\x1b[35m[Aether Map cleared]\x1b[0m\r\n')
           return
         }
         cmdBufRef.current = ''

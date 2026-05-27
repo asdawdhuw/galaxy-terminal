@@ -11,6 +11,7 @@ import FileViewer from './components/FileViewer'
 import ThemePicker from './components/ThemePicker'
 import MusicPlayer from './components/MusicPlayer'
 import MultiverseView from './components/MultiverseView'
+import AetherMap from './components/AetherMap'
 import useMusicController from './hooks/useNeteaseMusicController'
 import idleSrc from '../sound/idle.mp3'
 import activeSrc from '../sound/active.mp3'
@@ -141,10 +142,23 @@ export default function App() {
   const [canvasMode, setCanvasMode] = useState(false)
   const [canvasFocusId, setCanvasFocusId] = useState(null)
   const [webBarOpen, setWebBarOpen] = useState(false)
+  const [memoMode, setMemoMode] = useState(false)
+  const [filePinned, setFilePinned] = useState(false)
+  const [musicPlayerOpen, setMusicPlayerOpen] = useState(false)
+  const [musicPlayerPinned, setMusicPlayerPinned] = useState(false)
+  const [searchPinned, setSearchPinned] = useState(false)
 
   const termRef = useRef(null)
 
   const music = useMusicController()
+
+  // Poll Bilibili music time for mini-player display (TopMenuBar)
+  const [musicTime, setMusicTime] = useState(0)
+  useEffect(() => {
+    if (!music.playing) { setMusicTime(0); return }
+    const timer = setInterval(() => setMusicTime(music.getTime()), 250)
+    return () => clearInterval(timer)
+  }, [music.playing])
 
   useEffect(() => {
     const updateTime = () => {
@@ -230,10 +244,13 @@ export default function App() {
         setTerminalSolid((v) => !v)
         break
       case 'musicPlayer':
-        window.terminal.openMusicWindow()
+        setMusicPlayerOpen((v) => !v)
         break
       case 'canvasToggle':
         setCanvasMode((v) => !v)
+        break
+      case 'memoToggle':
+        setMemoMode((v) => !v)
         break
       case 'terminal':
         // Forward unknown command to active PTY session
@@ -308,7 +325,18 @@ export default function App() {
       <FileViewer
         file={viewerFile}
         onClose={() => setViewerFile(null)}
+        pinned={filePinned}
+        onTogglePin={() => setFilePinned((v) => !v)}
       />
+
+      {/* Music Player — inline overlay */}
+      {musicPlayerOpen && (
+        <MusicPlayer
+          onClose={() => setMusicPlayerOpen(false)}
+          pinned={musicPlayerPinned}
+          onTogglePin={() => setMusicPlayerPinned((v) => !v)}
+        />
+      )}
 
       {/* Web URL Bar — click Web button */}
       {webBarOpen && <WebUrlBar onClose={() => setWebBarOpen(false)} />}
@@ -342,6 +370,11 @@ export default function App() {
           musicTrack={music.currentTrack}
           onMusicPause={music.pause}
           onMusicResume={music.resume}
+          onMusicNext={music.next}
+          onMusicPrev={music.prev}
+          onMusicSeek={music.seek}
+          musicTime={musicTime}
+          musicDuration={music.duration}
           uiOpacity={uiOpacity}
           onOpacityChange={setUiOpacity}
           onWebClick={() => setWebBarOpen(true)}
@@ -363,9 +396,19 @@ export default function App() {
             cwd={activeCwd}
           />
 
-          {/* Terminal or Multiverse Canvas */}
-          <div style={{ flex: 1, padding: focusMode ? 0 : 12, overflow: 'hidden', minWidth: 0, transition: 'padding 0.5s ease' }}>
-            {canvasMode ? (
+          {/* Terminal, Aether Map, or Multiverse Canvas */}
+          <div
+            style={{ flex: 1, padding: focusMode ? 0 : 12, overflow: 'hidden', minWidth: 0, transition: 'padding 0.5s ease' }}
+            onMouseDown={() => {
+              if (viewerFile && !filePinned) setViewerFile(null)
+            }}
+          >
+            {memoMode ? (
+              <AetherMap
+                visible={memoMode}
+                onClose={() => setMemoMode(false)}
+              />
+            ) : canvasMode ? (
               <MultiverseView
                 sessions={sessions}
                 focusId={canvasFocusId}
@@ -395,6 +438,8 @@ export default function App() {
                 terminalSolid={terminalSolid}
                 onModeToggle={() => setTerminalSolid((v) => !v)}
                 onCanvasToggle={(sessionId) => { setCanvasFocusId(sessionId || null); setCanvasMode((v) => !v) }}
+                onMemoToggle={() => setMemoMode((v) => !v)}
+                onMusicPlayerToggle={() => setMusicPlayerOpen((v) => !v)}
                 onCloseSession={() => { if (activeId) handleClose(activeId) }}
               />
             )}
@@ -413,6 +458,8 @@ export default function App() {
             focusMode={focusMode}
             playing={music.playing}
             getTime={music.getTime}
+            pinned={searchPinned}
+            onTogglePin={() => setSearchPinned((v) => !v)}
           />
         </div>
 
