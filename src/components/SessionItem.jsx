@@ -8,7 +8,6 @@ export default function SessionItem({
   onRename,
   onClose
 }) {
-  const isWeb = session.type === 'web'
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(session.name)
   const [hovered, setHovered] = useState(false)
@@ -37,17 +36,13 @@ export default function SessionItem({
     <div
       className={`session-item${isActive ? ' active' : ''}`}
       onClick={() => onSwitch(session.id)}
-      onDoubleClick={() => { if (!isWeb) setEditing(true) }}
+      onDoubleClick={() => setEditing(true)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {isWeb ? (
-        <span style={{ fontSize: 11, flexShrink: 0, lineHeight: 1 }}>🌐</span>
-      ) : (
-        <span className={`session-item-dot ${isActive ? 'active' : 'idle'}`} />
-      )}
+      <span className={`session-item-dot ${isActive ? 'active' : 'idle'}`} />
 
-      {editing && !isWeb ? (
+      {editing ? (
         <input
           ref={inputRef}
           value={name}
@@ -64,7 +59,7 @@ export default function SessionItem({
         <span className="session-item-name" title={session.name}>{name}</span>
       )}
 
-      {hovered && canClose && !editing && !isWeb && (
+      {hovered && canClose && !editing && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onClose(session.id) }}

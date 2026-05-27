@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut, protocol, net } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut, protocol, net, shell } = require('electron')
 const { join, extname, relative } = require('path')
 const fs = require('fs')
 const os = require('os')
@@ -302,8 +302,7 @@ function createWindow() {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
-      webviewTag: true
+      sandbox: false
     }
   })
 
@@ -342,6 +341,20 @@ ipcMain.on('win:maximize', () => {
 })
 ipcMain.on('win:close', () => {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.close()
+})
+
+ipcMain.handle('shell:openExternal', async (_event, url) => {
+  try { await shell.openExternal(url); return true } catch (_) { return false }
+})
+
+ipcMain.handle('search:suggest', async (_event, query) => {
+  try {
+    const url = 'https://suggestqueries.google.com/complete/search?client=chrome&q=' + encodeURIComponent(query)
+    const res = await net.fetch(url, { headers: { 'Accept': 'application/json' } })
+    const body = await res.text()
+    const data = JSON.parse(body)
+    return (data && data[1]) ? data[1].slice(0, 8) : []
+  } catch (_) { return [] }
 })
 
 // Resolve a path — if absolute (Windows drive or /), use as-is; else relative to project root

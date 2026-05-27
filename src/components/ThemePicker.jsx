@@ -30,6 +30,13 @@ const THEMES = [
     bg: '#050505',
   },
   {
+    id: 'capricorn',
+    name: 'Capricorn',
+    desc: 'Luminous jet black',
+    color: '#b8c0d0',
+    bg: '#060608',
+  },
+  {
     id: 'supernova',
     name: 'Supernova',
     desc: 'Pure daylight',

@@ -28,8 +28,7 @@ export default function TopMenuBar({
   onMusicResume,
   uiOpacity,
   onOpacityChange,
-  webMode,
-  onWebToggle
+  onWebClick
 }) {
   const [audioOpen, setAudioOpen] = useState(false)
   const panelRef = useRef(null)
@@ -228,7 +227,7 @@ export default function TopMenuBar({
 
         <button
           type="button"
-          onClick={() => onWebToggle?.()}
+          onClick={() => onWebClick?.()}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -239,9 +238,10 @@ export default function TopMenuBar({
             letterSpacing: '0.05em',
             background: 'none',
             border: 'none',
-            color: webMode ? 'var(--accent)' : 'var(--text-dim)',
+            color: 'var(--text-dim)',
             cursor: 'pointer',
           }}
+          title="Open URL in Chrome"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10" />

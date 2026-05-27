@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ==============================
-   Theme System — 5 pure gravity fields
+   Theme System — 6 pure gravity fields
    ============================== */
 
 /* ── Orion (default) · deep-space void ── */
@@ -152,6 +152,43 @@
   --chill-n4:        radial-gradient(ellipse at center, rgba(74,222,128,0.12) 0%, transparent 55%);
   --chill-n5:        radial-gradient(ellipse at center, rgba(22,163,74,0.1) 0%, transparent 55%);
   --chill-n6:        radial-gradient(ellipse at center, rgba(74,222,128,0.08) 0%, transparent 50%);
+}
+
+/* ── Capricorn · luminous jet black ── */
+[data-theme="capricorn"] {
+  --bg-deep:         #060608;
+  --bg-panel:        rgba(10, 10, 16, 0.92);
+  --bg-terminal:     rgba(4, 4, 8, 0.88);
+  --border:          rgba(180, 190, 210, 0.1);
+  --accent:          #b8c0d0;
+  --accent-dim:      #4a5060;
+  --accent-r:        184; --accent-g: 192; --accent-b: 208;
+  --accent-glow:     0 0 10px rgba(180, 192, 210, 0.35);
+  --foreground:      #e8ecf2;
+  --text-primary:    #e8ecf2;
+  --text-dim:        #6a7080;
+  --session-active:  rgba(180, 192, 210, 0.1);
+  --dot-red:         #ff5f57;
+  --dot-yellow:      #febc2e;
+  --dot-green:       #28c840;
+  --glass-blur:      14px;
+  --glass-opacity:   0.92;
+  --panel-tint:      8, 8, 14;
+  /* chill */
+  --chill-filter:    contrast(0.9) brightness(0.78) saturate(0.85) hue-rotate(-1deg);
+  --chill-xterm:     brightness(0.85);
+  --chill-vignette:  rgba(0, 0, 2, 0.55);
+  --chill-border:    rgba(180, 192, 210, 0.12);
+  --chill-dust:      rgba(200, 210, 225, 0.45);
+  --chill-star-r:    190; --chill-star-g: 195; --chill-star-b: 210;
+  --chill-glow:      rgba(180, 192, 210, 0.25);
+  --chill-glow-end:  rgba(60, 70, 90, 0);
+  --chill-n1:        radial-gradient(ellipse at center, rgba(180,192,210,0.14) 0%, transparent 65%);
+  --chill-n2:        radial-gradient(ellipse at center, rgba(160,175,200,0.12) 0%, transparent 60%);
+  --chill-n3:        radial-gradient(ellipse at center, rgba(140,155,185,0.1) 0%, transparent 55%);
+  --chill-n4:        radial-gradient(ellipse at center, rgba(170,185,205,0.11) 0%, transparent 55%);
+  --chill-n5:        radial-gradient(ellipse at center, rgba(100,110,130,0.1) 0%, transparent 55%);
+  --chill-n6:        radial-gradient(ellipse at center, rgba(180,192,210,0.08) 0%, transparent 50%);
 }
 
 /* ── Supernova · pure daylight ── */
@@ -1493,10 +1530,10 @@ html, body, #root {
   padding: 14px 20px;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: rgba(8, 14, 30, 0.92);
+  background: var(--bg-panel);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
-  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(61, 127, 255, 0.1);
+  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--accent-glow);
 }
 
 .spotlight-icon {
@@ -1535,7 +1572,7 @@ html, body, #root {
   padding: 1px 5px;
   border-radius: 3px;
   border: 1px solid var(--border);
-  background: rgba(61, 127, 255, 0.08);
+  background: var(--session-active);
   font-family: inherit;
   font-size: 9px;
   color: var(--text-dim);
@@ -1546,7 +1583,7 @@ html, body, #root {
   padding: 12px 16px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: rgba(8, 14, 30, 0.85);
+  background: var(--bg-panel);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -1561,7 +1598,7 @@ html, body, #root {
   transition: background 0.1s;
 }
 .spotlight-cmd-row:hover {
-  background: rgba(61, 127, 255, 0.08);
+  background: var(--session-active);
 }
 .spotlight-cmd-key {
   font-size: 11px;
@@ -1622,9 +1659,6 @@ html, body, #root {
   position: fixed;
   inset: 0;
   z-index: 250;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: rgba(4, 8, 18, 0.75);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -1632,9 +1666,8 @@ html, body, #root {
 }
 
 .file-viewer-panel {
-  width: 720px;
-  max-width: 90vw;
-  max-height: 82vh;
+  position: fixed;
+  z-index: 250;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(8, 14, 30, 0.95);
@@ -1645,6 +1678,13 @@ html, body, #root {
   overflow: hidden;
   box-shadow: 0 12px 60px rgba(0, 0, 0, 0.6);
   animation: spotlight-slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 300px;
+  min-height: 200px;
+}
+
+.file-viewer-panel.file-viewer-max {
+  border-radius: 0;
+  animation: none;
 }
 
 .file-viewer-header {
@@ -1655,7 +1695,21 @@ html, body, #root {
   border-bottom: 1px solid var(--border);
   background: rgba(4, 8, 18, 0.4);
   flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
 }
+.file-viewer-header:active { cursor: grabbing; }
+
+/* Resize handles */
+.fv-resize { position: absolute; z-index: 5; }
+.fv-resize-n  { top: 0; left: 6px; right: 6px; height: 5px; cursor: n-resize; }
+.fv-resize-s  { bottom: 0; left: 6px; right: 6px; height: 5px; cursor: s-resize; }
+.fv-resize-e  { right: 0; top: 6px; bottom: 6px; width: 5px; cursor: e-resize; }
+.fv-resize-w  { left: 0; top: 6px; bottom: 6px; width: 5px; cursor: w-resize; }
+.fv-resize-ne { top: 0; right: 0; width: 12px; height: 12px; cursor: ne-resize; }
+.fv-resize-nw { top: 0; left: 0; width: 12px; height: 12px; cursor: nw-resize; }
+.fv-resize-se { bottom: 0; right: 0; width: 12px; height: 12px; cursor: se-resize; }
+.fv-resize-sw { bottom: 0; left: 0; width: 12px; height: 12px; cursor: sw-resize; }
 
 .file-viewer-title {
   display: flex;
@@ -1715,14 +1769,6 @@ html, body, #root {
   background: rgba(255, 95, 87, 0.12);
 }
 
-/* Maximized file viewer */
-.file-viewer-max {
-  width: 96vw !important;
-  max-width: 96vw !important;
-  max-height: 94vh !important;
-  border-radius: 16px;
-}
-
 .file-viewer-body {
   flex: 1;
   overflow-y: auto;
@@ -1744,20 +1790,6 @@ html, body, #root {
   max-height: calc(100% - 4px);
   object-fit: contain;
   border-radius: 8px;
-}
-
-/* Contain media panel strictly */
-.file-viewer-panel {
-  max-height: 82vh;
-  overflow: hidden;
-}
-
-/* Maximized — tighter constraint */
-.file-viewer-max {
-  width: 96vw !important;
-  max-width: 96vw !important;
-  max-height: 94vh !important;
-  height: 94vh;
 }
 
 .file-viewer-loading,
@@ -1831,6 +1863,83 @@ html, body, #root {
   background: rgba(249, 115, 22, 0.6);
   color: #fff;
   border-radius: 2px;
+}
+
+/* Chrome-style omnibox */
+.omnibox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(4, 8, 18, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  padding-top: 72px;
+  animation: overlay-fade-in 0.15s ease;
+}
+.omnibox-wrapper {
+  width: 640px;
+  max-width: 90vw;
+  animation: omnibox-slide-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes omnibox-slide-in {
+  from { opacity: 0; transform: translateY(-16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.omnibox-bar {
+  height: 44px;
+  border-radius: 22px;
+  background: rgba(18, 24, 40, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+}
+.omnibox-bar-open { border-radius: 22px 22px 0 0; border-bottom-color: transparent; }
+.omnibox-icon {
+  color: rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+}
+.omnibox-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e8eaed;
+  font-size: 15px;
+  font-family: inherit;
+  caret-color: #8ab4f8;
+}
+.omnibox-input::placeholder { color: rgba(255, 255, 255, 0.3); }
+
+.omnibox-dropdown {
+  background: rgba(18, 24, 40, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0 0 22px 22px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  padding: 4px 0;
+}
+.omnibox-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  cursor: pointer;
+  color: #e8eaed;
+  font-size: 14px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  transition: background 0.1s;
+}
+.omnibox-suggestion.selected,
+.omnibox-suggestion:hover { background: rgba(61, 127, 255, 0.15); }
+.omnibox-sug-icon {
+  color: rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
 }
 
 .file-viewer-footer {

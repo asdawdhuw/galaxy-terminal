@@ -1,6 +1,18 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 
+const MIN_W = 300, MIN_H = 200
+
+function initPos() {
+  const w = 720, h = 500
+  return {
+    x: Math.max(0, (window.innerWidth - w) / 2),
+    y: Math.max(0, (window.innerHeight - h) / 2),
+    w,
+    h,
+  }
+}
+
 export default function FileViewer({ file, onClose }) {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
@@ -8,8 +20,20 @@ export default function FileViewer({ file, onClose }) {
   const [maximized, setMaximized] = useState(false)
   const [fontSize, setFontSize] = useState(13)
   const [toast, setToast] = useState(null)
-  const overlayRef = useRef(null)
   const toastTimerRef = useRef(null)
+  const panelRef = useRef(null)
+  const dragRef = useRef(null)
+
+  const [pos, setPos] = useState(initPos)
+  const [savedPos, setSavedPos] = useState(null)
+
+  // Reset position when file changes
+  useEffect(() => {
+    if (file) {
+      setPos(initPos())
+      setMaximized(false)
+    }
+  }, [file])
 
   // Search state
   const [searchOpen, setSearchOpen] = useState(false)
@@ -24,7 +48,6 @@ export default function FileViewer({ file, onClose }) {
     if (!file) return
     const ext = (file.name?.split('.').pop() || 'txt').toLowerCase()
     const isMedia = ['png','jpg','jpeg','gif','webp','svg','bmp','ico','mp4','webm','mkv','avi','mov','wmv','flv'].includes(ext)
-    // Media files: stream directly, no need to read content
     if (isMedia) { setLoading(false); return }
 
     if (file.path) {
@@ -41,7 +64,6 @@ export default function FileViewer({ file, onClose }) {
     }
   }, [file])
 
-  // Find all match positions
   const matches = useMemo(() => {
     if (!searchQuery || !content) return []
     try {
@@ -52,13 +74,12 @@ export default function FileViewer({ file, onClose }) {
       let r
       while ((r = re.exec(content)) !== null) {
         m.push({ start: r.index, end: r.index + r[0].length })
-        if (r[0].length === 0) re.lastIndex++ // avoid infinite loop on empty match
+        if (r[0].length === 0) re.lastIndex++
       }
       return m
     } catch (_) { return [] }
   }, [content, searchQuery, searchCase, searchRegex])
 
-  // Highlighted HTML
   const highlightedHtml = useMemo(() => {
     if (!searchQuery || matches.length === 0) return null
     try {
@@ -75,7 +96,6 @@ export default function FileViewer({ file, onClose }) {
     } catch (_) { return null }
   }, [content, searchQuery, searchCase, searchRegex, matches, searchIdx])
 
-  // Scroll to current match
   useEffect(() => {
     if (!codeContainerRef.current) return
     const el = codeContainerRef.current.querySelector('.file-search-current')
@@ -88,9 +108,69 @@ export default function FileViewer({ file, onClose }) {
     toastTimerRef.current = setTimeout(() => setToast(null), 1200)
   }
 
+  // --- Drag to move ---
+  const handleDragStart = useCallback((e) => {
+    if (e.target.closest('.file-viewer-actions')) return
+    e.preventDefault()
+    const sx = e.clientX, sy = e.clientY
+    const ox = pos.x, oy = pos.y
+    function onMove(ev) {
+      setPos((p) => ({
+        ...p,
+        x: Math.max(-p.w + 100, Math.min(window.innerWidth - 100, ox + (ev.clientX - sx))),
+        y: Math.max(0, Math.min(window.innerHeight - 40, oy + (ev.clientY - sy))),
+      }))
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [pos.x, pos.y])
+
+  // --- Resize from edge/corner ---
+  const handleResizeStart = useCallback((dir, e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const sx = e.clientX, sy = e.clientY
+    const ox = pos.x, oy = pos.y, ow = pos.w, oh = pos.h
+    const maxW = window.innerWidth * 0.95, maxH = window.innerHeight * 0.9
+
+    function onMove(ev) {
+      const dx = ev.clientX - sx, dy = ev.clientY - sy
+      setPos((p) => {
+        let nx = p.x, ny = p.y, nw = ow, nh = oh
+        if (dir.includes('e')) nw = Math.min(maxW, Math.max(MIN_W, ow + dx))
+        if (dir.includes('w')) { nw = Math.min(maxW, Math.max(MIN_W, ow - dx)); nx = ox + ow - nw }
+        if (dir.includes('s')) nh = Math.min(maxH, Math.max(MIN_H, oh + dy))
+        if (dir.includes('n')) { nh = Math.min(maxH, Math.max(MIN_H, oh - dy)); ny = oy + oh - nh }
+        return { x: nx, y: ny, w: nw, h: nh }
+      })
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [pos.x, pos.y, pos.w, pos.h])
+
+  function toggleMaximize() {
+    if (maximized) {
+      setPos(savedPos || initPos())
+      setMaximized(false)
+    } else {
+      setSavedPos({ ...pos })
+      setPos({ x: 0, y: 0, w: window.innerWidth, h: window.innerHeight })
+      setMaximized(true)
+    }
+  }
+
   // Keyboard: Esc, Ctrl+F, Ctrl+Wheel
   useEffect(() => {
     function handleKey(e) {
+      if (e.key === 'Escape') { onClose?.(); return }
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault()
         if (searchOpen) {
@@ -101,7 +181,6 @@ export default function FileViewer({ file, onClose }) {
           setSearchIdx(0)
           setTimeout(() => searchInputRef.current?.focus(), 50)
         }
-        return
       }
     }
     function handleWheel(e) {
@@ -121,10 +200,6 @@ export default function FileViewer({ file, onClose }) {
       clearTimeout(toastTimerRef.current)
     }
   }, [onClose, searchOpen])
-
-  function handleOverlayClick(e) {
-    if (e.target === overlayRef.current) onClose?.()
-  }
 
   function handleSearchKeyDown(e) {
     if (e.key === 'Enter') {
@@ -151,17 +226,36 @@ export default function FileViewer({ file, onClose }) {
   const isMedia = isImage || isVideo
   const mediaUrl = file.path ? `stream://audio?url=${encodeURIComponent(file.path)}` : ''
 
+  const RESIZE_DIRS = ['n','s','e','w','ne','nw','se','sw']
+
   return createPortal(
-    <div ref={overlayRef} className="file-viewer-overlay" onClick={handleOverlayClick}>
-      <div className={`file-viewer-panel ${maximized ? 'file-viewer-max' : ''}`}>
-        <div className="file-viewer-header">
+    <div
+      ref={panelRef}
+      className={`file-viewer-panel${maximized ? ' file-viewer-max' : ''}`}
+        style={{
+          left: maximized ? 0 : pos.x,
+          top: maximized ? 0 : pos.y,
+          width: maximized ? '100vw' : pos.w,
+          height: maximized ? '100vh' : pos.h,
+        }}
+      >
+        {/* Resize handles */}
+        {!maximized && RESIZE_DIRS.map((dir) => (
+          <div
+            key={dir}
+            className={`fv-resize fv-resize-${dir}`}
+            onMouseDown={(e) => handleResizeStart(dir, e)}
+          />
+        ))}
+
+        <div className="file-viewer-header" onMouseDown={handleDragStart}>
           <div className="file-viewer-title">
             <span className="file-viewer-icon">{'\u{1F4C4}'}</span>
             <span>{file.name || file.path}</span>
             {file.size && <span className="file-viewer-size">{formatSize(file.size)}</span>}
           </div>
           <div className="file-viewer-actions">
-            <button className="file-viewer-maximize" onClick={() => setMaximized(!maximized)}
+            <button className="file-viewer-maximize" onClick={toggleMaximize}
               title={maximized ? 'Restore' : 'Maximize'}>
               {maximized ? '\u{25E3}' : '\u{25E2}'}
             </button>
@@ -169,7 +263,6 @@ export default function FileViewer({ file, onClose }) {
           </div>
         </div>
 
-        {/* Search bar */}
         {searchOpen && (
           <div className="file-viewer-search">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round">
@@ -231,8 +324,7 @@ export default function FileViewer({ file, onClose }) {
           {isVideo && <span>Video</span>}
           {!isMedia && <span>{content.split('\n').length} lines</span>}
         </div>
-      </div>
-    </div>,
+      </div>,
     document.body
   )
 }

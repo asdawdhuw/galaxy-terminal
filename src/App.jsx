@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import SessionList from './components/SessionList'
 import TerminalCanvas from './components/TerminalCanvas'
 import SplashScreen from './components/SplashScreen'
@@ -15,80 +16,92 @@ import idleSrc from '../sound/idle.mp3'
 import activeSrc from '../sound/active.mp3'
 import climaxSrc from '../sound/climax.mp3'
 
-function WebBrowser() {
-  const [url, setUrl] = useState('https://www.bing.com')
-  const [inputVal, setInputVal] = useState('https://www.bing.com')
-  const wvRef = useRef(null)
+function WebUrlBar({ onClose }) {
+  const [inputVal, setInputVal] = useState('')
+  const [suggestions, setSuggestions] = useState([])
+  const [selectedIdx, setSelectedIdx] = useState(-1)
+  const inputRef = useRef(null)
+  const timerRef = useRef(null)
 
-  function navigate() {
-    let u = inputVal.trim()
+  useEffect(() => { inputRef.current?.focus() }, [])
+
+  useEffect(() => {
+    const q = inputVal.trim()
+    if (!q) { setSuggestions([]); setSelectedIdx(-1); return }
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(async () => {
+      const list = await window.terminal.searchSuggest(q)
+      setSuggestions(list)
+      setSelectedIdx(-1)
+    }, 150)
+    return () => clearTimeout(timerRef.current)
+  }, [inputVal])
+
+  function openUrl(val) {
+    let u = (val || inputVal).trim()
     if (!u) return
-    if (!/^https?:\/\//i.test(u)) u = 'https://' + u
-    setUrl(u)
-    setInputVal(u)
+    if (!/^https?:\/\//i.test(u) && /\.\w{2,}/.test(u)) u = 'https://' + u
+    if (!/^https?:\/\//i.test(u)) u = 'https://www.google.com/search?q=' + encodeURIComponent(u)
+    window.terminal.openExternal(u)
+    onClose()
   }
 
   function handleKey(e) {
-    if (e.key === 'Enter') navigate()
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setSelectedIdx((i) => Math.min(i + 1, suggestions.length - 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setSelectedIdx((i) => Math.max(i - 1, -1))
+    } else if (e.key === 'Enter') {
+      if (selectedIdx >= 0 && selectedIdx < suggestions.length) {
+        openUrl(suggestions[selectedIdx])
+      } else {
+        openUrl()
+      }
+    } else if (e.key === 'Escape') {
+      onClose()
+    }
   }
 
-  useEffect(() => {
-    const wv = wvRef.current
-    if (!wv) return
-    function handleNav(e) { setInputVal(e.url); setUrl(e.url) }
-    wv.addEventListener('did-navigate', handleNav)
-    wv.addEventListener('did-navigate-in-page', handleNav)
-    return () => {
-      wv.removeEventListener('did-navigate', handleNav)
-      wv.removeEventListener('did-navigate-in-page', handleNav)
-    }
-  }, [])
-
-  return (
-    <div className="h-full flex flex-col overflow-hidden" style={{
-      borderRadius: 12,
-      border: '1px solid rgba(255,255,255,0.05)',
-      background: 'rgba(0,0,0,0.85)',
-    }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px',
-        borderBottom: '1px solid var(--border)', background: 'rgba(4,8,18,0.4)',
-      }}>
-        <button
-          onClick={() => { try { wvRef.current?.goBack() } catch (_) {} }}
-          style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 14, padding: '0 4px' }}
-          title="Back"
-        >←</button>
-        <button
-          onClick={() => { try { wvRef.current?.goForward() } catch (_) {} }}
-          style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 14, padding: '0 4px' }}
-          title="Forward"
-        >→</button>
-        <button
-          onClick={() => { try { wvRef.current?.reload() } catch (_) {} }}
-          style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 13, padding: '0 4px' }}
-          title="Reload"
-        >↻</button>
-        <input
-          type="text"
-          value={inputVal}
-          onChange={(e) => setInputVal(e.target.value)}
-          onKeyDown={handleKey}
-          placeholder="Enter URL..."
-          spellCheck={false}
-          style={{
-            flex: 1, background: 'rgba(4,8,18,0.6)', border: '1px solid var(--border)',
-            borderRadius: 6, padding: '4px 10px', color: 'var(--text-primary)', fontSize: 11,
-            fontFamily: 'inherit', outline: 'none',
-          }}
-        />
+  return createPortal(
+    <div className="omnibox-backdrop" onClick={onClose}>
+      <div className="omnibox-wrapper" onClick={(e) => e.stopPropagation()}>
+        <div className={`omnibox-bar${suggestions.length > 0 ? ' omnibox-bar-open' : ''}`}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="omnibox-icon">
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+          </svg>
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputVal}
+            onChange={(e) => setInputVal(e.target.value)}
+            onKeyDown={handleKey}
+            placeholder="Search Google or type a URL"
+            spellCheck={false}
+            className="omnibox-input"
+          />
+        </div>
+        {suggestions.length > 0 && (
+          <div className="omnibox-dropdown">
+            {suggestions.map((s, i) => (
+              <div
+                key={s}
+                className={`omnibox-suggestion${i === selectedIdx ? ' selected' : ''}`}
+                onMouseDown={(e) => { e.preventDefault(); openUrl(s) }}
+                onMouseEnter={() => setSelectedIdx(i)}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="omnibox-sug-icon">
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                </svg>
+                <span>{s}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      <webview
-        ref={wvRef}
-        src={url}
-        style={{ flex: 1, width: '100%', height: '100%' }}
-      />
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -127,10 +140,7 @@ export default function App() {
   const [uiOpacity, setUiOpacity] = useState(0.85)
   const [canvasMode, setCanvasMode] = useState(false)
   const [canvasFocusId, setCanvasFocusId] = useState(null)
-
-  const WEB_SESSION_ID = '__web__'
-  const webActive = activeId === WEB_SESSION_ID
-  const allSessions = [{ id: WEB_SESSION_ID, name: 'Web', type: 'web' }, ...sessions]
+  const [webBarOpen, setWebBarOpen] = useState(false)
 
   const termRef = useRef(null)
 
@@ -170,7 +180,6 @@ export default function App() {
   }, [])
 
   const handleSwitch = useCallback(async (id) => {
-    if (id === WEB_SESSION_ID) { setActiveId(id); return }
     const ok = await window.terminal.switchSession(id)
     if (ok) setActiveId(id)
   }, [])
@@ -301,6 +310,9 @@ export default function App() {
         onClose={() => setViewerFile(null)}
       />
 
+      {/* Web URL Bar — click Web button */}
+      {webBarOpen && <WebUrlBar onClose={() => setWebBarOpen(false)} />}
+
       {/* Theme Picker — /theme command */}
       {themePickerOpen && (
         <ThemePicker
@@ -332,14 +344,13 @@ export default function App() {
           onMusicResume={music.resume}
           uiOpacity={uiOpacity}
           onOpacityChange={setUiOpacity}
-          webMode={webActive}
-          onWebToggle={() => webActive ? handleSwitch(sessions[0]?.id || '') : handleSwitch(WEB_SESSION_ID)}
+          onWebClick={() => setWebBarOpen(true)}
         />
 
         <div className="app-body">
           {/* X-axis: Sidebar with flip */}
           <SessionList
-            sessions={allSessions}
+            sessions={sessions}
             activeId={activeId}
             onSwitch={handleSwitch}
             onRename={handleRename}
@@ -366,8 +377,6 @@ export default function App() {
                   setCanvasMode(false)
                 }}
               />
-            ) : webActive ? (
-              <WebBrowser />
             ) : (
               <TerminalCanvas
                 activeSessionId={activeId}

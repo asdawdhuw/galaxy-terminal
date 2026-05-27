@@ -38,7 +38,8 @@
       "PowerShell(Get-ChildItem \"E:\\\\GitHub_tools\\\\galaxy-terminal\\\\music\" -File | Select-Object Name, @{N='Size';E={\"{0:N1} KB\" -f \\($_.Length/1KB\\)}})",
       "PowerShell(node -e \"const path = require\\('path'\\); console.log\\(path.join\\(__dirname, '../../..', 'music'\\)\\)\" 2>&1)",
       "Bash(npm install *)",
-      "PowerShell(Get-Process *)"
+      "PowerShell(Get-Process *)",
+      "Bash(Start-Sleep -Seconds 5)"
     ]
   }
 }
