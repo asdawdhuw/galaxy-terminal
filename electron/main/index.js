@@ -473,6 +473,31 @@ ipcMain.handle('music:toggle-pin', () => {
   return { pinned: false }
 })
 
+// File watcher
+const fileWatchers = new Map()
+ipcMain.handle('fs:watch', (_event, dirPath) => {
+  if (!dirPath || !fs.existsSync(dirPath)) return { ok: false, error: 'Directory not found' }
+  if (fileWatchers.has(dirPath)) return { ok: true } // already watching
+
+  try {
+    const stats = fs.statSync(dirPath)
+    if (!stats.isDirectory()) return { ok: false, error: 'Not a directory' }
+
+    const watcher = fs.watch(dirPath, { recursive: true }, (_eventType, filename) => {
+      if (!mainWindow || mainWindow.isDestroyed()) return
+      try {
+        const entries = fs.readdirSync(dirPath, { withFileTypes: true })
+        const fileCount = entries.filter(e => e.isFile()).length
+        mainWindow.webContents.send('fs:changed', { dirPath, filename, fileCount })
+      } catch (_) { /* dir may have been deleted */ }
+    })
+    fileWatchers.set(dirPath, watcher)
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
+})
+
 ipcMain.handle('pty:list', () => {
   return [...sessions.values()].map(s => ({ id: s.id, name: s.name }))
 })

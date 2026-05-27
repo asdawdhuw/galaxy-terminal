@@ -63,5 +63,11 @@ contextBridge.exposeInMainWorld('terminal', {
   getFilePath: (file) => webUtils.getPathForFile(file),
   searchLyrics: (params) => ipcRenderer.invoke('lyrics:search', params),
   openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
-  searchSuggest: (query) => ipcRenderer.invoke('search:suggest', query)
+  searchSuggest: (query) => ipcRenderer.invoke('search:suggest', query),
+  watchDir: (path) => ipcRenderer.invoke('fs:watch', path),
+  onFsChanged: (callback) => {
+    const handler = (_event, data) => callback(data)
+    ipcRenderer.on('fs:changed', handler)
+    return () => ipcRenderer.removeListener('fs:changed', handler)
+  }
 })

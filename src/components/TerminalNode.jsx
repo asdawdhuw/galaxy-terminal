@@ -6,21 +6,13 @@ function TerminalNodeComponent({ data, selected, id }) {
   const containerRef = useRef(null)
   const [compact, setCompact] = useState(false)
 
-  function handleClose(e) {
-    e.stopPropagation()
-    data.onClose?.(id)
-  }
+  function handleClose(e) { e.stopPropagation(); data.onClose?.(id) }
+  function handleMinimize(e) { e.stopPropagation(); setCompact(!compact) }
+  function handleOpen(e) { e.stopPropagation(); e.preventDefault(); data.onFocus?.(id) }
 
-  function handleMinimize(e) {
-    e.stopPropagation()
-    setCompact(!compact)
-  }
-
-  function handleOpen(e) {
-    e.stopPropagation()
-    e.preventDefault()
-    data.onFocus?.(id)
-  }
+  const glowStyle = selected
+    ? '0 0 18px var(--accent-glow), 0 0 40px rgba(var(--accent-r, 61), var(--accent-g, 127), var(--accent-b, 255), 0.25)'
+    : '0 0 8px rgba(0,0,0,0.3), 0 0 2px rgba(var(--accent-r, 61), var(--accent-g, 127), var(--accent-b, 255), 0.12)'
 
   return (
     <motion.div
@@ -28,15 +20,15 @@ function TerminalNodeComponent({ data, selected, id }) {
       animate={{
         opacity: data.isDimmed ? 0.3 : 1,
         filter: data.isDimmed ? 'blur(4px)' : 'blur(0px)',
-        boxShadow: selected
-          ? '0 0 20px rgba(var(--accent-r, 61), var(--accent-g, 127), var(--accent-b, 255), 0.4), 0 0 60px rgba(var(--accent-r, 61), var(--accent-g, 127), var(--accent-b, 255), 0.1)'
-          : '0 0 8px rgba(0,0,0,0.3)',
+        boxShadow: glowStyle,
       }}
       transition={{ duration: 0.5, ease: 'easeInOut' }}
       style={{ width: data.width || 320, borderRadius: 12, overflow: 'hidden' }}
     >
-      <Handle type="target" position={Position.Top} style={{ background: 'var(--accent)', border: 'none', width: 8, height: 8 }} />
-      <Handle type="source" position={Position.Bottom} style={{ background: 'var(--accent)', border: 'none', width: 8, height: 8 }} />
+      <Handle type="target" position={Position.Top}
+        style={{ background: 'var(--accent)', border: 'none', width: 8, height: 8 }} />
+      <Handle type="source" position={Position.Bottom}
+        style={{ background: 'var(--accent)', border: 'none', width: 8, height: 8 }} />
 
       <div className="terminal-node-chrome" style={{ WebkitAppRegion: 'no-drag' }}>
         <div className="flex items-center gap-1.5">
@@ -55,7 +47,7 @@ function TerminalNodeComponent({ data, selected, id }) {
       >
         <div className="terminal-node-preview">
           {data.session ? (
-            <span style={{ color: 'var(--accent)', fontSize: 12 }}>● {data.session.name} — pwsh</span>
+            <span style={{ color: 'var(--accent)', fontSize: 12 }}>{'●'} {data.session.name} — pwsh</span>
           ) : (
             <span style={{ color: 'var(--text-dim)', fontSize: 12 }}>Inactive session</span>
           )}

@@ -2298,10 +2298,14 @@ html, body, #root {
 
 /* Terminal Node */
 .terminal-node-wrapper {
-  background: var(--bg-panel);
+  background: rgba(0, 0, 0, 0.6);
   border: 1px solid var(--border);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.terminal-node-wrapper:hover {
+  border-color: rgba(var(--accent-r, 61), var(--accent-g, 127), var(--accent-b, 255), 0.3);
 }
 .terminal-node-chrome {
   display: flex; align-items: center; gap: 8px;
@@ -2774,6 +2778,124 @@ html, body, #root {
   height: 100%;
   background: var(--accent);
   transition: width 0.2s linear;
+}
+
+/* ==============================
+   Energy Beam Edge animation
+   ============================== */
+@keyframes energy-dash-flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -208; }
+}
+.energy-beam-dash {
+  animation: energy-dash-flow 2s linear infinite;
+}
+
+/* ==============================
+   Music Satellite node
+   ============================== */
+.music-satellite {
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 0 8px rgba(0,0,0,0.3), 0 0 2px rgba(var(--accent-r, 61), var(--accent-g, 127), var(--accent-b, 255), 0.12);
+}
+.music-satellite:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 18px var(--accent-glow);
+}
+.music-satellite-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow), 0 0 40px rgba(var(--accent-r, 61), var(--accent-g, 127), var(--accent-b, 255), 0.3);
+}
+.music-satellite-label {
+  font-size: 28px;
+  pointer-events: none;
+}
+.music-satellite-bars {
+  display: flex; align-items: flex-end;
+  gap: 3px; height: 24px;
+  pointer-events: none;
+}
+.music-satellite-bar {
+  width: 4px;
+  border-radius: 2px;
+  background: var(--accent);
+  animation: spectrum-jump 0.8s ease-in-out infinite alternate;
+}
+@keyframes spectrum-jump {
+  0% { height: 6px; opacity: 0.6; }
+  100% { height: 22px; opacity: 1; }
+}
+
+/* ==============================
+   File Watcher node
+   ============================== */
+.file-watcher-node {
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px;
+  position: relative;
+  box-shadow: 0 0 8px rgba(0,0,0,0.3), 0 0 2px rgba(var(--accent-r, 61), var(--accent-g, 127), var(--accent-b, 255), 0.12);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.file-watcher-node:hover,
+.file-watcher-node.watcher-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+.watcher-icon {
+  font-size: 22px;
+  pointer-events: none;
+  position: relative; z-index: 1;
+}
+.watcher-label {
+  font-size: 10px;
+  color: var(--text-primary);
+  font-family: 'JetBrainsMono NF', 'FiraCode Nerd Font', 'Cascadia Code', monospace;
+  max-width: 90px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  pointer-events: none;
+  position: relative; z-index: 1;
+}
+.watcher-count {
+  font-size: 9px;
+  color: var(--text-dim);
+  opacity: 0.6;
+  font-family: 'JetBrainsMono NF', 'FiraCode Nerd Font', 'Cascadia Code', monospace;
+  pointer-events: none;
+  position: relative; z-index: 1;
+}
+.watcher-pulse-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  opacity: 0;
+  animation: pulse-ring-out 1.2s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes pulse-ring-out {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.terminal-node-chrome {
+  background: rgba(0,0,0,0.3);
 }
 
 /* ==============================

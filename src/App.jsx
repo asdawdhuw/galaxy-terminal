@@ -423,6 +423,7 @@ export default function App() {
                   handleSwitch(id)
                   setCanvasMode(false)
                 }}
+                onMusicOpen={() => setMusicPlayerOpen(true)}
               />
             ) : (
               <TerminalCanvas
