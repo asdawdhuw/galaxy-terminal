@@ -133,61 +133,61 @@ export default function TopMenuBar({
 
         {musicTrack && (
           <div className="topbar-mini-player">
-            <button
-              type="button"
-              onClick={onMusicPrev}
-              className="topbar-music-btn"
-              title="Previous"
-            >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                <polygon points="11 19 2 12 11 5 11 19" /><polygon points="22 19 13 12 22 5 22 19" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={musicPlaying ? onMusicPause : onMusicResume}
-              className="topbar-music-btn topbar-music-btn-play"
-              title={musicPlaying ? 'Pause' : 'Play'}
-            >
-              {musicPlaying ? (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                  <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
+              <button
+                type="button"
+                onClick={onMusicPrev}
+                className="topbar-music-btn"
+                title="Previous"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="11 19 2 12 11 5 11 19" /><polygon points="22 19 13 12 22 5 22 19" />
                 </svg>
-              ) : (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                  <polygon points="5 3 19 12 5 21 5 3" />
+              </button>
+              <button
+                type="button"
+                onClick={musicPlaying ? onMusicPause : onMusicResume}
+                className="topbar-music-btn topbar-music-btn-play"
+                title={musicPlaying ? 'Pause' : 'Play'}
+              >
+                {musicPlaying ? (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
+                  </svg>
+                ) : (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={onMusicNext}
+                className="topbar-music-btn"
+                title="Next"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="13 19 22 12 13 5 13 19" /><polygon points="2 19 11 12 2 5 2 19" />
                 </svg>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={onMusicNext}
-              className="topbar-music-btn"
-              title="Next"
-            >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                <polygon points="13 19 22 12 13 5 13 19" /><polygon points="2 19 11 12 2 5 2 19" />
-              </svg>
-            </button>
-            <div className="topbar-music-bar-wrap" onClick={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect()
-              const pct = (e.clientX - rect.left) / rect.width
-              if (onMusicSeek && musicDuration > 0) {
-                onMusicSeek(pct * musicDuration)
-              }
-            }}>
-              <div
-                className="topbar-music-bar-fill"
-                style={{ width: musicDuration > 0 ? `${(musicTime / musicDuration) * 100}%` : '0%' }}
-              />
+              </button>
+              <div className="topbar-music-bar-wrap" onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                const pct = (e.clientX - rect.left) / rect.width
+                if (onMusicSeek && musicDuration > 0) {
+                  onMusicSeek(pct * musicDuration)
+                }
+              }}>
+                <div
+                  className="topbar-music-bar-fill"
+                  style={{ width: musicDuration > 0 ? `${(musicTime / musicDuration) * 100}%` : '0%' }}
+                />
+              </div>
+              <span className="topbar-music-time">
+                {fmtTime(musicTime)}
+              </span>
+              <span className="topbar-music-label">
+                {musicTrack.title || musicTrack.name} — {musicTrack.artist}
+              </span>
             </div>
-            <span className="topbar-music-time">
-              {fmtTime(musicTime)}
-            </span>
-            <span className="topbar-music-label">
-              {musicTrack.title || musicTrack.name} — {musicTrack.artist}
-            </span>
-          </div>
         )}
       </div>
 

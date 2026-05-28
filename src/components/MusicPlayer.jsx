@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import MusicSpectrum from './MusicSpectrum'
 
 function fmtTime(s) {
   if (!s || !isFinite(s)) return '0:00'
@@ -24,6 +25,36 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
   const miniBarRef = useRef(null)
   const dragRef = useRef({ dragging: false, startX: 0, startY: 0, offX: 0, offY: 0, init: false })
   const [miniOff, setMiniOff] = useState({ x: 0, y: 0 })
+
+  // AudioContext + AnalyserNode for spectrum
+  const audioCtxRef = useRef(null)
+  const analyserRef = useRef(null)
+  const sourceRef = useRef(null)
+
+  const getAnalyser = useCallback(() => {
+    return analyserRef.current
+  }, [])
+
+  // Connect audio element to AudioContext graph (runs once when audio element appears)
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio || sourceRef.current) return
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)()
+      if (ctx.state === 'suspended') ctx.resume()
+      audioCtxRef.current = ctx
+      const source = ctx.createMediaElementSource(audio)
+      sourceRef.current = source
+      const analyser = ctx.createAnalyser()
+      analyser.fftSize = 256
+      analyser.smoothingTimeConstant = 0.8
+      analyserRef.current = analyser
+      source.connect(analyser)
+      analyser.connect(ctx.destination)
+    } catch (_) {
+      // createMediaElementSource can only be called once — ignore duplicate
+    }
+  }, [currentIdx])
 
   // Init mini bar position (centered, near bottom)
   useEffect(() => {
@@ -191,6 +222,8 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
         }}
         onMouseDown={onMiniMouseDown}
       >
+        <MusicSpectrum getAnalyser={getAnalyser} playing={playing} />
+
         {/* Search results dropdown (appears above mini bar) */}
         {miniSearch && miniResults.length > 0 && (
           <div className="music-mini-results">

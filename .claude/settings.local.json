@@ -40,7 +40,10 @@
       "Bash(npm install *)",
       "PowerShell(Get-Process *)",
       "Bash(Start-Sleep -Seconds 5)",
-      "Bash(Select-Object -Last 20)"
+      "Bash(Select-Object -Last 20)",
+      "Bash(Start-Sleep -Seconds 8)",
+      "Bash(Select-Object -First 5)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:5173/\" -TimeoutSec 5 -UseBasicParsing; Write-Host \"Dev server: OK \\($\\($r.StatusCode\\)\\)\" } catch { Write-Host \"Dev server: $_\" })"
     ]
   }
 }
