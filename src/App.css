@@ -2484,7 +2484,7 @@ html, body, #root {
   width: 100%;
   height: 48px;
   pointer-events: none;
-  z-index: 10;
+  z-index: 99;
 }
 .music-spectrum-canvas {
   display: block;
@@ -2496,12 +2496,12 @@ html, body, #root {
 .topbar-mini-player {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
+  gap: 2px;
+  padding: 2px 6px;
   border-radius: 9999px;
   background: rgba(8,13,28,0.5);
   border: 1px solid var(--border);
-  max-width: 420px;
+  max-width: 300px;
   overflow: hidden;
 }
 .topbar-music-btn {
@@ -2529,7 +2529,7 @@ html, body, #root {
   color: #fff;
 }
 .topbar-music-bar-wrap {
-  width: 48px; height: 2px;
+  width: 36px; height: 2px;
   border-radius: 1px;
   background: rgba(255,255,255,0.1);
   cursor: pointer;
@@ -2537,7 +2537,7 @@ html, body, #root {
   transition: width 0.2s;
 }
 .topbar-mini-player:hover .topbar-music-bar-wrap {
-  width: 60px;
+  width: 48px;
 }
 .topbar-music-bar-fill {
   height: 100%;
@@ -2550,7 +2550,7 @@ html, body, #root {
   color: var(--text-dim);
   opacity: 0.6;
   flex-shrink: 0;
-  min-width: 30px;
+  min-width: 24px;
   text-align: right;
   font-family: 'JetBrainsMono NF', 'FiraCode Nerd Font', 'Cascadia Code', monospace;
 }
@@ -2560,7 +2560,8 @@ html, body, #root {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex: 1;
+  max-width: 100px;
+  flex-shrink: 1;
   min-width: 0;
 }
 

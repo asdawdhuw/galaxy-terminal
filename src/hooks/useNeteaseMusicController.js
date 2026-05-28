@@ -99,15 +99,33 @@ export default function useMusicController() {
     }
   }
 
-  // Auto-radio: move to next track in current results
+  // Find next track in results by the same artist (loops within artist group)
+  function findNextByArtist(track) {
+    const results = resultsRef.current
+    const artist = (track.artist || '').trim().toLowerCase()
+    if (!artist) {
+      // No artist info — fall back to sequential next in results
+      const idx = results.findIndex((t) => t.bvid === track.bvid)
+      return results[idx + 1] || results[0] || null
+    }
+    const sameArtist = results.filter((t) => (t.artist || '').trim().toLowerCase() === artist)
+    if (sameArtist.length <= 1) {
+      // Only one track by this artist — sequential next
+      const idx = results.findIndex((t) => t.bvid === track.bvid)
+      return results[idx + 1] || results[0] || null
+    }
+    const curIdx = sameArtist.findIndex((t) => t.bvid === track.bvid)
+    const nextInGroup = sameArtist[(curIdx + 1) % sameArtist.length]
+    return nextInGroup && nextInGroup.bvid !== track.bvid ? nextInGroup : null
+  }
+
+  // Auto-radio: when a track ends, play next by the same artist
   const autoRadio = useCallback(async () => {
     const prev = currentRef.current
     if (!prev) return
-
-    const idx = resultsRef.current.findIndex((t) => t.bvid === prev.bvid)
-    const next = resultsRef.current[idx + 1] || resultsRef.current[0]
-    if (next && next.bvid !== prev.bvid) {
-      console.log('[Radio] Next up:', next.title)
+    const next = findNextByArtist(prev)
+    if (next) {
+      console.log('[Radio] Next up:', next.title, '|', next.artist)
       await playTrack(next)
     } else {
       console.log('[Radio] No more tracks')
@@ -124,9 +142,8 @@ export default function useMusicController() {
   const next = useCallback(async () => {
     const cur = currentRef.current
     if (!cur) return
-    const idx = resultsRef.current.findIndex((t) => t.bvid === cur.bvid)
-    const nextTrack = resultsRef.current[idx + 1] || resultsRef.current[0]
-    if (nextTrack && nextTrack.bvid !== cur.bvid) {
+    const nextTrack = findNextByArtist(cur)
+    if (nextTrack) {
       await playTrack(nextTrack)
     }
   }, [])
