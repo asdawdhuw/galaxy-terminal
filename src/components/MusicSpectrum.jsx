@@ -92,7 +92,7 @@ export default function MusicSpectrum({ getAnalyser, playing }) {
         let sum = 0
         for (let j = start; j < end; j++) sum += dataRef.current[j]
         const raw = sum / (end - start) / 255
-        heights[i] += (raw - heights[i]) * 0.35
+        heights[i] += (raw - heights[i]) * 0.6
         const barH = Math.max(2, heights[i] * CANVAS_H * 0.88)
 
         const x = i * (barW + GAP)

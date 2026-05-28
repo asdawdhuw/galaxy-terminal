@@ -30,31 +30,49 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
   const audioCtxRef = useRef(null)
   const analyserRef = useRef(null)
   const sourceRef = useRef(null)
+  const wiredElRef = useRef(null) // track which DOM element is currently wired
 
   const getAnalyser = useCallback(() => {
     return analyserRef.current
   }, [])
 
-  // Connect audio element to AudioContext graph (runs once when audio element appears)
+  // Connect audio element to AudioContext graph — reconnects when element changes
   useEffect(() => {
     const audio = audioRef.current
-    if (!audio || sourceRef.current) return
+    if (!audio) return
+    // Same DOM element already wired — skip
+    if (audio === wiredElRef.current) return
+
+    // Clean up old source if audio element changed (e.g. full→mini mode switch)
+    if (sourceRef.current) {
+      try { sourceRef.current.disconnect() } catch (_) {}
+      sourceRef.current = null
+    }
+
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)()
+      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)()
+      }
+      const ctx = audioCtxRef.current
       if (ctx.state === 'suspended') ctx.resume()
-      audioCtxRef.current = ctx
+
       const source = ctx.createMediaElementSource(audio)
       sourceRef.current = source
-      const analyser = ctx.createAnalyser()
-      analyser.fftSize = 256
-      analyser.smoothingTimeConstant = 0.8
-      analyserRef.current = analyser
-      source.connect(analyser)
-      analyser.connect(ctx.destination)
+      wiredElRef.current = audio
+
+      // Reuse existing analyser or create new one
+      if (!analyserRef.current) {
+        const analyser = ctx.createAnalyser()
+        analyser.fftSize = 256
+        analyser.smoothingTimeConstant = 0.5
+        analyserRef.current = analyser
+      }
+      source.connect(analyserRef.current)
+      analyserRef.current.connect(ctx.destination)
     } catch (_) {
-      // createMediaElementSource can only be called once — ignore duplicate
+      // createMediaElementSource can only be called once per element
     }
-  }, [currentIdx])
+  }, [currentIdx, miniMode])
 
   // Init mini bar position (centered, near bottom)
   useEffect(() => {

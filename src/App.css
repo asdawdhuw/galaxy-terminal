@@ -2572,8 +2572,7 @@ html, body, #root {
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
-  min-width: 420px;
-  max-width: 600px;
+  width: 600px;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--bg-panel);
