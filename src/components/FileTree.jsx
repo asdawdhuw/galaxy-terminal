@@ -21,8 +21,14 @@ function TreeNode({ node, depth = 0, onFileOpen, loadChildren }) {
   return (
     <div>
       <div
-        className="file-tree-node"
+        className={`file-tree-node${node.type === 'file' ? ' draggable' : ''}`}
         style={{ paddingLeft: 12 + depth * 14 }}
+        draggable={node.type === 'file'}
+        onDragStart={(e) => {
+          if (node.type !== 'file') return
+          e.dataTransfer.setData('application/galaxy-file', JSON.stringify({ name: node.name, path: node.path }))
+          e.dataTransfer.effectAllowed = 'copy'
+        }}
         onClick={handleClick}
         onDoubleClick={(e) => {
           e.stopPropagation()

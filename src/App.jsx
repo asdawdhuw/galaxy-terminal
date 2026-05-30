@@ -152,9 +152,15 @@ export default function App() {
       setViewerFile(file)
     }
   }
+  // Listen for file-open events from MultiverseView ResourcePodNode double-click
+  useEffect(() => {
+    function handler(e) { handleFileOpen(e.detail) }
+    window.addEventListener('galaxy:openFile', handler)
+    return () => window.removeEventListener('galaxy:openFile', handler)
+  }, [])
   const [activeCwd, setActiveCwd] = useState(null)
   const [chillMode, setChillMode] = useState(false)
-  const [currentTheme, setCurrentTheme] = useState('orion')
+  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem('galaxy-theme') || 'orion')
   const [themePickerOpen, setThemePickerOpen] = useState(false)
   const [terminalSolid, setTerminalSolid] = useState(false)
   const [uiOpacity, setUiOpacity] = useState(0.85)
@@ -439,6 +445,7 @@ export default function App() {
                 onNodeClick={(id) => handleSwitch(id)}
                 onCanvasClick={() => {}}
                 onNodeClose={(id) => handleClose(id)}
+                onMusicOpen={() => setMusicPlayerOpen(true)}
                 onNodeFocus={(id) => {
                   handleSwitch(id)
                   setCanvasMode(false)

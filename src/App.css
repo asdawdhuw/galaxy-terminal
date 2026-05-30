@@ -2279,23 +2279,6 @@ html, body, #root {
 .multiverse-canvas .react-flow__pane {
   cursor: grab;
 }
-.multiverse-controls {
-  background: rgba(8,14,24,0.8) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 8px !important;
-  overflow: hidden;
-}
-.multiverse-controls button {
-  background: transparent !important;
-  border-color: var(--border) !important;
-  color: var(--text-dim) !important;
-  fill: var(--text-dim) !important;
-  transition: background 0.15s, color 0.15s;
-}
-.multiverse-controls button:hover {
-  background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.12) !important;
-}
-
 /* Terminal Node */
 .terminal-node-wrapper {
   background: rgba(0, 0, 0, 0.6);
@@ -3189,4 +3172,233 @@ html, body, #root {
 .aether-btn:hover .aether-btn-icon {
   opacity: 1;
   color: var(--accent);
+}
+
+/* ================================================================
+   FileTree — draggable file hint
+   ================================================================ */
+.file-tree-node.draggable { cursor: grab; }
+.file-tree-node.draggable:active { cursor: grabbing; }
+.file-tree-node.draggable:hover .file-tree-name {
+  color: var(--accent);
+}
+
+/* ================================================================
+   MultiverseView — Memo Page Button (bottom-left)
+   ================================================================ */
+.multiverse-left-panel {
+  position: absolute; left: 180px; bottom: 30px; z-index: 50;
+}
+.mv-panel-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: rgba(8,14,24,0.9); border: 1px solid var(--border);
+  color: var(--accent); cursor: pointer;
+  font-size: 18px; font-family: 'JetBrainsMono NF', monospace;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(12px);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.mv-panel-btn:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.2);
+}
+.mv-panel-icon { font-size: 18px; color: var(--accent); line-height: 1; }
+
+/* ================================================================
+   MultiverseView — Black Hole (ReactFlow node)
+   ================================================================ */
+.bh-node {
+  position: relative; cursor: grab;
+}
+.bh-node:active { cursor: grabbing; }
+.bh-node-core {
+  position: absolute; inset: 24px; border-radius: 50%;
+  background: radial-gradient(circle, #050008 0%, #0a0014 45%, #100020 75%, transparent 100%);
+  box-shadow: 0 0 50px rgba(40,0,80,0.5), 0 0 90px rgba(20,0,40,0.3), inset 0 0 25px rgba(60,0,100,0.3);
+}
+.bh-node-accretion {
+  position: absolute; inset: 4px; border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent, rgba(80,30,140,0.12), transparent, rgba(40,10,80,0.18), transparent);
+  animation: mv-bh-spin 6s linear infinite;
+}
+@keyframes mv-bh-spin { to { transform: rotate(360deg); } }
+.bh-node-ring {
+  position: absolute; inset: -12px; width: 164px; height: 164px;
+  pointer-events: none;
+}
+.bh-node-label {
+  position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+  font-family: 'JetBrainsMono NF', monospace; font-size: 8px;
+  color: rgba(120,60,180,0.5); letter-spacing: 1.5px; white-space: nowrap;
+}
+.mv-bh-explosion {
+  position: absolute; width: 80px; height: 80px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(120,40,200,0.7) 0%, rgba(60,10,120,0.3) 40%, transparent 70%);
+  pointer-events: none; z-index: 100;
+  animation: mv-bh-explode 0.5s ease-out forwards;
+}
+@keyframes mv-bh-explode {
+  0% { transform: scale(0.3); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ================================================================
+   MultiverseView — Audio Radar Node
+   ================================================================ */
+.audio-radar-node {
+  width: 68px; height: 68px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(20,22,30,1) 0%, rgba(10,12,20,1) 100%);
+  border: 1.5px solid rgba(100,100,120,0.35);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.audio-radar-node.playing {
+  border-color: var(--accent);
+  box-shadow: 0 0 22px rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.4), 0 0 44px rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.15);
+}
+.audio-radar-node.radar-selected {
+  box-shadow: 0 0 30px rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.6), 0 0 60px rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.25);
+}
+.radar-core {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(40,40,60,1), rgba(15,15,25,1));
+  display: flex; align-items: center; justify-content: center; z-index: 2;
+}
+.radar-core.breathing {
+  animation: radar-breathe 1.8s ease-in-out infinite;
+}
+@keyframes radar-breathe {
+  0%, 100% { box-shadow: 0 0 12px rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.4); }
+  50%      { box-shadow: 0 0 24px rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.65); }
+}
+.radar-icon { font-size: 15px; color: var(--text-dim); }
+.audio-radar-node.playing .radar-icon { color: var(--accent); text-shadow: 0 0 6px var(--accent); }
+.radar-spectrum-ring {
+  position: absolute; inset: -6px; width: 80px; height: 80px;
+  pointer-events: none;
+}
+.radar-idle-ring {
+  position: absolute; inset: -6px; width: 80px; height: 80px;
+  pointer-events: none;
+}
+.radar-label {
+  position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%);
+  font-family: 'JetBrainsMono NF', monospace; font-size: 8px; color: var(--text-dim);
+  white-space: nowrap; opacity: 0; transition: opacity 0.2s;
+}
+.audio-radar-node:hover .radar-label { opacity: 1; }
+
+/* ================================================================
+   MultiverseView — Resource Pod Node
+   ================================================================ */
+.resource-pod-node {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(25,35,25,1) 0%, rgba(8,12,8,1) 100%);
+  border: 1.5px solid rgba(60,180,80,0.3);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.resource-pod-node:hover, .resource-pod-node.pod-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 16px rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.3);
+}
+.pod-core { z-index: 2; display: flex; }
+.pod-icon { font-size: 16px; }
+.pod-ring {
+  position: absolute; inset: -8px; width: 72px; height: 72px;
+  pointer-events: none;
+}
+.pod-label {
+  position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
+  font-family: 'JetBrainsMono NF', monospace; font-size: 8px; color: var(--text-dim);
+  white-space: nowrap; max-width: 90px; overflow: hidden; text-overflow: ellipsis;
+  opacity: 0; transition: opacity 0.2s;
+}
+.resource-pod-node:hover .pod-label { opacity: 1; }
+
+/* Resource Pod preview overlay (rendered in ReactFlow pane) */
+.pod-preview-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+}
+.pod-preview-card {
+  width: 560px; max-width: 90vw; max-height: 75vh;
+  background: #0e1117; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.pod-preview-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-family: 'JetBrainsMono NF', monospace; font-size: 12px;
+  color: var(--text-primary);
+}
+.pod-preview-close {
+  background: transparent; border: none; color: var(--text-dim);
+  font-size: 16px; cursor: pointer; padding: 2px 6px;
+}
+.pod-preview-close:hover { color: #ff4444; }
+.pod-preview-body {
+  flex: 1; overflow: auto; padding: 14px 18px;
+}
+.pod-preview-loading {
+  font-family: 'JetBrainsMono NF', monospace; font-size: 12px; color: var(--text-dim);
+}
+.pod-preview-code {
+  font-family: 'JetBrainsMono NF', monospace; font-size: 11px;
+  color: var(--text-primary); line-height: 1.5;
+  white-space: pre-wrap; word-break: break-all; margin: 0;
+}
+
+/* ================================================================
+   MultiverseView — Memo Page Node
+   ================================================================ */
+.memo-page-node {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, #1a1c24 0%, #14161e 50%, #1a1b22 100%);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03);
+  display: flex; flex-direction: column; overflow: hidden;
+  font-family: 'JetBrainsMono NF', monospace;
+}
+.memo-page-node.memo-selected {
+  border-color: var(--accent);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 12px rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.2);
+}
+.memo-header {
+  display: flex; align-items: center; padding: 6px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.02);
+}
+.memo-title-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text-primary); font-size: 11px; font-family: inherit;
+  padding: 2px 4px;
+}
+.memo-title-input:focus { background: rgba(255,255,255,0.04); border-radius: 3px; }
+.memo-close-btn {
+  background: transparent; border: none; color: var(--text-dim);
+  font-size: 14px; cursor: pointer; padding: 0 4px; line-height: 1;
+  opacity: 0; transition: opacity 0.15s;
+}
+.memo-page-node:hover .memo-close-btn { opacity: 1; }
+.memo-close-btn:hover { color: #ff4444; }
+.memo-body {
+  flex: 1; padding: 10px 12px; overflow: auto;
+  font-size: 11px; color: var(--text-primary); line-height: 1.6;
+  white-space: pre-wrap; word-break: break-word;
+  user-select: text;
+}
+.memo-placeholder {
+  color: var(--text-dim); font-style: italic; opacity: 0.5;
+  user-select: none;
+}
+.memo-textarea {
+  flex: 1; padding: 10px 12px; resize: none;
+  background: rgba(0,0,0,0.3); border: none; outline: none;
+  color: var(--text-primary); font-size: 11px; line-height: 1.6;
+  font-family: inherit;
 }

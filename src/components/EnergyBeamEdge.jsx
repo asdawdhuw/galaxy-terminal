@@ -13,13 +13,12 @@ export default function EnergyBeamEdge({
     targetX, targetY, targetPosition
   })
 
-  const isActive = data?.energy === 'active' || selected
-  const glowColor = isActive
-    ? 'rgba(56,189,248,0.9)'
-    : 'rgba(61,127,255,0.35)'
+  const flowing = data?.energy === 'flowing'
+  const isActive = flowing || selected
+  const glowColor = 'rgba(56,189,248,0.9)'
   const glowFilter = isActive
     ? 'drop-shadow(0 0 8px rgba(56,189,248,0.7)) drop-shadow(0 0 2px rgba(56,189,248,0.5))'
-    : 'drop-shadow(0 0 3px rgba(61,127,255,0.2))'
+    : 'drop-shadow(0 0 5px rgba(56,189,248,0.5))'
 
   return (
     <g style={{ filter: glowFilter }}>
@@ -39,15 +38,13 @@ export default function EnergyBeamEdge({
       <path
         d={edgePath}
         fill="none"
-        stroke={isActive ? '#bae6fd' : 'rgba(56,189,248,0.6)'}
-        strokeWidth={isActive ? 3 : 2}
+        stroke="#bae6fd"
+        strokeWidth={3}
         strokeLinecap="round"
         strokeDasharray="8 200"
         className="energy-beam-dash"
         style={{
-          filter: isActive
-            ? 'drop-shadow(0 0 6px rgba(186,230,253,0.9))'
-            : 'drop-shadow(0 0 3px rgba(56,189,248,0.4))'
+          filter: 'drop-shadow(0 0 6px rgba(186,230,253,0.9))'
         }}
       />
     </g>

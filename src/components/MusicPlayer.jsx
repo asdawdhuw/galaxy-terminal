@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import MusicSpectrum from './MusicSpectrum'
+import { setMusicState } from '../utils/musicState'
 
 function fmtTime(s) {
   if (!s || !isFinite(s)) return '0:00'
@@ -142,6 +143,16 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
     const unsub = window.terminal.onMusicSessionChanged?.(() => load())
     return () => { if (typeof unsub === 'function') unsub() }
   }, [])
+
+  // Broadcast music state to AetherMap Audio Radar
+  useEffect(() => {
+    const track = currentIdx >= 0 ? allFiles[currentIdx] : null
+    setMusicState({
+      playing,
+      trackName: track?.name || null,
+      trackPath: track?.path || null,
+    })
+  }, [playing, currentIdx, allFiles])
 
   const filtered = useMemo(() => {
     if (!searchQuery) return allFiles
