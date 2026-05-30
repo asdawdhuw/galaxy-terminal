@@ -58,8 +58,19 @@ contextBridge.exposeInMainWorld('terminal', {
     return () => ipcRenderer.removeListener('pty:cwd', handler)
   },
   musicList: () => ipcRenderer.invoke('music:list'),
+  saveMusicSession: (s) => ipcRenderer.invoke('music:saveSession', s),
+  loadMusicSession: () => ipcRenderer.invoke('music:loadSession'),
+  playMusicFile: (filePath) => ipcRenderer.send('music:playFile', filePath),
+  onMusicSessionChanged: (cb) => {
+    const h = () => cb(); ipcRenderer.on('music:sessionChanged', h)
+    return () => ipcRenderer.removeListener('music:sessionChanged', h)
+  },
+  openAudioDialog: () => ipcRenderer.invoke('dialog:openAudio'),
   openMusicWindow: () => ipcRenderer.send('music:open-window'),
+  openGameWindow: () => ipcRenderer.send('game:open-window'),
   toggleMusicPin: () => ipcRenderer.invoke('music:toggle-pin'),
+  toggleGamePin: () => ipcRenderer.invoke('game:toggle-pin'),
+  closeGameWindow: () => ipcRenderer.send('game:close'),
   getFilePath: (file) => webUtils.getPathForFile(file),
   searchLyrics: (params) => ipcRenderer.invoke('lyrics:search', params),
   openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),

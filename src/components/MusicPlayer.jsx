@@ -11,7 +11,28 @@ function fmtTime(s) {
 
 export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
   const [files, setFiles] = useState([])
+  const [extraFiles, setExtraFiles] = useState([])
+  const [removedPaths, setRemovedPaths] = useState(new Set())
   const [currentIdx, setCurrentIdx] = useState(-1)
+
+  const allFiles = useMemo(() => {
+    const merged = [...files, ...extraFiles]
+    return merged.filter(f => !removedPaths.has(f.path))
+  }, [files, extraFiles, removedPaths])
+
+  function removeTrack(f) {
+    if (currentIdx >= 0 && allFiles[currentIdx] === f) {
+      setCurrentIdx(-1)
+      setPlaying(false)
+      setProgress(0)
+    }
+    // Extra files (user-picked): remove from the list entirely
+    setExtraFiles(prev => prev.filter(ef => ef.path !== f.path))
+    // Music folder files: just hide from view
+    if (!extraFiles.some(ef => ef.path === f.path)) {
+      setRemovedPaths(prev => new Set([...prev, f.path]))
+    }
+  }
   const [playing, setPlaying] = useState(false)
   const [loading, setLoading] = useState(true)
   const [progress, setProgress] = useState(0)
@@ -83,17 +104,60 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
   }, [miniMode])
 
   useEffect(() => {
-    window.terminal.musicList().then((res) => {
-      if (res.ok) setFiles(res.files)
+    async function load() {
+      const [listRes, session] = await Promise.all([
+        window.terminal.musicList(),
+        window.terminal.loadMusicSession()
+      ])
+      setFiles(listRes.ok ? listRes.files : [])
+      setExtraFiles(session?.extraFiles || [])
+      setRemovedPaths(new Set())
+
+      if (session?.playTarget) {
+        // Resolve playTarget to correct index in merged allFiles
+        const merged = [...(listRes.ok ? listRes.files : []), ...(session.extraFiles || [])]
+        const idx = merged.findIndex(f => f.path === session.playTarget)
+        if (idx >= 0) {
+          setCurrentIdx(idx)
+          setProgress(0)
+          setPlaying(true)
+          setTimeout(() => { audioRef.current?.play()?.catch(() => {}) }, 100)
+        }
+      } else if (session?.currentIdx >= 0) {
+        setCurrentIdx(session.currentIdx)
+        setProgress(session.progress || 0)
+        setPlaying(true)
+        setTimeout(() => {
+          if (audioRef.current && session.progress > 0) {
+            audioRef.current.currentTime = session.progress
+          }
+          audioRef.current?.play().catch(() => {})
+        }, 100)
+      }
       setLoading(false)
-    })
+    }
+    load()
+
+    // Listen for session changes from another window (music:playFile)
+    const unsub = window.terminal.onMusicSessionChanged?.(() => load())
+    return () => { if (typeof unsub === 'function') unsub() }
   }, [])
 
   const filtered = useMemo(() => {
-    if (!searchQuery) return files
+    if (!searchQuery) return allFiles
     const q = searchQuery.toLowerCase()
-    return files.filter((f) => f.name.toLowerCase().includes(q))
-  }, [files, searchQuery])
+    return allFiles.filter((f) => f.name.toLowerCase().includes(q))
+  }, [allFiles, searchQuery])
+
+  async function openFiles() {
+    const res = await window.terminal.openAudioDialog()
+    if (!res?.ok || res.files.length === 0) return
+    setExtraFiles(prev => {
+      const existingPaths = new Set([...files, ...prev].map(f => f.path))
+      const newFiles = res.files.filter(f => !existingPaths.has(f.path))
+      return [...prev, ...newFiles]
+    })
+  }
 
   // Show up to 5 filtered results in mini search dropdown
   const miniResults = miniSearch && searchQuery ? filtered.slice(0, 5) : []
@@ -118,7 +182,7 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
 
   useEffect(() => {
     if (!('mediaSession' in navigator)) return
-    const track = currentIdx >= 0 ? files[currentIdx] : null
+    const track = currentIdx >= 0 ? allFiles[currentIdx] : null
     if (!track) { navigator.mediaSession.metadata = null; return }
     navigator.mediaSession.metadata = new MediaMetadata({
       title: track.name.replace(/\.[^.]+$/, ''),
@@ -128,7 +192,7 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
     navigator.mediaSession.setActionHandler('pause', () => { if (audioRef.current) { audioRef.current.pause(); setPlaying(false) } })
     navigator.mediaSession.setActionHandler('nexttrack', () => playNext())
     navigator.mediaSession.setActionHandler('previoustrack', () => playPrev())
-  }, [currentIdx, files])
+  }, [currentIdx, allFiles])
 
   function play(idx) {
     setCurrentIdx(idx)
@@ -155,7 +219,7 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
     if (filtered.length === 0) return
     const nextFiltered = (currentIdx + 1) % filtered.length
     const nextFile = filtered[nextFiltered]
-    const nextRealIdx = files.indexOf(nextFile)
+    const nextRealIdx = allFiles.indexOf(nextFile)
     play(nextRealIdx)
   }
 
@@ -163,7 +227,7 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
     if (filtered.length === 0) return
     const prevFiltered = (currentIdx - 1 + filtered.length) % filtered.length
     const prevFile = filtered[prevFiltered]
-    const prevRealIdx = files.indexOf(prevFile)
+    const prevRealIdx = allFiles.indexOf(prevFile)
     play(prevRealIdx)
   }
 
@@ -176,7 +240,13 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
     }
   }
 
-  function handlePopOut() {
+  async function handlePopOut() {
+    // Save current state so popup window can restore it
+    await window.terminal.saveMusicSession({
+      extraFiles,
+      currentIdx,
+      progress: audioRef.current?.currentTime || 0
+    })
     window.terminal.openMusicWindow()
     onClose?.()
   }
@@ -222,7 +292,7 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
     return () => document.removeEventListener('mousedown', handleClick, { capture: true })
   }, [miniMode, isPopup, pinned, onClose])
 
-  const currentTrack = currentIdx >= 0 ? files[currentIdx] : null
+  const currentTrack = currentIdx >= 0 ? allFiles[currentIdx] : null
   const streamUrl = currentTrack ? `stream://audio?url=${encodeURIComponent(currentTrack.path)}` : ''
   const audioEl = currentTrack ? <audio ref={audioRef} src={streamUrl} preload="auto" /> : null
 
@@ -246,7 +316,7 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
         {miniSearch && miniResults.length > 0 && (
           <div className="music-mini-results">
             {miniResults.map((f, i) => {
-              const realIdx = files.indexOf(f)
+              const realIdx = allFiles.indexOf(f)
               return (
                 <div
                   key={realIdx}
@@ -346,6 +416,9 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
       <div className="music-player-header" style={isPopup ? { WebkitAppRegion: 'drag' } : {}}>
         <span className="music-player-title">{'\u{1F3B5}'} Galaxy Music</span>
         <div className="file-viewer-actions">
+          <button className="file-viewer-pin" onClick={openFiles} title="Open audio files" style={{ WebkitAppRegion: 'no-drag' }}>
+            {'+'}
+          </button>
           {isPopup ? (
             <button
               className={`file-viewer-pin ${popupPinned ? 'pinned' : ''}`}
@@ -413,13 +486,15 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
           <div className="music-player-empty">No matches for "{searchQuery}"</div>
         )}
         {filtered.map((f, i) => {
-          const realIdx = files.indexOf(f)
+          const realIdx = allFiles.indexOf(f)
           return (
             <div key={realIdx} className={`music-track ${realIdx === currentIdx ? 'active' : ''}`}
               onClick={() => realIdx === currentIdx ? togglePlay() : play(realIdx)}>
               <span className="music-track-idx">{realIdx + 1}</span>
               <span className="music-track-name">{f.name}</span>
               {realIdx === currentIdx && playing && <span className="music-track-playing">{'\u{266B}'}</span>}
+              <span className="music-track-remove" title="Remove from playlist"
+                onClick={(e) => { e.stopPropagation(); removeTrack(f) }}>×</span>
             </div>
           )
         })}

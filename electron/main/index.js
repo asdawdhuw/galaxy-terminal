@@ -325,6 +325,8 @@ function createWindow() {
 
   mainWindow.on('closed', () => {
     mainWindow = null
+    if (musicPopup && !musicPopup.isDestroyed()) musicPopup.close()
+    if (gamePopup && !gamePopup.isDestroyed()) gamePopup.close()
   })
 }
 
@@ -440,6 +442,47 @@ ipcMain.handle('music:list', async () => {
   }
 })
 
+// Music session — shared state so pop-out window retains playlist + track
+let musicSession = { extraFiles: [], currentIdx: -1, progress: 0, playTarget: null }
+ipcMain.handle('music:saveSession', (_event, session) => {
+  musicSession = { ...musicSession, ...session, playTarget: null }
+})
+ipcMain.handle('music:loadSession', () => musicSession)
+
+// Play a single audio file — opens popup music window with the file queued
+ipcMain.on('music:playFile', (_event, filePath) => {
+  const path = require('path')
+  const p = filePath.replace(/\\/g, '/')
+  if (!musicSession.extraFiles.some(f => f.path === p)) {
+    musicSession.extraFiles.push({ name: path.basename(filePath), path: p })
+  }
+  musicSession.playTarget = p
+  musicSession.progress = 0
+  // Open popup if not already open
+  if (musicPopup && !musicPopup.isDestroyed()) {
+    musicPopup.focus()
+    musicPopup.webContents.send('music:sessionChanged')
+  }
+})
+
+// Open audio file dialog — pick mp3/flac/wav/etc from anywhere on disk
+ipcMain.handle('dialog:openAudio', async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: 'Open Audio Files',
+    filters: [
+      { name: 'Audio', extensions: ['mp3', 'wav', 'flac', 'ogg', 'm4a', 'aac', 'wma'] },
+      { name: 'All Files', extensions: ['*'] }
+    ],
+    properties: ['openFile', 'multiSelections']
+  })
+  if (canceled || filePaths.length === 0) return { ok: true, files: [] }
+  const path = require('path')
+  return {
+    ok: true,
+    files: filePaths.map(p => ({ name: path.basename(p), path: p.replace(/\\/g, '/') }))
+  }
+})
+
 // Music popup window
 let musicPopup = null
 ipcMain.on('music:open-window', () => {
@@ -463,11 +506,51 @@ ipcMain.on('music:open-window', () => {
   musicPopup.on('closed', () => { musicPopup = null })
 })
 
+// Game popup window
+let gamePopup = null
+ipcMain.on('game:open-window', () => {
+  if (gamePopup && !gamePopup.isDestroyed()) {
+    gamePopup.focus()
+    return
+  }
+  gamePopup = new BrowserWindow({
+    width: 900, height: 664, minWidth: 900, minHeight: 664,
+    maxWidth: 900, maxHeight: 664,
+    title: 'Void Dasher',
+    backgroundColor: '#05070f',
+    frame: false,
+    resizable: false,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      contextIsolation: true, nodeIntegration: false, sandbox: false,
+      devTools: true
+    }
+  })
+  const baseUrl = process.env.ELECTRON_RENDERER_URL || `file://${join(__dirname, '../../out/renderer/index.html')}`
+  gamePopup.loadURL(baseUrl + '#/games')
+  gamePopup.on('closed', () => { gamePopup = null })
+})
+
 // Music popup — toggle always-on-top
 ipcMain.handle('music:toggle-pin', () => {
   if (musicPopup && !musicPopup.isDestroyed()) {
     const pinned = !musicPopup.isAlwaysOnTop()
     musicPopup.setAlwaysOnTop(pinned)
+    return { pinned }
+  }
+  return { pinned: false }
+})
+
+// Game popup — close window
+ipcMain.on('game:close', () => {
+  if (gamePopup && !gamePopup.isDestroyed()) gamePopup.close()
+})
+
+// Game popup — toggle always-on-top
+ipcMain.handle('game:toggle-pin', () => {
+  if (gamePopup && !gamePopup.isDestroyed()) {
+    const pinned = !gamePopup.isAlwaysOnTop()
+    gamePopup.setAlwaysOnTop(pinned)
     return { pinned }
   }
   return { pinned: false }

@@ -2469,6 +2469,14 @@ html, body, #root {
   flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .music-track-playing { font-size: 12px; flex-shrink: 0; }
+.music-track-remove {
+  display: none; width: 20px; height: 20px; line-height: 20px;
+  text-align: center; font-size: 14px; color: #ff4444;
+  border-radius: 3px; flex-shrink: 0; cursor: pointer;
+  transition: background 0.1s;
+}
+.music-track-remove:hover { background: rgba(255,68,68,0.15); }
+.music-track:hover .music-track-remove { display: block; }
 
 .music-player-empty {
   text-align: center; padding: 32px 16px; font-size: 11px;

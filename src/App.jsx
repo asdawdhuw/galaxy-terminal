@@ -12,6 +12,7 @@ import ThemePicker from './components/ThemePicker'
 import MusicPlayer from './components/MusicPlayer'
 import MultiverseView from './components/MultiverseView'
 import AetherMap from './components/AetherMap'
+import VoidDasher from './components/VoidDasher'
 import useMusicController from './hooks/useNeteaseMusicController'
 import idleSrc from '../sound/idle.mp3'
 import activeSrc from '../sound/active.mp3'
@@ -118,6 +119,13 @@ export default function App() {
     )
   }
 
+  // Game popup window
+  if (window.location.hash === '#/games') {
+    const savedTheme = localStorage.getItem('galaxy-theme') || 'orion'
+    document.documentElement.setAttribute('data-theme', savedTheme)
+    return <VoidDasher onClose={() => window.terminal?.closeGameWindow?.()} />
+  }
+
   const [splash, setSplash] = useState(true)
   const [sessions, setSessions] = useState([])
   const [activeId, setActiveId] = useState(null)
@@ -135,6 +143,15 @@ export default function App() {
   // Z-axis: focus mode
   const [focusMode, setFocusMode] = useState(false)
   const [viewerFile, setViewerFile] = useState(null)
+  function handleFileOpen(file) {
+    const ext = (file.name?.split('.').pop() || '').toLowerCase()
+    if (/^(mp3|wav|flac|ogg|m4a|aac|wma)$/i.test(ext)) {
+      window.terminal?.playMusicFile(file.path)
+      window.terminal?.openMusicWindow()
+    } else {
+      setViewerFile(file)
+    }
+  }
   const [activeCwd, setActiveCwd] = useState(null)
   const [chillMode, setChillMode] = useState(false)
   const [currentTheme, setCurrentTheme] = useState('orion')
@@ -253,6 +270,9 @@ export default function App() {
         break
       case 'memoToggle':
         setMemoMode((v) => !v)
+        break
+      case 'gamesLaunch':
+        window.terminal?.openGameWindow()
         break
       case 'terminal':
         // Forward unknown command to active PTY session
@@ -396,7 +416,7 @@ export default function App() {
             viewMode={sidebarViewMode}
             onViewModeChange={setSidebarViewMode}
             focusMode={focusMode}
-            onFileOpen={setViewerFile}
+            onFileOpen={handleFileOpen}
             cwd={activeCwd}
           />
 
