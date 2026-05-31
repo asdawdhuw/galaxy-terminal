@@ -231,6 +231,17 @@ export default function MultiverseCanvas({ sessions, focusId, onNodeClick, onCan
     return () => clearTimeout(timer)
   }, [])
 
+  // Keyboard: Delete/Backspace removes selected edges only
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      setEdges(eds => eds.filter(e => !e.selected))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [setEdges])
+
   /* ================================================================
      Render
      ================================================================ */
@@ -269,6 +280,7 @@ export default function MultiverseCanvas({ sessions, focusId, onNodeClick, onCan
         defaultViewport={{ x: 0, y: 0, zoom: 0.55 }}
         minZoom={0.15}
         maxZoom={2}
+        deleteKeyCode={[]}
         proOptions={{ hideAttribution: true }}
         style={{ background: 'transparent' }}
       >

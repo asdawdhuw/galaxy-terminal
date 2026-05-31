@@ -122,7 +122,7 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
           setCurrentIdx(idx)
           setProgress(0)
           setPlaying(true)
-          setTimeout(() => { audioRef.current?.play()?.catch(() => {}) }, 100)
+          setTimeout(() => { audioRef.current?.play()?.catch(() => setPlaying(false)) }, 100)
         }
       } else if (session?.currentIdx >= 0) {
         setCurrentIdx(session.currentIdx)
@@ -132,7 +132,7 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
           if (audioRef.current && session.progress > 0) {
             audioRef.current.currentTime = session.progress
           }
-          audioRef.current?.play().catch(() => {})
+          audioRef.current?.play().catch(() => setPlaying(false))
         }, 100)
       }
       setLoading(false)
@@ -144,15 +144,18 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
     return () => { if (typeof unsub === 'function') unsub() }
   }, [])
 
-  // Broadcast music state to AetherMap Audio Radar
+  // Broadcast music state to AetherMap Audio Radar (local + cross-window)
   useEffect(() => {
     const track = currentIdx >= 0 ? allFiles[currentIdx] : null
-    setMusicState({
+    const state = {
       playing,
       trackName: track?.name || null,
       trackPath: track?.path || null,
-    })
-  }, [playing, currentIdx, allFiles])
+    }
+    setMusicState(state)
+    // When popped out, also broadcast via IPC to reach the main window
+    if (isPopup) window.terminal?.broadcastMusicState?.(state)
+  }, [playing, currentIdx, allFiles, isPopup])
 
   const filtered = useMemo(() => {
     if (!searchQuery) return allFiles
@@ -179,15 +182,21 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
     function tick() { setProgress(audio.currentTime) }
     function meta() { if (audio.duration && isFinite(audio.duration)) setDuration(audio.duration) }
     function ended() { playNext() }
+    function onPlay() { setPlaying(true) }
+    function onPause() { setPlaying(false) }
     audio.addEventListener('timeupdate', tick)
     audio.addEventListener('loadedmetadata', meta)
     audio.addEventListener('durationchange', meta)
     audio.addEventListener('ended', ended)
+    audio.addEventListener('play', onPlay)
+    audio.addEventListener('pause', onPause)
     return () => {
       audio.removeEventListener('timeupdate', tick)
       audio.removeEventListener('loadedmetadata', meta)
       audio.removeEventListener('durationchange', meta)
       audio.removeEventListener('ended', ended)
+      audio.removeEventListener('play', onPlay)
+      audio.removeEventListener('pause', onPause)
     }
   }, [currentIdx])
 
@@ -211,7 +220,7 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
     setProgress(0)
     setDuration(0)
     setTimeout(() => {
-      if (audioRef.current) audioRef.current.play().catch(() => {})
+      if (audioRef.current) audioRef.current.play().catch(() => setPlaying(false))
     }, 50)
   }
 
@@ -221,7 +230,7 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
       audioRef.current.pause()
       setPlaying(false)
     } else {
-      audioRef.current.play().catch(() => {})
+      audioRef.current.play().catch(() => setPlaying(false))
       setPlaying(true)
     }
   }

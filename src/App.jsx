@@ -14,6 +14,7 @@ import MultiverseView from './components/MultiverseView'
 import AetherMap from './components/AetherMap'
 import VoidDasher from './components/VoidDasher'
 import useMusicController from './hooks/useNeteaseMusicController'
+import { setMusicState } from './utils/musicState'
 import idleSrc from '../sound/idle.mp3'
 import activeSrc from '../sound/active.mp3'
 import climaxSrc from '../sound/climax.mp3'
@@ -184,6 +185,13 @@ export default function App() {
     const timer = setInterval(() => setMusicTime(music.getTime()), 250)
     return () => clearInterval(timer)
   }, [music.playing])
+
+  // Listen for cross-window music state from pop-out MusicPlayer → update shared store
+  useEffect(() => {
+    return window.terminal?.onMusicStateBroadcast?.((state) => {
+      setMusicState(state)
+    })
+  }, [])
 
   useEffect(() => {
     const updateTime = () => {

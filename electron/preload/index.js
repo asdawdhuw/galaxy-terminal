@@ -67,6 +67,12 @@ contextBridge.exposeInMainWorld('terminal', {
   },
   openAudioDialog: () => ipcRenderer.invoke('dialog:openAudio'),
   openMusicWindow: () => ipcRenderer.send('music:open-window'),
+  broadcastMusicState: (state) => ipcRenderer.send('music:broadcastState', state),
+  onMusicStateBroadcast: (cb) => {
+    const h = (_event, state) => cb(state)
+    ipcRenderer.on('music:stateBroadcast', h)
+    return () => ipcRenderer.removeListener('music:stateBroadcast', h)
+  },
   openGameWindow: () => ipcRenderer.send('game:open-window'),
   toggleMusicPin: () => ipcRenderer.invoke('music:toggle-pin'),
   toggleGamePin: () => ipcRenderer.invoke('game:toggle-pin'),

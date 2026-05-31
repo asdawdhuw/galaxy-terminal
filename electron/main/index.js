@@ -506,6 +506,13 @@ ipcMain.on('music:open-window', () => {
   musicPopup.on('closed', () => { musicPopup = null })
 })
 
+// Cross-window music state broadcast — popup → main window
+ipcMain.on('music:broadcastState', (_event, state) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('music:stateBroadcast', state)
+  }
+})
+
 // Game popup window
 let gamePopup = null
 ipcMain.on('game:open-window', () => {

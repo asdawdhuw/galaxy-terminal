@@ -22,6 +22,15 @@ export default function EnergyBeamEdge({
 
   return (
     <g style={{ filter: glowFilter }}>
+      {/* Wide invisible hit area for easy click-to-select */}
+      <path
+        d={edgePath}
+        fill="none"
+        stroke="transparent"
+        strokeWidth={18}
+        style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
+      />
+
       {/* Base edge — the "pipe" */}
       <BaseEdge
         id={id}
@@ -47,6 +56,7 @@ export default function EnergyBeamEdge({
           filter: 'drop-shadow(0 0 6px rgba(186,230,253,0.9))'
         }}
       />
+
     </g>
   )
 }

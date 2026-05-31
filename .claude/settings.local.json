@@ -54,7 +54,9 @@
       "Bash(Get-ChildItem \"E:\\\\GitHub_tools\\\\galaxy-terminal\\\\sound\\\\bgm\" -ErrorAction SilentlyContinue)",
       "PowerShell(New-Item *)",
       "Bash(Start-Sleep -Seconds 10)",
-      "Bash(pkill -f electron)"
+      "Bash(pkill -f electron)",
+      "Bash(pkill -f \"electron\")",
+      "Bash(pkill -f \"electron-vite\")"
     ]
   }
 }
