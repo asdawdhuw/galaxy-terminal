@@ -56,7 +56,8 @@
       "Bash(Start-Sleep -Seconds 10)",
       "Bash(pkill -f electron)",
       "Bash(pkill -f \"electron\")",
-      "Bash(pkill -f \"electron-vite\")"
+      "Bash(pkill -f \"electron-vite\")",
+      "Bash(Start-Sleep 5)"
     ]
   }
 }

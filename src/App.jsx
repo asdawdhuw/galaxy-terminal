@@ -288,6 +288,9 @@ export default function App() {
       case 'gamesLaunch':
         window.terminal?.openGameWindow()
         break
+      case 'viewMode':
+        setSidebarViewMode(payload)
+        break
       case 'terminal':
         // Forward unknown command to active PTY session
         window.terminal.sendInput(payload + '\r')
@@ -458,7 +461,6 @@ export default function App() {
                   handleSwitch(id)
                   setCanvasMode(false)
                 }}
-                onMusicOpen={() => setMusicPlayerOpen(true)}
               />
             ) : (
               <TerminalCanvas
@@ -480,6 +482,8 @@ export default function App() {
                 onCanvasToggle={(sessionId) => { setCanvasFocusId(sessionId || null); setCanvasMode((v) => !v) }}
                 onMemoToggle={() => setMemoMode((v) => !v)}
                 onMusicPlayerToggle={() => setMusicPlayerOpen((v) => !v)}
+                onGamesLaunch={() => window.terminal?.openGameWindow()}
+                onViewModeChange={(mode) => setSidebarViewMode(mode)}
                 onCloseSession={() => { if (activeId) handleClose(activeId) }}
               />
             )}

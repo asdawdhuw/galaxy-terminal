@@ -33,7 +33,7 @@ const COSMIC_THEME = {
   brightWhite: '#e8f0ff'
 }
 
-export default function TerminalCanvas({ activeSessionId, sessionName, onSessionCreated, musicEnabled = true, audioMap, masterVolume = 0.75, mode = 'dynamic', staticTier = 0, onTierChange, focusMode, onFocusToggle, onChillToggle, onThemePick, terminalSolid, onModeToggle, onCanvasToggle, onMemoToggle, onMusicPlayerToggle, onCloseSession }) {
+export default function TerminalCanvas({ activeSessionId, sessionName, onSessionCreated, musicEnabled = true, audioMap, masterVolume = 0.75, mode = 'dynamic', staticTier = 0, onTierChange, focusMode, onFocusToggle, onChillToggle, onThemePick, terminalSolid, onModeToggle, onCanvasToggle, onMemoToggle, onMusicPlayerToggle, onGamesLaunch, onViewModeChange, onCloseSession }) {
   const containerRef = useRef(null)
   const termRef = useRef(null)
   const fitRef = useRef(null)
@@ -194,50 +194,51 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
     term.onData((data) => {
       updateTypingStrike()
 
-      // Z-axis: intercept toggle commands typed in terminal
+      // Z-axis: intercept slash commands — local echo, no PTY leak
+      const slashMode = cmdBufRef.current.startsWith('/')
+
       if (data === '\r') {
         const cmd = cmdBufRef.current.trim()
         if (cmd === '/shh' || cmd === '/focus') {
           cmdBufRef.current = ''
-          onFocusToggle?.((v) => !v)
           term.write('\r\n\x1b[36m[Focus mode toggled]\x1b[0m\r\n')
+          onFocusToggle?.((v) => !v)
           return
         }
         if (cmd === '/chill') {
           cmdBufRef.current = ''
-          onChillToggle?.((v) => !v)
           term.write('\r\n\x1b[35m[Chill mode toggled]\x1b[0m\r\n')
+          onChillToggle?.((v) => !v)
           return
         }
         if (cmd === '/theme') {
           cmdBufRef.current = ''
-          onThemePick?.()
           term.write('\r\n\x1b[36m[Theme picker opened]\x1b[0m\r\n')
+          onThemePick?.()
           return
         }
         if (cmd === '/mode') {
           cmdBufRef.current = ''
-          onModeToggle?.()
           term.write('\r\n\x1b[36m[Terminal background toggled]\x1b[0m\r\n')
+          onModeToggle?.()
           return
         }
         if (cmd === '/music') {
           cmdBufRef.current = ''
-          onMusicPlayerToggle?.()
           term.write('\r\n\x1b[36m[Music player toggled]\x1b[0m\r\n')
+          onMusicPlayerToggle?.()
           return
         }
         if (cmd === '/canvas') {
           cmdBufRef.current = ''
-          window.terminal.sendInput('\x03')
+          term.write('\r\n\x1b[36m[Canvas toggled]\x1b[0m\r\n')
           onCanvasToggle?.(activeSessionId)
-          setTimeout(() => { term.write('\r\n\x1b[36m[Canvas toggled]\x1b[0m\r\n') }, 50)
           return
         }
         if (cmd === '/memo') {
           cmdBufRef.current = ''
-          onMemoToggle?.()
           term.write('\r\n\x1b[35m[Aether Map toggled]\x1b[0m\r\n')
+          onMemoToggle?.()
           return
         }
         if (cmd.startsWith('/memo create ')) {
@@ -267,16 +268,64 @@ export default function TerminalCanvas({ activeSessionId, sessionName, onSession
           term.write('\r\n\x1b[35m[Aether Map cleared]\x1b[0m\r\n')
           return
         }
+        if (cmd === '/games') {
+          cmdBufRef.current = ''
+          term.write('\r\n\x1b[36m[Void Dasher launched]\x1b[0m\r\n')
+          onGamesLaunch?.()
+          return
+        }
+        if (cmd === '/files') {
+          cmdBufRef.current = ''
+          term.write('\r\n\x1b[36m[File tree view]\x1b[0m\r\n')
+          onViewModeChange?.('files')
+          return
+        }
+        if (cmd === '/sessions') {
+          cmdBufRef.current = ''
+          term.write('\r\n\x1b[36m[Session list view]\x1b[0m\r\n')
+          onViewModeChange?.('sessions')
+          return
+        }
+        if (cmd === '/help' || cmd === '/galaxy') {
+          cmdBufRef.current = ''
+          term.write('\x1b[36m┌─ Commands ────────────────────────────────┐\x1b[0m\r\n')
+          term.write('\x1b[36m│\x1b[0m \x1b[33m/shh\x1b[0m        Toggle focus mode              \x1b[36m│\x1b[0m\r\n')
+          term.write('\x1b[36m│\x1b[0m \x1b[33m/chill\x1b[0m      Toggle ambient flow            \x1b[36m│\x1b[0m\r\n')
+          term.write('\x1b[36m│\x1b[0m \x1b[33m/theme\x1b[0m      Open theme picker              \x1b[36m│\x1b[0m\r\n')
+          term.write('\x1b[36m│\x1b[0m \x1b[33m/mode\x1b[0m       Toggle glass / solid terminal  \x1b[36m│\x1b[0m\r\n')
+          term.write('\x1b[36m│\x1b[0m \x1b[33m/music\x1b[0m      Open music player              \x1b[36m│\x1b[0m\r\n')
+          term.write('\x1b[36m│\x1b[0m \x1b[33m/canvas\x1b[0m     Toggle Multiverse Canvas       \x1b[36m│\x1b[0m\r\n')
+          term.write('\x1b[36m│\x1b[0m \x1b[33m/memo\x1b[0m       Toggle Aether Map              \x1b[36m│\x1b[0m\r\n')
+          term.write('\x1b[36m│\x1b[0m \x1b[33m/games\x1b[0m      Launch Void Dasher             \x1b[36m│\x1b[0m\r\n')
+          term.write('\x1b[36m│\x1b[0m \x1b[33m/files\x1b[0m      Show file tree                 \x1b[36m│\x1b[0m\r\n')
+          term.write('\x1b[36m│\x1b[0m \x1b[33m/sessions\x1b[0m   Show session list              \x1b[36m│\x1b[0m\r\n')
+          term.write('\x1b[36m├─ Shortcuts ───────────────────────────────┤\x1b[0m\r\n')
+          term.write('\x1b[36m│\x1b[0m \x1b[35mCtrl+F\x1b[0m      Text search in terminal        \x1b[36m│\x1b[0m\r\n')
+          term.write('\x1b[36m│\x1b[0m \x1b[35mCtrl+S\x1b[0m      Feature search (Spotlight)     \x1b[36m│\x1b[0m\r\n')
+          term.write('\x1b[36m│\x1b[0m \x1b[35mCtrl+Wheel\x1b[0m  Zoom font size                 \x1b[36m│\x1b[0m\r\n')
+          term.write('\x1b[36m└───────────────────────────────────────────┘\x1b[0m\r\n')
+          window.terminal.sendInput('\r')
+          return
+        }
+        // Flush: unknown slash → send captured buffer to PTY; normal → send Enter
+        if (slashMode) {
+          window.terminal.sendInput(cmdBufRef.current + '\r')
+        } else {
+          window.terminal.sendInput(data)
+        }
         cmdBufRef.current = ''
-      } else if (data === '\x7f' || data === '\b') {
+        return
+      }
+
+      if (data === '\x7f' || data === '\b') {
         cmdBufRef.current = cmdBufRef.current.slice(0, -1)
+        if (slashMode) { term.write('\b \b'); return }
       } else if (data === '\x03') {
-        // Ctrl+C — reset buffer
         cmdBufRef.current = ''
       } else if (data.length === 1 && data.charCodeAt(0) >= 32) {
         cmdBufRef.current += data
+        if (cmdBufRef.current.startsWith('/')) { term.write(data); return }
       } else {
-        // Arrow keys, control sequences — reset buffer (user navigating/editing)
         cmdBufRef.current = ''
       }
 
