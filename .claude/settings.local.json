@@ -57,7 +57,11 @@
       "Bash(pkill -f electron)",
       "Bash(pkill -f \"electron\")",
       "Bash(pkill -f \"electron-vite\")",
-      "Bash(Start-Sleep 5)"
+      "Bash(Start-Sleep 5)",
+      "Bash(ffmpeg -i sound/bgm/l1-dark-matter.mp3 -codec:a libmp3lame -b:a 128k sound/bgm/l1-dark-matter.mp3.tmp)",
+      "Bash(ffmpeg -y -i sound/bgm/l1-dark-matter.mp3 -codec:a libmp3lame -b:a 128k -f mp3 sound/bgm/l1-dark-matter-new.mp3)",
+      "Bash(ffmpeg -y -i \"sound/bgm/l2-flight-of-the-cosmos.mp3\" -codec:a libmp3lame -b:a 128k -f mp3 \"sound/bgm/l2-new.mp3\")",
+      "Bash(ffmpeg -y -i \"sound/bgm/l3-darkwave-storm.mp3\" -codec:a libmp3lame -b:a 128k -f mp3 \"sound/bgm/l3-new.mp3\")"
     ]
   }
 }

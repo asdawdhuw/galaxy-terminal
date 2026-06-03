@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react'
 import { createPortal } from 'react-dom'
 import SessionList from './components/SessionList'
 import TerminalCanvas from './components/TerminalCanvas'
@@ -6,13 +6,14 @@ import SplashScreen from './components/SplashScreen'
 import GalaxyBackground from './components/GalaxyBackground'
 import TopMenuBar from './components/TopMenuBar'
 import RightMusicSidebar from './components/RightMusicSidebar'
-import GalaxySpotlight from './components/GalaxySpotlight'
-import FileViewer from './components/FileViewer'
-import ThemePicker from './components/ThemePicker'
-import MusicPlayer from './components/MusicPlayer'
-import MultiverseView from './components/MultiverseView'
-import AetherMap from './components/AetherMap'
-import VoidDasher from './components/VoidDasher'
+
+const GalaxySpotlight = lazy(() => import('./components/GalaxySpotlight'))
+const FileViewer = lazy(() => import('./components/FileViewer'))
+const ThemePicker = lazy(() => import('./components/ThemePicker'))
+const MusicPlayer = lazy(() => import('./components/MusicPlayer'))
+const MultiverseView = lazy(() => import('./components/MultiverseView'))
+const AetherMap = lazy(() => import('./components/AetherMap'))
+const VoidDasher = lazy(() => import('./components/VoidDasher'))
 import useMusicController from './hooks/useNeteaseMusicController'
 import { setMusicState } from './utils/musicState'
 import idleSrc from '../sound/idle.mp3'
@@ -359,11 +360,12 @@ export default function App() {
         </>
       )}
 
-      {/* Galaxy Spotlight — Ctrl+K */}
-      <GalaxySpotlight onCommand={handleSpotlightCommand} />
+      <Suspense fallback={null}>
+        {/* Galaxy Spotlight — Ctrl+K */}
+        <GalaxySpotlight onCommand={handleSpotlightCommand} />
 
-      {/* File Viewer — double-click in FileTree */}
-      <FileViewer
+        {/* File Viewer — double-click in FileTree */}
+        <FileViewer
         file={viewerFile}
         onClose={() => setViewerFile(null)}
         pinned={filePinned}
@@ -390,6 +392,7 @@ export default function App() {
           onClose={() => setThemePickerOpen(false)}
         />
       )}
+      </Suspense>
 
 
       <div className="app-layout">
@@ -445,12 +448,12 @@ export default function App() {
             }}
           >
             {memoMode ? (
-              <AetherMap
+              <Suspense fallback={null}><AetherMap
                 visible={memoMode}
                 onClose={() => setMemoMode(false)}
-              />
+              /></Suspense>
             ) : canvasMode ? (
-              <MultiverseView
+              <Suspense fallback={null}><MultiverseView
                 sessions={sessions}
                 focusId={canvasFocusId}
                 onNodeClick={(id) => handleSwitch(id)}
@@ -461,7 +464,7 @@ export default function App() {
                   handleSwitch(id)
                   setCanvasMode(false)
                 }}
-              />
+              /></Suspense>
             ) : (
               <TerminalCanvas
                 activeSessionId={activeId}

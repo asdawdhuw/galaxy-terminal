@@ -5,7 +5,7 @@ import { WebLinksAddon } from '@xterm/addon-web-links'
 import { SearchAddon } from '@xterm/addon-search'
 import '@xterm/xterm/css/xterm.css'
 import SearchBar from './SearchBar'
-import { memoStore } from './AetherMap'
+import { memoStore } from './memoStore'
 import useAudioEngine from '../hooks/useAudioEngine'
 
 const COSMIC_THEME = {

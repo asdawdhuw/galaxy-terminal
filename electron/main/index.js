@@ -298,11 +298,14 @@ function createWindow() {
     backgroundColor: '#070b14',
     frame: false,
     show: false,
+    backgroundThrottling: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
+      sandbox: false,
+      spellcheck: false,
+      enableWebSQL: false
     }
   })
 
@@ -627,40 +630,9 @@ ipcMain.handle('pty:close', (_event, id) => {
   return true
 })
 
-// Per-session input buffer for command interception
-const inputBufs = new Map()
-
 ipcMain.on('pty:input', (_event, data) => {
   const s = activeSessionId && sessions.get(activeSessionId)
-  if (!s) return
-
-  // Buffer input and intercept on Enter
-  if (data === '\r') {
-    const buf = inputBufs.get(activeSessionId) || ''
-    const cmd = buf.trim()
-    inputBufs.set(activeSessionId, '')
-
-    // Intercept known commands
-    if (cmd === '/music') {
-      s.process.write('\x03')
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('pty:output', { sessionId: activeSessionId, data: '\r\n\x1b[36m[Music popup opened]\x1b[0m\r\n' })
-      }
-      return
-    }
-
-    s.process.write(data)
-  } else if (data === '\x03') {
-    inputBufs.set(activeSessionId, '')
-    s.process.write(data)
-  } else if (data.length === 1 && data.charCodeAt(0) >= 32) {
-    inputBufs.set(activeSessionId, (inputBufs.get(activeSessionId) || '') + data)
-    s.process.write(data)
-  } else {
-    // Arrow keys, control sequences — reset buffer
-    inputBufs.set(activeSessionId, '')
-    s.process.write(data)
-  }
+  if (s) s.process.write(data)
 })
 
 ipcMain.on('pty:resize', (_event, cols, rows) => {
@@ -988,5 +960,9 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   globalShortcut.unregisterAll()
+  for (const [dirPath, watcher] of fileWatchers) {
+    try { watcher.close() } catch (_) {}
+  }
+  fileWatchers.clear()
   killAll()
 })
