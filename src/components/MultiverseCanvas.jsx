@@ -51,7 +51,7 @@ export default function MultiverseCanvas({ sessions, focusId, onNodeClick, onCan
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [focusedId, setFocusedId] = useState(null)
   const [explosions, setExplosions] = useState([])
-  const { setCenter, fitView, screenToFlowPosition } = useReactFlow()
+  const { setCenter, fitView, screenToFlowPosition, getNodes } = useReactFlow()
   const containerRef = useRef(null)
   const nodesRef = useRef(nodes)
   nodesRef.current = nodes  // always current, avoids stale closure in drag callback
@@ -228,19 +228,31 @@ export default function MultiverseCanvas({ sessions, focusId, onNodeClick, onCan
 
   useEffect(() => {
     const timer = setTimeout(() => fitView({ padding: 0.3, duration: 500 }), 300)
-    return () => clearTimeout(timer)
-  }, [])
+    function onResize() { fitView({ padding: 0.3, duration: 300 }) }
+    window.addEventListener('resize', onResize)
+    return () => { clearTimeout(timer); window.removeEventListener('resize', onResize) }
+  }, [fitView])
 
-  // Keyboard: Delete/Backspace removes selected edges only
+  // Keyboard: Delete/Backspace removes selected edges + deletable nodes
   useEffect(() => {
+    const deletableTypes = new Set(['terminalNode', 'resourcePod', 'memoPage'])
     function onKey(e) {
       if (e.key !== 'Delete' && e.key !== 'Backspace') return
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      // Remove selected edges
       setEdges(eds => eds.filter(e => !e.selected))
+      // Remove selected deletable nodes
+      const selectedNodes = getNodes().filter(n => n.selected && deletableTypes.has(n.type))
+      if (selectedNodes.length > 0) {
+        selectedNodes.forEach(n => {
+          if (n.type === 'terminalNode') onNodeClose?.(n.id)
+        })
+        setNodes(nds => nds.filter(n => !selectedNodes.some(sn => sn.id === n.id)))
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [setEdges])
+  }, [setEdges, setNodes, getNodes, onNodeClose])
 
   /* ================================================================
      Render

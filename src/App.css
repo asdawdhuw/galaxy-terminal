@@ -256,9 +256,6 @@
 [data-theme="supernova"] .aether-orbits-svg circle {
   opacity: 0.3;
 }
-[data-theme="supernova"] .aether-moon-ring-svg {
-  opacity: 0.25;
-}
 [data-theme="supernova"] .aether-star-glow {
   background: radial-gradient(circle, rgba(0,0,0,0.1) 0%, transparent 70%);
 }
@@ -2931,7 +2928,15 @@ html, body, #root {
 .aether-orbits-svg {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
+  overflow: visible;
   pointer-events: none; z-index: 1;
+}
+
+/* ── Centering wrapper (x,y = geometric center) ── */
+.aether-cell-wrap {
+  transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center;
+  position: relative;
 }
 
 /* ── Celestial Nodes (common) ── */
@@ -2953,52 +2958,26 @@ html, body, #root {
 
 /* ── Star ── */
 .aether-star-node {
-  position: absolute; width: 90px; height: 90px;
-  display: flex; align-items: center; justify-content: center;
+  position: absolute;
   cursor: grab; z-index: 10; user-select: none;
 }
 .aether-star-node:active { cursor: grabbing; }
-.aether-star-svg { position: absolute; filter: drop-shadow(0 0 10px rgba(255,200,60,0.4)); }
+.aether-star-svg { filter: drop-shadow(0 0 10px rgba(255,200,60,0.4)); display: block; }
 
 /* ── Planet ── */
 .aether-planet-node {
-  position: absolute; width: 56px; height: 56px;
-  display: flex; align-items: center; justify-content: center;
+  position: absolute;
   z-index: 20; user-select: none;
 }
 .aether-planet-node[style*="cursor: grab"] { cursor: grab; }
 .aether-planet-node[style*="cursor: grab"]:active { cursor: grabbing; }
-.aether-planet-svg { position: absolute; filter: drop-shadow(0 0 6px rgba(100,150,220,0.3)); }
+.aether-planet-svg { filter: drop-shadow(0 0 6px rgba(100,150,220,0.3)); display: block; }
 .aether-sel-indicator {
   position: absolute; inset: -6px; border-radius: 50%;
   border: 1.5px dashed var(--accent); opacity: 0.6;
   animation: sel-spin 8s linear infinite;
 }
 @keyframes sel-spin { to { transform: rotate(360deg); } }
-
-/* ── Moon ── */
-.aether-moon-node {
-  position: absolute; width: 24px; height: 24px;
-  display: flex; align-items: center; justify-content: center;
-  z-index: 25; user-select: none;
-}
-
-/* ── Black Hole ── */
-.aether-bh {
-  position: absolute; z-index: 50; cursor: grab; user-select: none;
-  filter: drop-shadow(0 0 20px rgba(40,0,80,0.6));
-}
-.aether-bh:active { cursor: grabbing; }
-.aether-bh-label {
-  position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
-  font-family: 'JetBrainsMono NF', monospace; font-size: 7px;
-  color: rgba(120,60,180,0.5); letter-spacing: 1.5px; white-space: nowrap;
-}
-.aether-explosion {
-  position: absolute; width: 80px; height: 80px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(120,40,200,0.7) 0%, rgba(60,10,120,0.3) 40%, transparent 70%);
-  pointer-events: none; z-index: 60;
-}
 
 /* ── Empty state ── */
 .aether-empty {
