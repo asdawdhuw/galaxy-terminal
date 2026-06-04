@@ -447,12 +447,8 @@ export default function App() {
               if (viewerFile && !filePinned) setViewerFile(null)
             }}
           >
-            {memoMode ? (
-              <Suspense fallback={null}><AetherMap
-                visible={memoMode}
-                onClose={() => setMemoMode(false)}
-              /></Suspense>
-            ) : canvasMode ? (
+            {/* MultiverseView kept mounted (hidden via CSS) so canvas state survives toggle */}
+            <div style={{ display: memoMode || !canvasMode ? 'none' : 'flex', flex: 1, height: '100%' }}>
               <Suspense fallback={null}><MultiverseView
                 sessions={sessions}
                 focusId={canvasFocusId}
@@ -465,7 +461,13 @@ export default function App() {
                   setCanvasMode(false)
                 }}
               /></Suspense>
-            ) : (
+            </div>
+            {memoMode ? (
+              <Suspense fallback={null}><AetherMap
+                visible={memoMode}
+                onClose={() => setMemoMode(false)}
+              /></Suspense>
+            ) : !canvasMode ? (
               <TerminalCanvas
                 activeSessionId={activeId}
                 sessionName={activeSession?.name}
@@ -489,7 +491,7 @@ export default function App() {
                 onViewModeChange={(mode) => setSidebarViewMode(mode)}
                 onCloseSession={() => { if (activeId) handleClose(activeId) }}
               />
-            )}
+            ) : null}
           </div>
 
           {/* Z-axis: Right sidebar hidden in focus mode */}

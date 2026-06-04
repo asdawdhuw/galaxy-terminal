@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useEffect } from 'react'
+import { useCallback, useRef, useState, useEffect, useMemo, createContext, useContext } from 'react'
 import {
   ReactFlow,
   Background,
@@ -18,6 +18,8 @@ import MemoPageNode from './MemoPageNode'
 import BlackHoleNode from './BlackHoleNode'
 
 const BH_X = 20, BH_Y = 20, BH_R = 70
+
+export const FocusContext = createContext(null)
 
 const nodeTypes = {
   terminalNode: TerminalNode,
@@ -51,7 +53,7 @@ export default function MultiverseCanvas({ sessions, focusId, onNodeClick, onCan
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [focusedId, setFocusedId] = useState(null)
   const [explosions, setExplosions] = useState([])
-  const { setCenter, fitView, screenToFlowPosition, getNodes } = useReactFlow()
+  const { setCenter, screenToFlowPosition, getNodes } = useReactFlow()
   const containerRef = useRef(null)
   const nodesRef = useRef(nodes)
   nodesRef.current = nodes  // always current, avoids stale closure in drag callback
@@ -75,7 +77,6 @@ export default function MultiverseCanvas({ sessions, focusId, onNodeClick, onCan
           position: existingNode?.position || { x: 120 + (i % 3) * 420, y: 120 + Math.floor(i / 3) * 320 },
           data: {
             label: s.name, width: 320, session: s,
-            isDimmed: focusedId ? focusedId !== s.id : false,
             onClose: onNodeClose, onFocus: onNodeFocus,
           },
         }
@@ -84,26 +85,18 @@ export default function MultiverseCanvas({ sessions, focusId, onNodeClick, onCan
     })
   }, [sessions])
 
-  // Auto-focus
+  // Auto-focus — only on initial focusId assignment, not on every nodes change
+  const lastAutoFocusRef = useRef(null)
   useEffect(() => {
-    if (!focusId) return
+    if (!focusId || focusId === lastAutoFocusRef.current) return
     const node = nodes.find((n) => n.id === focusId)
     if (!node) return
+    lastAutoFocusRef.current = focusId
     setFocusedId(focusId)
     setTimeout(() => {
       setCenter(node.position.x + 160, node.position.y + 120, { zoom: 1.0, duration: 800 })
     }, 100)
   }, [focusId, nodes])
-
-  // Update dimmed state
-  useEffect(() => {
-    setNodes((nds) =>
-      nds.map((n) => ({
-        ...n,
-        data: { ...n.data, isDimmed: focusedId ? focusedId !== n.id : false },
-      }))
-    )
-  }, [focusedId])
 
   /* ================================================================
      Black Hole — check node overlap on drag stop
@@ -161,7 +154,7 @@ export default function MultiverseCanvas({ sessions, focusId, onNodeClick, onCan
           id,
           type: 'resourcePod',
           position: { x: pos.x - 30, y: pos.y - 30 },
-          data: { label: file.name, filePath: file.path }
+          data: { label: file.name, filePath: file.path, onClose: () => setNodes(nds => nds.filter(n => n.id !== id)) }
         }]
       })
     } catch (_) {}
@@ -180,7 +173,10 @@ export default function MultiverseCanvas({ sessions, focusId, onNodeClick, onCan
       data: {
         label: 'New Page',
         content: '',
-        onClose: () => setNodes(nds => nds.filter(n => n.id !== id))
+        onClose: () => setNodes(nds => nds.filter(n => n.id !== id)),
+        onUpdate: (update) => {
+          setNodes(nds => nds.map(n => n.id === id ? { ...n, data: { ...n.data, label: update.label, content: update.content } } : n))
+        },
       }
     }])
   }
@@ -192,19 +188,30 @@ export default function MultiverseCanvas({ sessions, focusId, onNodeClick, onCan
     (_event, node) => {
       if (node.id === 'bh-singularity') return
       if (node.type === 'musicRadar') return
-      if (focusedId === node.id) return
       setFocusedId(node.id)
-      setCenter(node.position.x + 160, node.position.y + 120, { zoom: 1.0, duration: 800 })
       onNodeClick?.(node.id)
     },
-    [focusedId, setCenter, onNodeClick, onMusicOpen]
+    [focusedId, onNodeClick]
+  )
+
+  const handleNodeDoubleClick = useCallback(
+    (_event, node) => {
+      if (node.id === 'bh-singularity') return
+      if (node.type === 'musicRadar') return
+      const w = node.measured?.width || node.width || node.style?.width || node.data?.width || 320
+      const h = node.measured?.height || node.height || node.style?.height || 240
+      setCenter(node.position.x + w / 2, node.position.y + h / 2, { zoom: 1.0, duration: 800 })
+    },
+    [setCenter]
   )
 
   const handlePaneClick = useCallback(() => {
     setFocusedId(null)
-    fitView({ padding: 0.3, duration: 800 })
     onCanvasClick?.()
-  }, [fitView, onCanvasClick])
+  }, [onCanvasClick])
+
+  // Memoize viewport to prevent ReactFlow from resetting zoom on re-render
+  const defaultViewport = useMemo(() => ({ x: 0, y: 0, zoom: 0.55 }), [])
 
   /* ================================================================
      Edge connect — energy always flowing when edge exists
@@ -225,13 +232,6 @@ export default function MultiverseCanvas({ sessions, focusId, onNodeClick, onCan
     },
     [setEdges]
   )
-
-  useEffect(() => {
-    const timer = setTimeout(() => fitView({ padding: 0.3, duration: 500 }), 300)
-    function onResize() { fitView({ padding: 0.3, duration: 300 }) }
-    window.addEventListener('resize', onResize)
-    return () => { clearTimeout(timer); window.removeEventListener('resize', onResize) }
-  }, [fitView])
 
   // Keyboard: Delete/Backspace removes selected edges + deletable nodes
   useEffect(() => {
@@ -275,34 +275,37 @@ export default function MultiverseCanvas({ sessions, focusId, onNodeClick, onCan
         />
       ))}
 
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodeClick={handleNodeClick}
-        onNodeDragStop={handleNodeDragStop}
-        onPaneClick={handlePaneClick}
-        onConnect={handleConnect}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        fitView
-        defaultViewport={{ x: 0, y: 0, zoom: 0.55 }}
-        minZoom={0.15}
-        maxZoom={2}
-        deleteKeyCode={[]}
-        proOptions={{ hideAttribution: true }}
-        style={{ background: 'transparent' }}
-      >
-        <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(61,127,255,0.12)" />
-        <MiniMap
-          style={{ background: 'rgba(8,14,24,0.85)', border: '1px solid var(--border)' }}
-          maskColor="rgba(0,0,0,0.4)"
-          nodeColor="var(--accent)"
-        />
-      </ReactFlow>
+      <FocusContext.Provider value={focusedId}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onNodeClick={handleNodeClick}
+          onNodeDoubleClick={handleNodeDoubleClick}
+          onNodeDragStop={handleNodeDragStop}
+          onPaneClick={handlePaneClick}
+          onConnect={handleConnect}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          selectionKeyCode={null}
+          defaultViewport={defaultViewport}
+          minZoom={0.08}
+          maxZoom={2}
+          deleteKeyCode={[]}
+          proOptions={{ hideAttribution: true }}
+          style={{ background: 'transparent' }}
+        >
+          <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(61,127,255,0.12)" />
+          <MiniMap
+            style={{ background: 'rgba(8,14,24,0.85)', border: '1px solid var(--border)' }}
+            maskColor="rgba(0,0,0,0.4)"
+            nodeColor="var(--accent)"
+          />
+        </ReactFlow>
+      </FocusContext.Provider>
     </div>
   )
 }

@@ -1,10 +1,13 @@
-import { memo, useRef, useState } from 'react'
+import { memo, useRef, useState, useContext } from 'react'
 import { Handle, Position } from '@xyflow/react'
 import { motion } from 'framer-motion'
+import { FocusContext } from './MultiverseCanvas'
 
 function TerminalNodeComponent({ data, selected, id }) {
   const containerRef = useRef(null)
   const [compact, setCompact] = useState(false)
+  const focusedId = useContext(FocusContext)
+  const isDimmed = focusedId && focusedId !== id
 
   function handleClose(e) { e.stopPropagation(); data.onClose?.(id) }
   function handleMinimize(e) { e.stopPropagation(); setCompact(!compact) }
@@ -18,8 +21,8 @@ function TerminalNodeComponent({ data, selected, id }) {
     <motion.div
       className="terminal-node-wrapper"
       animate={{
-        opacity: data.isDimmed ? 0.3 : 1,
-        filter: data.isDimmed ? 'blur(4px)' : 'blur(0px)',
+        opacity: isDimmed ? 0.3 : 1,
+        filter: isDimmed ? 'blur(4px)' : 'blur(0px)',
         boxShadow: glowStyle,
       }}
       transition={{ duration: 0.5, ease: 'easeInOut' }}

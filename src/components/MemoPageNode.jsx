@@ -11,6 +11,9 @@ function MemoPageNode({ data, selected }) {
     if (editing) requestAnimationFrame(() => taRef.current?.focus())
   }, [editing])
 
+  // Sync title/content back to node data for persistence
+  useEffect(() => { data.onUpdate?.({ label: title, content }) }, [title, content])
+
   return (
     <div className={`memo-page-node ${selected ? 'memo-selected' : ''}`}>
       <Handle type="target" position={Position.Top} style={{ background: 'var(--accent)', border: 'none', width: 6, height: 6 }} />
