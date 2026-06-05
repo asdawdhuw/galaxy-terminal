@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/asdawdhuw/galaxy-terminal/main/src/assets/Snipaste_2026-05-17_11-45-36.png" alt="Galaxy Terminal" width="600">
+  <img src="https://raw.githubusercontent.com/asdawdhuw/galaxy-terminal/main/src/assets/introduce.png" alt="Galaxy Terminal" width="600">
 </p>
 
 <h1 align="center">Galaxy Terminal</h1>
@@ -26,7 +26,7 @@
 - **Command Blocks** — Warp-style visual command/output separation.
 - **Galaxy Spotlight** — `Ctrl+K` command palette with `/help`, `/galaxy`, `/canvas`, `/memo` and more.
 - **Aether Mind Map** — Visual memo/knowledge graph with orbital planet nodes.
-- **Bilibili Music** — Built-in music search & playback from Bilibili, with mini-player.
+- **Music Search** —  music search & playback from Bilibili, with mini-player.
 - **3-Tier Ambient Audio** — Dynamic idle/active/climax background music that responds to typing.
 - **Local Music Player** — Play local MP3 files with spectrum visualizer.
 - **File Tree Explorer** — Browse directories, double-click to open files.
@@ -89,8 +89,9 @@ Type these directly in the terminal:
 | `/chill` | Toggle chill mode |
 | `/focus` | Toggle focus mode |
 | `/web` | Open web URL bar |
+| `ctrl+k` | Galaxy Spotlight |
+| `ctrl+wheel` | Zoom front size |
 
-Or press `Ctrl+K` for Galaxy Spotlight.
 
 ---
 
