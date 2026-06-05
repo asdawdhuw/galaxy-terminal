@@ -54,6 +54,38 @@
 
 ---
 
+## 🎯 Feature Demos
+
+### 🎨 Infinite Canvas
+Organize your terminal sessions on an infinite 2D canvas. Drag, zoom, and visually layout multiple session windows just like a designer's artboard.
+
+<p align="center">
+  <img src="screenshots/canvas.png" alt="Canvas" width="700">
+</p>
+
+### 🧠 Aether Memo
+A cosmic mind-mapping tool. Create stars (topics) and orbiting planets (notes), connect ideas with energy beams. Built-in physics simulation makes your knowledge graph come alive.
+
+<p align="center">
+  <img src="screenshots/memo.png" alt="Memo" width="700">
+</p>
+
+### 🎵 Online Music Search
+Search and stream music from Bilibili directly inside the terminal. Browse results, double-click to play, with a built-in mini-player and auto-radio mode for endless discovery.
+
+<p align="center">
+  <img src="screenshots/music search.png" alt="Music Search" width="700">
+</p>
+
+### 🕹️ Void Dasher
+A retro arcade mini-game built into your terminal. Dodge obstacles in deep space — because even developers need a quick gaming break.
+
+<p align="center">
+  <img src="screenshots/games.png" alt="Void Dasher" width="700">
+</p>
+
+---
+
 ## 📦 Download
 
 Download the latest installer from [Releases](https://github.com/asdawdhuw/galaxy-terminal/releases):
