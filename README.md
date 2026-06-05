@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/assets/introduce.png" alt="Galaxy Terminal" width="600">
+  <img src="https://raw.githubusercontent.com/asdawdhuw/galaxy-terminal/main/src/assets/introduce.png" alt="Galaxy Terminal" width="600">
 </p>
 
 <h1 align="center">Galaxy Terminal</h1>
