@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import startSound from '../../sound/startSound3.mp3'
+import startSound from '../../sound/start.mp3'
 
 // Preload at module level — loads while JS bundle parses, not when splash mounts
 const audio = new Audio(startSound)
@@ -74,7 +74,7 @@ export default function SplashScreen({ onDone }) {
 
   // Dismiss
   useEffect(() => {
-    const t = setTimeout(onDone, 4000)
+    const t = setTimeout(onDone, 5000)
     return () => clearTimeout(t)
   }, [onDone])
 
