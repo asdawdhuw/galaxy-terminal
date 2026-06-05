@@ -71,7 +71,7 @@ A cosmic mind-mapping tool. Create stars (topics) and orbiting planets (notes), 
 </p>
 
 ### 🎵 Online Music Search
-Search and stream music from Bilibili directly inside the terminal. Browse results, double-click to play, with a built-in mini-player and auto-radio mode for endless discovery.
+Search and stream music from Websites directly inside the terminal. Browse results, double-click to play, with a built-in mini-player and auto-radio mode for endless discovery.
 
 <p align="center">
   <img src="screenshots/music search.png" alt="Music Search" width="700">
@@ -89,8 +89,11 @@ A retro arcade mini-game built into your terminal. Dodge obstacles in deep space
 ## 🔧 More Features
 
 - **UI Opacity Control** — Fine-tune the transparency of all UI panels and overlays with a slider. Dial in your perfect cosmic immersion.
-- **Web Search Bar** — Press the Web button or `/web` to open a built-in URL bar. Search Google or type any URL — opens in your default browser.
-- **3-Tier Adaptive Audio Engine** — Three ambient sound layers (Deep Space / Particle Stream / Interstellar) that auto-switch based on your typing speed. Swap any layer with your own MP3 files.
+- **Web Search Bar** — Click the Web button on the menu bar to open a built-in URL bar. Search Google or type any URL — opens in your default browser.
+- **3-Tier Audio Engine** — Three ambient sound layers (Deep Space / Particle Stream / Interstellar) with two modes:
+  - *Dynamic Mode* — Tiers auto-switch based on your typing speed. Idle for browsing, Climax when coding fast.
+  - *Static Mode* — Manually lock a single tier for consistent background vibes.
+  - Customize any layer by clicking **Change** and selecting your own MP3.
 - **Universal File Opener** — Drag and drop or double-click any file in the built-in File Tree. Supports audio (MP3/WAV/FLAC), video (MP4/MKV), images (PNG/JPG), and text files.
 
 ---
