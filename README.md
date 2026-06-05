@@ -143,7 +143,6 @@ Type these directly in the terminal:
 | `/games` | Launch Void Dasher |
 | `/chill` | Toggle chill mode |
 | `/focus` | Toggle focus mode |
-| `/web` | Open web URL bar |
 | `ctrl+S` | Galaxy Spotlight |
 | `ctrl+wheel` | Zoom front size |
 | `ctrl+F` | Text search |
