@@ -47,7 +47,7 @@
     <td align="center"><img src="screenshots/Snipaste_2026-06-05_18-45-39.png" width="400"></td>
   </tr>
   <tr>
-    <td align="center"><img src="screenshots/Snipaste_2026-06-05_18-45-58.png" width="400"></td>
+    <td align="center"><img src="screenshots/grown.png" width="400"></td>
     <td align="center"><img src="screenshots/Snipaste_2026-06-05_18-46-15.png" width="400"></td>
   </tr>
 </table>
