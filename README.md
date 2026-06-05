@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="introduce.png" alt="Galaxy Terminal" width="600">
+  <img src="screenshots/introduce.png" alt="Galaxy Terminal" width="600">
 </p>
 
 <h1 align="center">Galaxy Terminal</h1>
