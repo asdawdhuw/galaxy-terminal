@@ -38,8 +38,19 @@
 ## 🖥️ Screenshots
 
 <p align="center">
-  <em>Splash Screen · Terminal · Music Sidebar · Aether Map · Void Dasher</em>
+  <strong>4 Cosmic Themes</strong>
 </p>
+
+<table align="center">
+  <tr>
+    <td align="center"><img src="screenshots/Snipaste_2026-06-05_18-45-13.png" width="400"></td>
+    <td align="center"><img src="screenshots/Snipaste_2026-06-05_18-45-39.png" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/Snipaste_2026-06-05_18-45-58.png" width="400"></td>
+    <td align="center"><img src="screenshots/Snipaste_2026-06-05_18-46-15.png" width="400"></td>
+  </tr>
+</table>
 
 ---
 
@@ -89,8 +100,9 @@ Type these directly in the terminal:
 | `/chill` | Toggle chill mode |
 | `/focus` | Toggle focus mode |
 | `/web` | Open web URL bar |
-| `ctrl+k` | Galaxy Spotlight |
+| `ctrl+S` | Galaxy Spotlight |
 | `ctrl+wheel` | Zoom front size |
+| `ctrl+F` | Text search |
 
 
 ---
