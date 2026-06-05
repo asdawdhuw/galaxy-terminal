@@ -58,9 +58,16 @@ export default function TopMenuBar({
     return () => document.removeEventListener('mousedown', handler)
   }, [audioOpen])
 
-  function handleFile(tier, e) {
+  async function handleFile(tier, e) {
     const file = e.target.files?.[0]
-    if (file) onChangeTrack?.(tier, file)
+    if (!file) return
+    const filePath = window.terminal.getFilePath?.(file) || file.path
+    if (filePath) {
+      const result = await window.terminal.copySoundFile(filePath, tier)
+      if (result?.ok) onChangeTrack?.(tier, result.url)
+    } else {
+      onChangeTrack?.(tier, URL.createObjectURL(file))
+    }
     e.target.value = ''
   }
 
@@ -370,7 +377,7 @@ export default function TopMenuBar({
               return (
                 <div
                   key={i}
-                  onClick={() => isStatic && onStaticSelect?.(i)}
+                  onClick={() => onStaticSelect?.(i)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -380,7 +387,7 @@ export default function TopMenuBar({
                     marginBottom: 4,
                     border: active ? '1px solid rgba(61,127,255,0.25)' : '1px solid var(--border)',
                     background: active ? 'rgba(61,127,255,0.1)' : 'rgba(8,13,28,0.3)',
-                    cursor: isStatic ? 'pointer' : 'default',
+                    cursor: 'pointer',
                     transition: 'all 0.15s',
                   }}
                 >

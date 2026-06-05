@@ -3056,6 +3056,7 @@ html, body, #root {
   transition: color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 .aether-btn:hover { color: var(--text-primary); }
+.aether-btn-disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 .aether-btn-icon { font-size: 12px; opacity: 0.7; transition: opacity 0.25s ease; }
 .aether-btn:hover .aether-btn-icon { opacity: 1; color: var(--accent); }
 .aether-btn-disabled {

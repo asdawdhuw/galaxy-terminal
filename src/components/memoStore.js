@@ -11,6 +11,7 @@ function notify() { store.subs.forEach(fn => fn()) }
 
 export const memoStore = {
   createStar(name) {
+    if (store.stars.length >= 1) return // only one star allowed
     store.stars.push({
       id: genId(), name: name || `Star ${store.stars.length + 1}`, content: '',
       position: { x: 180 + Math.random() * 500, y: 120 + Math.random() * 380 }

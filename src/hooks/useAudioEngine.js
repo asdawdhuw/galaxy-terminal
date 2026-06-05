@@ -297,6 +297,7 @@ export default function useAudioEngine(audioMap, {
       if (audioMap[i] && audioMap[i] !== elems[i].src) {
         const isActive = tierRef.current === i
         if (isActive) {
+          if (_ctx?.state === 'suspended') _ctx.resume()
           expRampTo(gains[i], 0, FADE_OUT_S)
           setTimeout(() => {
             try { gains[i].gain.setValueAtTime(0, _ctx?.currentTime ?? 0) } catch (_) {}

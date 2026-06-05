@@ -506,7 +506,13 @@ ipcMain.on('music:open-window', () => {
   })
   const baseUrl = process.env.ELECTRON_RENDERER_URL || `file://${join(__dirname, '../../out/renderer/index.html')}`
   musicPopup.loadURL(baseUrl + '#/music')
-  musicPopup.on('closed', () => { musicPopup = null })
+  musicPopup.on('closed', () => {
+    // Notify main window that music stopped
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('music:stateBroadcast', { playing: false, trackName: null, trackPath: null })
+    }
+    musicPopup = null
+  })
 })
 
 // Cross-window music state broadcast — popup → main window
@@ -564,6 +570,27 @@ ipcMain.handle('game:toggle-pin', () => {
     return { pinned }
   }
   return { pinned: false }
+})
+
+// Sound file management — copy user-selected audio into sound/ folder
+ipcMain.handle('sound:copyFile', (_event, srcPath, tier) => {
+  const soundDir = join(__dirname, '../../sound')
+  // Remove old user file for this tier
+  let prev = null
+  try {
+    const files = fs.readdirSync(soundDir)
+    for (const f of files) {
+      if (f.startsWith(`tier${tier}_user`)) { prev = f; break }
+    }
+    if (prev) fs.unlinkSync(join(soundDir, prev))
+  } catch (_) {}
+  const ext = extname(srcPath) || '.mp3'
+  const destName = `tier${tier}_user${ext}`
+  const destPath = join(soundDir, destName)
+  fs.copyFileSync(srcPath, destPath)
+  // Use existing stream:// protocol (bypasses CSP + webSecurity)
+  const streamUrl = 'stream://audio?url=' + encodeURIComponent(destPath)
+  return { ok: true, path: destPath, url: streamUrl }
 })
 
 // File watcher

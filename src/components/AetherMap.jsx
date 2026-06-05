@@ -256,9 +256,13 @@ export default function AetherMap({ visible, onClose }) {
     for (const s of store.stars) groups.set(s.id, [])
 
     for (const p of store.planets) {
+      // Use live physics position for captured planets, stored position for free ones
+      const pp = physicsRef.current[p.id]
+      const px = pp?.x ?? p.x
+      const py = pp?.y ?? p.y
       let best = null, bestD = Infinity
       for (const s of store.stars) {
-        const d = Math.hypot(p.x - s.position.x, p.y - s.position.y)
+        const d = Math.hypot(px - s.position.x, py - s.position.y)
         if (d < bestD) { bestD = d; best = s }
       }
       if (best) groups.get(best.id).push(p)
@@ -269,12 +273,12 @@ export default function AetherMap({ visible, onClose }) {
       const star = store.stars.find(s => s.id === starId)
       if (!star) continue
       group.sort((a, b) => {
-        const angA = (a.isCaptured && physicsRef.current[a.id])
-          ? physicsRef.current[a.id].angle
-          : Math.atan2(a.y - star.position.y, a.x - star.position.x)
-        const angB = (b.isCaptured && physicsRef.current[b.id])
-          ? physicsRef.current[b.id].angle
-          : Math.atan2(b.y - star.position.y, b.x - star.position.x)
+        const ppA = physicsRef.current[a.id]
+        const ax = ppA?.x ?? a.x, ay = ppA?.y ?? a.y
+        const ppB = physicsRef.current[b.id]
+        const bx = ppB?.x ?? b.x, by = ppB?.y ?? b.y
+        const angA = Math.atan2(ay - star.position.y, ax - star.position.x)
+        const angB = Math.atan2(by - star.position.y, bx - star.position.x)
         return angA - angB
       })
     }
@@ -289,9 +293,9 @@ export default function AetherMap({ visible, onClose }) {
       const star = store.stars.find(s => s.id === starId)
       const group = groups.get(starId)
       const idx = group.indexOf(p)
-      const angle = (p.isCaptured && physicsRef.current[p.id])
-        ? physicsRef.current[p.id].angle
-        : Math.atan2(p.y - star.position.y, p.x - star.position.x)
+      const pp = physicsRef.current[p.id]
+      const px = pp?.x ?? p.x, py = pp?.y ?? p.y
+      const angle = Math.atan2(py - star.position.y, px - star.position.x)
       const orbitR = BASE_ORBIT_R + idx * ORBIT_SPACING
       if (!physicsRef.current[p.id]) physicsRef.current[p.id] = { x: 0, y: 0, angle }
       else physicsRef.current[p.id].angle = angle
@@ -521,10 +525,13 @@ export default function AetherMap({ visible, onClose }) {
       {/* === CONSOLE BAR === */}
       <div className="aether-console">
         <div className="aether-console-inner">
-          <motion.button className="aether-btn" onClick={() => memoStore.createStar()}
-            whileHover="hover" whileTap="tap"
+          <motion.button
+            className={`aether-btn${stars.length >= 1 ? ' aether-btn-disabled' : ''}`}
+            onClick={() => memoStore.createStar()}
+            whileHover={stars.length >= 1 ? undefined : "hover"}
+            whileTap={stars.length >= 1 ? undefined : "tap"}
             variants={{ hover: { borderColor: 'var(--accent)', boxShadow: 'inset 0 0 18px rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.12)' }, tap: { scale: 0.93 } }}>
-            <span className="aether-btn-icon">✚</span><span>恒星</span>
+            <span className="aether-btn-icon">{stars.length >= 1 ? '✓' : '✚'}</span><span>恒星</span>
           </motion.button>
           <motion.button className="aether-btn" onClick={() => memoStore.addPlanet()}
             whileHover="hover" whileTap="tap"

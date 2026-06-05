@@ -81,6 +81,7 @@ contextBridge.exposeInMainWorld('terminal', {
   searchLyrics: (params) => ipcRenderer.invoke('lyrics:search', params),
   openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
   searchSuggest: (query) => ipcRenderer.invoke('search:suggest', query),
+  copySoundFile: (path, tier) => ipcRenderer.invoke('sound:copyFile', path, tier),
   watchDir: (path) => ipcRenderer.invoke('fs:watch', path),
   onFsChanged: (callback) => {
     const handler = (_event, data) => callback(data)

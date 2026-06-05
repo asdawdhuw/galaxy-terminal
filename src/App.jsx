@@ -16,9 +16,9 @@ const AetherMap = lazy(() => import('./components/AetherMap'))
 const VoidDasher = lazy(() => import('./components/VoidDasher'))
 import useMusicController from './hooks/useNeteaseMusicController'
 import { setMusicState } from './utils/musicState'
-import idleSrc from '../sound/idle.mp3'
+import idleSrc from '../sound/Walk_Tonight.mp3'
 import activeSrc from '../sound/active.mp3'
-import climaxSrc from '../sound/climax.mp3'
+import climaxSrc from '../sound/Hans Zimmer - Batman Begins - Ending Theme.mp3'
 
 function WebUrlBar({ onClose }) {
   const [inputVal, setInputVal] = useState('')
@@ -205,13 +205,8 @@ export default function App() {
     return () => clearInterval(interval)
   }, [])
 
-  function handleChangeTrack(tier, file) {
-    const url = URL.createObjectURL(file)
-    setAudioMap((prev) => {
-      const old = prev[tier]
-      if (old && old.startsWith('blob:')) URL.revokeObjectURL(old)
-      return { ...prev, [tier]: url }
-    })
+  function handleChangeTrack(tier, url) {
+    setAudioMap((prev) => ({ ...prev, [tier]: url }))
   }
 
   const handleSessionCreated = useCallback((session) => {

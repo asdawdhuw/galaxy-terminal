@@ -155,6 +155,11 @@ export default function MusicPlayer({ onClose, isPopup, pinned, onTogglePin }) {
     setMusicState(state)
     // When popped out, also broadcast via IPC to reach the main window
     if (isPopup) window.terminal?.broadcastMusicState?.(state)
+    return () => {
+      const resetState = { playing: false, trackName: null, trackPath: null }
+      setMusicState(resetState)
+      if (isPopup) window.terminal?.broadcastMusicState?.(resetState)
+    }
   }, [playing, currentIdx, allFiles, isPopup])
 
   const filtered = useMemo(() => {
