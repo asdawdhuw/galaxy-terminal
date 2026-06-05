@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- 太空背景渐变 -->
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1a1040"/>
+      <stop offset="60%" stop-color="#0d0820"/>
+      <stop offset="100%" stop-color="#050510"/>
+    </radialGradient>
+
+    <!-- 星系螺旋渐变 -->
+    <linearGradient id="spiral1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="50%" stop-color="#7b2ff7"/>
+      <stop offset="100%" stop-color="#c44dff"/>
+    </linearGradient>
+
+    <linearGradient id="spiral2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c44dff"/>
+      <stop offset="50%" stop-color="#4d7cff"/>
+      <stop offset="100%" stop-color="#00d4ff"/>
+    </linearGradient>
+
+    <!-- 终端光标光晕 -->
+    <radialGradient id="cursorGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00ffcc" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#00ffcc" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#00ffcc" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 星点光晕 -->
+    <radialGradient id="starGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 星云滤镜 -->
+    <filter id="nebulaBlur">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+  </defs>
+
+  <!-- 背景圆 -->
+  <circle cx="256" cy="256" r="248" fill="url(#bg)" stroke="#2a1a5e" stroke-width="4"/>
+
+  <!-- 星云光晕 -->
+  <ellipse cx="240" cy="230" rx="140" ry="100" transform="rotate(-30 240 230)" fill="#7b2ff7" opacity="0.12" filter="url(#softGlow)"/>
+  <ellipse cx="280" cy="280" rx="120" ry="80" transform="rotate(20 280 280)" fill="#00d4ff" opacity="0.10" filter="url(#softGlow)"/>
+
+  <!-- 星系螺旋臂 1 -->
+  <path d="M256 256
+    Q200 180 160 200
+    Q110 220 140 280
+    Q170 340 256 340
+    Q340 340 370 280
+    Q400 220 350 190
+    Q300 160 256 170"
+    fill="none" stroke="url(#spiral1)" stroke-width="12" stroke-linecap="round"
+    opacity="0.7" filter="url(#nebulaBlur)"/>
+
+  <path d="M256 256
+    Q200 180 160 200
+    Q110 220 140 280
+    Q170 340 256 340
+    Q340 340 370 280
+    Q400 220 350 190"
+    fill="none" stroke="url(#spiral1)" stroke-width="4" stroke-linecap="round"
+    opacity="0.9"/>
+
+  <!-- 星系螺旋臂 2 -->
+  <path d="M256 256
+    Q310 330 350 310
+    Q400 290 370 230
+    Q340 170 256 170
+    Q170 170 140 230
+    Q110 290 160 320
+    Q210 350 256 340"
+    fill="none" stroke="url(#spiral2)" stroke-width="10" stroke-linecap="round"
+    opacity="0.5" filter="url(#nebulaBlur)"/>
+
+  <path d="M256 256
+    Q310 330 350 310
+    Q400 290 370 230
+    Q340 170 256 170
+    Q170 170 140 230"
+    fill="none" stroke="url(#spiral2)" stroke-width="3" stroke-linecap="round"
+    opacity="0.8"/>
+
+  <!-- 星系中心 -->
+  <circle cx="256" cy="256" r="18" fill="#ffffff" opacity="0.9" filter="url(#glow)"/>
+  <circle cx="256" cy="256" r="8" fill="#ffffff"/>
+
+  <!-- 终端标提示符 >_ -->
+  <g transform="translate(220, 290)" filter="url(#glow)">
+    <text x="0" y="0" font-family="Consolas, 'Courier New', monospace" font-size="32" font-weight="bold" fill="#00ffcc">
+      >
+    </text>
+    <rect x="26" y="-22" width="18" height="10" rx="1" fill="#00ffcc" opacity="0.9">
+      <animate attributeName="opacity" values="0.9;0.3;0.9" dur="1.2s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- 散布星点 -->
+  <circle cx="120" cy="100" r="3" fill="white" opacity="0.9"/>
+  <circle cx="380" cy="90" r="2.5" fill="white" opacity="0.8"/>
+  <circle cx="420" cy="200" r="2" fill="white" opacity="0.7"/>
+  <circle cx="100" cy="350" r="2" fill="white" opacity="0.8"/>
+  <circle cx="380" cy="400" r="2.5" fill="white" opacity="0.7"/>
+  <circle cx="150" cy="420" r="1.8" fill="white" opacity="0.6"/>
+  <circle cx="400" cy="130" r="1.5" fill="white" opacity="0.9"/>
+  <circle cx="90" cy="220" r="2" fill="white" opacity="0.7"/>
+  <circle cx="340" cy="420" r="1.8" fill="white" opacity="0.6"/>
+
+  <!-- 四芒星 -->
+  <g transform="translate(130, 160)" fill="white" opacity="0.95">
+    <rect x="-1" y="-6" width="2" height="12" rx="1"/>
+    <rect x="-6" y="-1" width="12" height="2" rx="1"/>
+  </g>
+  <g transform="translate(370, 150)" fill="white" opacity="0.85">
+    <rect x="-0.8" y="-4.8" width="1.6" height="9.6" rx="0.8"/>
+    <rect x="-4.8" y="-0.8" width="9.6" height="1.6" rx="0.8"/>
+  </g>
+  <g transform="translate(140, 370)" fill="white" opacity="0.8">
+    <rect x="-0.8" y="-4.8" width="1.6" height="9.6" rx="0.8"/>
+    <rect x="-4.8" y="-0.8" width="9.6" height="1.6" rx="0.8"/>
+  </g>
+
+  <!-- 小行星带/尘埃 -->
+  <g opacity="0.3">
+    <circle cx="180" cy="180" r="1" fill="#c44dff"/>
+    <circle cx="195" cy="175" r="0.8" fill="#c44dff"/>
+    <circle cx="320" cy="330" r="1" fill="#00d4ff"/>
+    <circle cx="310" cy="340" r="0.7" fill="#00d4ff"/>
+    <circle cx="200" cy="300" r="0.8" fill="#7b2ff7"/>
+    <circle cx="300" cy="200" r="0.9" fill="#7b2ff7"/>
+  </g>
+
+  <!-- 底部终端命令行装饰 -->
+  <g transform="translate(185, 390)" opacity="0.25">
+    <rect x="0" y="0" width="140" height="4" rx="2" fill="#00ffcc"/>
+    <rect x="0" y="10" width="100" height="4" rx="2" fill="#7b2ff7"/>
+    <rect x="0" y="20" width="120" height="4" rx="2" fill="#4d7cff"/>
+  </g>
+</svg>

@@ -6,7 +6,33 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
+    "pack": "electron-vite build && electron-builder --win",
+    "icon": "node scripts/generate-icon.cjs",
     "preview": "electron-vite preview"
+  },
+  "build": {
+    "appId": "com.galaxy.terminal",
+    "productName": "Galaxy Terminal",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Galaxy Terminal"
+    }
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",
@@ -25,7 +51,10 @@
     "electron": "^33.0.0",
     "electron-vite": "^5.0.0",
     "postcss": "^8.4.0",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.4.0",
+    "electron-builder": "^25.0.0",
+    "to-ico": "^1.1.5",
     "vite": "^5.4.0"
   }
 }
