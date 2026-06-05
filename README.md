@@ -21,12 +21,12 @@
 ## ✨ Features
 
 - **Real PowerShell PTY** — Full `pwsh.exe` integration via `node-pty`. Not a mock terminal.
-- **Cosmic Visuals** — Galaxy starfield background, nebula overlays, scan lines, multi-theme support.
+- **Cosmic Visuals** — Galaxy starfield background, nebula overlays, multi-theme support.
 - **Multi-Session Tabs** — Create, switch, rename, and close independent PTY sessions.
 - **Command Blocks** — Warp-style visual command/output separation.
-- **Galaxy Spotlight** — `Ctrl+K` command palette with `/help`, `/galaxy`, `/canvas`, `/memo` and more.
+- **Galaxy Spotlight** — `Ctrl+s` command palette with `/help`, `/galaxy`, `/canvas`, `/memo` and more.
 - **Aether Mind Map** — Visual memo/knowledge graph with orbital planet nodes.
-- **Music Search** —  music search & playback from Bilibili, with mini-player.
+- **Music Search** —  music search & playback from website, with mini-player.
 - **3-Tier Ambient Audio** — Dynamic idle/active/climax background music that responds to typing.
 - **Local Music Player** — Play local MP3 files with spectrum visualizer.
 - **File Tree Explorer** — Browse directories, double-click to open files.
