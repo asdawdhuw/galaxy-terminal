@@ -86,6 +86,15 @@ A retro arcade mini-game built into your terminal. Dodge obstacles in deep space
 
 ---
 
+## 🔧 More Features
+
+- **UI Opacity Control** — Fine-tune the transparency of all UI panels and overlays with a slider. Dial in your perfect cosmic immersion.
+- **Web Search Bar** — Press the Web button or `/web` to open a built-in URL bar. Search Google or type any URL — opens in your default browser.
+- **3-Tier Adaptive Audio Engine** — Three ambient sound layers (Deep Space / Particle Stream / Interstellar) that auto-switch based on your typing speed. Swap any layer with your own MP3 files.
+- **Universal File Opener** — Drag and drop or double-click any file in the built-in File Tree. Supports audio (MP3/WAV/FLAC), video (MP4/MKV), images (PNG/JPG), and text files.
+
+---
+
 ## 📦 Download
 
 Download the latest installer from [Releases](https://github.com/asdawdhuw/galaxy-terminal/releases):
