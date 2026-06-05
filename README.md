@@ -43,12 +43,12 @@
 
 <table align="center">
   <tr>
-    <td align="center"><img src="https://raw.githubusercontent.com/asdawdhuw/galaxy-terminal/main/screenshots/black.png?v=2" width="400"></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/asdawdhuw/galaxy-terminal/main/screenshots/Snipaste_2026-06-05_18-45-39.png" width="400"></td>
+    <td align="center"><img src="screenshots/black.png" width="400"></td>
+    <td align="center"><img src="screenshots/Snipaste_2026-06-05_18-45-39.png" width="400"></td>
   </tr>
   <tr>
-    <td align="center"><img src="https://raw.githubusercontent.com/asdawdhuw/galaxy-terminal/main/screenshots/grown.png" width="400"></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/asdawdhuw/galaxy-terminal/main/screenshots/Snipaste_2026-06-05_18-46-15.png" width="400"></td>
+    <td align="center"><img src="screenshots/grown.png" width="400"></td>
+    <td align="center"><img src="screenshots/Snipaste_2026-06-05_18-46-15.png" width="400"></td>
   </tr>
 </table>
 
