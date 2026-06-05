@@ -299,6 +299,7 @@ function createWindow() {
     frame: false,
     show: false,
     backgroundThrottling: true,
+    icon: join(__dirname, '../../build/icon.ico'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
